@@ -1,12 +1,6 @@
-import pytest
-
-from main import hello_world
+from src.main import main
 
 
-def test_hello_world():
-    assert hello_world("World") == "Hello, World!"
-    assert hello_world("Bob") == "Hello, Bob!"
-    assert hello_world("") == "Hello, !"
-    assert hello_world(123) == "Hello, 123!"
-    with pytest.raises(TypeError):
-        hello_world()
+def test_main():
+    assert main([1, 2, 3, 4, 5]) == 15
+    assert main([]) == 0

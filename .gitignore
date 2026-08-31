@@ -170,5 +170,12 @@ cython_debug/
 # Ruff stuff:
 .ruff_cache/
 
+# IDE-specific files
+.idea/
+.vscode/
+
+# Nano lockfiles
+.*.swp
+
 # PyPI configuration file
 .pypirc

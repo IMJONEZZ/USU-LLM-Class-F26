@@ -1,9 +1,8 @@
 # USU LLM Class — Fall 2026
 
-Repository for USU LLM Class DSAI-5810/6810.
+Homework-submission repository for USU LLM Class DSAI-5810/6810.
 
-> This repo is a work in progress for the Fall 2026 semester. Assignments, notebooks,
-> and course materials will be added here as the semester approaches.
+> Assignments and course materials will be added throughout the Fall 2026 semester.
 
 ## Contributing
 
@@ -17,32 +16,36 @@ Then sync the project:
 uv sync
 ```
 
-### Add dependencies
+### Start experimenting
 
-If you need to add dependencies to run your code, for example cowsay, you can do so with:
-
-```bash
-uv add cowsay
-```
-
-### Change the code
-
-Update the code to complete your homework. You can run your experiment like so:
+Run the entrypoint script:
 
 ```bash
-uv run main.py
+uv run src/main.py
 ```
 
-If you prefer working in a jupyter notebook setting you can run:
+If you prefer a Jupyter notebook:
 
 ```bash
 uv run --with jupyter jupyter lab
 ```
 
-### Run formatting/linting/tests
+### Set up pre-commit (optional)
+
+CI runs the project checks for every push and pull request. To run those checks before committing, install the hooks:
 
 ```bash
-uv run ruff format
+uvx prek install
+```
+
+### Run checks locally
+
+```bash
 uv run ruff check
+uv run ruff format --check .
 uv run pytest
 ```
+
+### AI assistance
+
+The course supports Claude Code and Codex. Both assistants follow the same student-learning and academic-integrity expectations in [AGENTS.md](AGENTS.md).

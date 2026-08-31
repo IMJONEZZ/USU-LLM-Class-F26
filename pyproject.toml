@@ -3,11 +3,15 @@ name = "usu-llm-class-f26"
 version = "0.1.0"
 description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = []
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3.4",
-    "ruff>=0.9.3",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.4",
 ]
+
+[tool.pytest.ini_options]
+addopts = "--cov=src --cov-fail-under=80"

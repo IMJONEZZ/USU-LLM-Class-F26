@@ -2,27 +2,28 @@ name: Test, Format, and Lint
 
 on:
   push:
-    branches: [ "**" ]
+    branches: ["**"]
+  pull_request:
 
 jobs:
-  build:
+  checks:
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Setup uv
-      uses: astral-sh/setup-uv@v5
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version-file: ".python-version"
 
-    - name: Install dependencies
-      run: |
-        uv sync
-    - name: Run Format and Lint Checks
-      run: |
-        uv run ruff check .
-        uv run ruff format --check .
-    - name: Run tests
-      run: |
-        uv run pytest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Check formatting and lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Run tests
+        run: uv run pytest
