@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# marimo files
+marimo_notebooks/
+__marimo__/
+
 # C extensions
 *.so
 
