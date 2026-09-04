@@ -21,7 +21,7 @@ ds = load_dataset("andrewkroening/Star-wars-scripts-dialogue-IV-VI")
 print(ds)
 
 # %%
-# Get all rows from the training split
+# Get all rows from the training splits
 rows = ds["train"][:]["Line"]
 rows[:5]  # Display the first 5 rows
 
