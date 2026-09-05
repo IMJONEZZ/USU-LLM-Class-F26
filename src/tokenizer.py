@@ -1,30 +1,11 @@
 import json
 import re
 
-with open("SW_EpisodeIV_VI.json", "r") as f:
-    data = json.load(f)
-
-lines = []
-for i in range(len(data)):
-    lines.append(data[i]["Line"])
-
-# View the first 10 'Lines' in the dataset
-print(lines[0:10])
-
 
 def process_text(text):
     tokens = re.split(r'([,.:;?_!"()\']|--|\s)', text)
     tokens = [item.strip() for item in tokens if item.strip()]
     return tokens
-
-
-preprocessed = process_text(" ".join(lines))
-
-# Build Vocab
-all_tokens = sorted(set(preprocessed))
-all_tokens.extend(["<|endoftext|>", "<|unk|>"])
-vocab = {token: integer for integer, token in enumerate(all_tokens)}
-print(len(vocab.items()))
 
 
 # Tokenize
@@ -48,15 +29,34 @@ class SimpleTokenizer:
         return text
 
 
-tokenizer = SimpleTokenizer(vocab)
-# Example of the tokenizer with all words in the vocabulary
-encoded = tokenizer.encode("Take the Falcon back to Tatooine.")
-decoded = tokenizer.decode(encoded)
-print(f"Encoded: {encoded}")
-print(f"Decoded: {decoded}")
+if __name__ == "__main__":  # pragma: no cover
+    with open("SW_EpisodeIV_VI.json", "r") as f:
+        data = json.load(f)
 
-# Example of the tokenizer with an unknown word
-encoded_unknown = tokenizer.encode("We must return to Coruscant.")
-decoded_unknown = tokenizer.decode(encoded_unknown)
-print(f"Encoded with unknown: {encoded_unknown}")
-print(f"Decoded with unknown: {decoded_unknown}")
+    lines = []
+    for i in range(len(data)):
+        lines.append(data[i]["Line"])
+
+    # View the first 10 'Lines' in the dataset
+    print(lines[0:10])
+
+    preprocessed = process_text(" ".join(lines))
+
+    # Build Vocab
+    all_tokens = sorted(set(preprocessed))
+    all_tokens.extend(["<|endoftext|>", "<|unk|>"])
+    vocab = {token: integer for integer, token in enumerate(all_tokens)}
+    print(len(vocab.items()))
+
+    tokenizer = SimpleTokenizer(vocab)
+    # Example of the tokenizer with all words in the vocabulary
+    encoded = tokenizer.encode("Take the Falcon back to Tatooine.")
+    decoded = tokenizer.decode(encoded)
+    print(f"Encoded: {encoded}")
+    print(f"Decoded: {decoded}")
+
+    # Example of the tokenizer with an unknown word
+    encoded_unknown = tokenizer.encode("We must return to Coruscant.")
+    decoded_unknown = tokenizer.decode(encoded_unknown)
+    print(f"Encoded with unknown: {encoded_unknown}")
+    print(f"Decoded with unknown: {decoded_unknown}")
