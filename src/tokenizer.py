@@ -8,6 +8,7 @@ def process_text(text):
     return tokens
 
 
+# Adding a comment to open my PR
 # Tokenize
 class SimpleTokenizer:
     def __init__(self, vocab):
