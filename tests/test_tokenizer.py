@@ -1,6 +1,6 @@
 import pytest
 
-from src.tokenizer import SimpleTokenizer
+from src.tokenizer import SimpleTokenizer, build_vocab
 
 
 @pytest.fixture
@@ -15,6 +15,26 @@ def tokenizer():
             "<|unk|>": 4,
         }
     )
+
+
+@pytest.fixture
+def sample_data():
+    return [
+        {"Line": "Hello, world!"},
+        {"Line": "Hello galaxy"},
+    ]
+
+
+def test_build_vocab(sample_data):
+    vocab = build_vocab(sample_data)
+
+    assert "Hello" in vocab
+    assert "," in vocab
+    assert "world" in vocab
+    assert "!" in vocab
+    assert "galaxy" in vocab
+    assert "<|endoftext|>" in vocab
+    assert "<|unk|>" in vocab
 
 
 def test_encode_known_tokens(tokenizer):
