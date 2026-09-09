@@ -1,6 +1,6 @@
-from src.main import main
+from src.main import run_demo
 
 
-def test_main():
-    assert main([1, 2, 3, 4, 5]) == 15
-    assert main([]) == 0
+def test_main_runs_without_errors():
+    preprocessed = ["Luke", ",", "I", "am", "your", "father", "."]
+    run_demo(preprocessed, vocab_size=50)
