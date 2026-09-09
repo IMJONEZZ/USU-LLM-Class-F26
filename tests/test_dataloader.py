@@ -48,12 +48,12 @@ def make_dataset(dataloader_module):
     [
         ([], True, []),
         ([], False, []),
-        ([1], True, [[1, 99, 99, 99]]),
+        ([1], True, [[99, 99, 99, 1]]),
         ([1, 2, 3], False, []),
-        ([1, 2, 3], True, [[1, 2, 3, 99]]),
+        ([1, 2, 3], True, [[99, 1, 2, 3]]),
         ([1, 2, 3, 4], True, [[1, 2, 3, 4]]),
         ([1, 2, 3, 4], False, [[1, 2, 3, 4]]),
-        ([1, 2, 3, 4, 5], True, [[1, 2, 3, 4], [3, 4, 5, 99]]),
+        ([1, 2, 3, 4, 5], True, [[1, 2, 3, 4], [99, 3, 4, 5]]),
         ([1, 2, 3, 4, 5], False, [[1, 2, 3, 4]]),
         ([1, 2, 3, 4, 5, 6], True, [[1, 2, 3, 4], [3, 4, 5, 6]]),
     ],
@@ -73,20 +73,21 @@ def test_only_one_padded_window_with_small_step(make_dataset):
     dataset = make_dataset([1, 2, 3, 4, 5], max_length=4, step=1)
     assert dataset.chunks == [[1, 2, 3, 4, 5]]
     dataset = make_dataset([1, 2, 3], max_length=4, step=1)
-    assert dataset.chunks == [[1, 2, 3, 99, 99]]
+    assert dataset.chunks == [[99, 99, 1, 2, 3]]
 
 
 @pytest.mark.parametrize(("pad_id", "expected"), [(None, 98), (0, 0), (99, 99)])
 def test_padding_token_fallback(make_dataset, pad_id, expected):
     dataset = make_dataset([1, 2], pad_id=pad_id)
-    assert dataset.chunks == [[1, 2, expected, expected]]
+    assert dataset.chunks == [[expected, expected, 1, 2]]
 
 
 @pytest.mark.parametrize(
     ("tokens", "expected_inputs", "expected_target"),
     [
         ([1, 2, 3, 4], [1, 2, 3], 4),
-        ([1, 2], [1, 2, 99], 99),
+        ([1, 2], [99, 99, 1], 2),
+        ([1], [99, 99, 99], 1),
     ],
 )
 def test_final_position_target(make_dataset, tokens, expected_inputs, expected_target):

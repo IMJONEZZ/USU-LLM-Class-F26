@@ -53,7 +53,7 @@ class TextDataset(Dataset):
 
             if len(chunk) < window_size:
                 if self.pad:
-                    chunk += [self.pad_token_id] * (window_size - len(chunk))
+                    chunk = [self.pad_token_id] * (window_size - len(chunk)) + chunk
                 else:
                     break
 
