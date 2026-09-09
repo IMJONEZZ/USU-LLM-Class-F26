@@ -25,7 +25,7 @@ def extract_text(obj):
 
 def preprocess_text(text):
     """Split text into words and punctuation, removing whitespace-only items."""
-    tokens = re.split(r'([,.:;?_!"()\']|--|\s)', text)
+    tokens = re.split(r'([,.:;?_!"()]|--|\s)', text)
     return [item.strip() for item in tokens if item.strip()]
 
 

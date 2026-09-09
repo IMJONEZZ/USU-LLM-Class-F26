@@ -4,14 +4,14 @@ import re
 class WordPieceTokenizer:
     def __init__(self, vocab):
 
-        self.str_to_int = vocab
+        self.vocab = vocab
 
         self.int_to_str = {integer: token for token, integer in vocab.items()}
 
     def tokenize_word(self, word):
         """Break one word into WordPiece tokens."""
 
-        if word in self.str_to_int:
+        if word in self.vocab:
             return [word]
 
         pieces = []
@@ -27,7 +27,7 @@ class WordPieceTokenizer:
                 if start > 0:
                     piece = "##" + piece
 
-                if piece in self.str_to_int:
+                if piece in self.vocab:
                     found_piece = piece
                     break
 
@@ -44,16 +44,27 @@ class WordPieceTokenizer:
     def encode(self, text):
         """Convert text into token IDs."""
 
-        preprocessed = re.split(r'([,.:;?_!"()\']|--|\s)', text)
+        preprocessed = re.split(r'([,.:;?_!"()]|--|\s)', text)
 
-        preprocessed = [item.strip() for item in preprocessed if item.strip()]
+        cleaned_preprocessed = []
+
+        for item in preprocessed:
+            if item.strip():
+                cleaned_preprocessed.append(item.strip())
+
+        preprocessed = cleaned_preprocessed
 
         tokens = []
 
         for token in preprocessed:
             tokens.extend(self.tokenize_word(token))
 
-        return [self.str_to_int[token] for token in tokens]
+        token_ids = []
+
+        for token in tokens:
+            token_ids.append(self.vocab[token])
+
+        return token_ids
 
     def decode(self, ids):
         """Convert IDs back into text."""
@@ -72,6 +83,6 @@ class WordPieceTokenizer:
             else:
                 text += " " + token
 
-        text = re.sub(r'\s+([,.:;?!"()\'])', r"\1", text)
+        text = re.sub(r'\s+([,.:;?!"()])', r"\1", text)
 
         return text

@@ -2,9 +2,7 @@ from collections import Counter
 
 
 def initial_wordpiece_split(token):
-    """Break a token into the smallest pieces used to begin WordPiece training.
-    Start with individual characters before learning
-    which characters should be merged into larger, useful subwords."""
+    """Break token into individual characters. First character is left as-is, subsequent characters are prefixed with '##'."""
 
     if len(token) == 1 or not any(char.isalnum() for char in token):
         return [token]
@@ -109,9 +107,18 @@ def build_wordpiece_vocab(preprocessed, target_vocab_size=1000):
 
     token_freqs = Counter(preprocessed)
 
-    splits = {token: initial_wordpiece_split(token) for token in token_freqs}
+    # Split each unique token into its starting WordPiece pieces.
+    splits = {}
 
-    vocab = {piece for split in splits.values() for piece in split}
+    for token in token_freqs:
+        splits[token] = initial_wordpiece_split(token)
+
+    # Collect every unique WordPiece piece into the starting vocabulary.
+    vocab = set()
+
+    for split in splits.values():
+        for piece in split:
+            vocab.add(piece)
 
     vocab.update(["<|endoftext|>", "<|unk|>"])
 
@@ -121,10 +128,16 @@ def build_wordpiece_vocab(preprocessed, target_vocab_size=1000):
         if best_pair is None:
             break
 
+        # Reset splits to reflect the new merged token.
         splits, new_token = merge_pair(best_pair, splits)
 
         vocab.add(new_token)
 
     all_tokens = sorted(vocab)
 
-    return {token: integer for integer, token in enumerate(all_tokens)}
+    vocab_dictionary = {}
+
+    for integer, token in enumerate(all_tokens):
+        vocab_dictionary[token] = integer
+
+    return vocab_dictionary
