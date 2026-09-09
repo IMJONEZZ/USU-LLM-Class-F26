@@ -1,4 +1,4 @@
-from src.BSEtokenizer import BPE_Algorithm, BSE_Encoder, BSE_Vocabulary
+from src.BPEtokenizer import BPE_Algorithm, BPE_Encoder, BPE_Vocabulary
 
 
 def test_pretokenize():
@@ -129,7 +129,7 @@ def test_mergify_multiple_merges():
 
 
 def test_encode_decode():
-    vocabulary = BSE_Vocabulary(
+    vocabulary = BPE_Vocabulary(
         [
             "i",
             "'",
@@ -147,7 +147,7 @@ def test_encode_decode():
             "programmer",
         ]
     )
-    encoder = BSE_Encoder(vocabulary.str2id)
+    encoder = BPE_Encoder(vocabulary.str2id)
 
     token_ids = encoder.encode("I'm a programmer.x")
 
@@ -164,8 +164,8 @@ def test_pipeline():
     algorithm = BPE_Algorithm(training_text=text, merge_size=20)
 
     algorithm.mergify()
-    vocabulary = BSE_Vocabulary(algorithm.bpe_merges)
-    encoder = BSE_Encoder(vocabulary.str2id)
+    vocabulary = BPE_Vocabulary(algorithm.bpe_merges)
+    encoder = BPE_Encoder(vocabulary.str2id)
     token_ids = encoder.encode(text)
 
     assert len(algorithm.bpe_merges) == 20

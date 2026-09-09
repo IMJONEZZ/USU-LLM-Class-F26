@@ -80,7 +80,7 @@ class BPE_Algorithm:
                 break
 
 
-class BSE_Vocabulary:
+class BPE_Vocabulary:
     """Assign stable integer IDs to learned BPE tokens."""
 
     unknown_token = "<|unk|>"
@@ -93,13 +93,13 @@ class BSE_Vocabulary:
         self.id2str = {token_id: token for token, token_id in self.str2id.items()}
 
 
-class BSE_Encoder:
+class BPE_Encoder:
     """Encode and decode words with a greedy BPE vocabulary."""
 
     def __init__(self, str2id: dict[str, int]):
         self.str2id = str2id
         self.id2str = {token_id: token for token, token_id in str2id.items()}
-        self.unknown_token = BSE_Vocabulary.unknown_token
+        self.unknown_token = BPE_Vocabulary.unknown_token
         self.unknown_id = self.str2id[self.unknown_token]
         self.bpe_merges = [
             token for token in self.str2id if token != self.unknown_token
@@ -152,8 +152,8 @@ if __name__ == "__main__":
 
     algorithm = BPE_Algorithm(training_text=training_text, merge_size=3000)
     algorithm.mergify()
-    vocabulary = BSE_Vocabulary(algorithm.bpe_merges)
-    encoder = BSE_Encoder(vocabulary.str2id)
+    vocabulary = BPE_Vocabulary(algorithm.bpe_merges)
+    encoder = BPE_Encoder(vocabulary.str2id)
 
     sentence = "Which basketball team do you think will win the championship this year?"
     token_ids = encoder.encode(sentence)
