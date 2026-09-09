@@ -179,3 +179,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Star Wars Data Set
+SW_EpisodeIV_VI.json
+
+# Trained tokenizer vocabulary (regenerate with: uv run python src/bpe_tokenizer.py)
+bpe_vocab.json
