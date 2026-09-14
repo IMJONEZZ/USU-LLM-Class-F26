@@ -84,10 +84,12 @@ class BPE_Vocabulary:
     """Assign stable integer IDs to learned BPE tokens."""
 
     unknown_token = "<|unk|>"
+    end_of_text_token = "<|endoftext|>"
 
     def __init__(self, bpe_merges: list[str]):
         tokens = [token for token in bpe_merges if token != self.unknown_token]
         tokens.append(self.unknown_token)
+        tokens.append(self.end_of_text_token)
 
         self.str2id = {token: token_id for token_id, token in enumerate(tokens)}
         self.id2str = {token_id: token for token, token_id in self.str2id.items()}
@@ -101,6 +103,8 @@ class BPE_Encoder:
         self.id2str = {token_id: token for token, token_id in str2id.items()}
         self.unknown_token = BPE_Vocabulary.unknown_token
         self.unknown_id = self.str2id[self.unknown_token]
+        self.end_of_text_token = BPE_Vocabulary.end_of_text_token
+        self.end_of_text_id = self.str2id[self.end_of_text_token]
         self.bpe_merges = [
             token for token in self.str2id if token != self.unknown_token
         ]
