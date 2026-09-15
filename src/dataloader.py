@@ -38,8 +38,10 @@ def create_dataloader(
     # Initialize the tokenizer
     tokenizer = SentencePieceTokenizer()
 
+    # Text should be a single string. If a list of strings, join them into one string.
     joined_text = " ".join(text) if isinstance(text, list) else text
 
+    # Custom tokenizer requires number of merges to be specified.
     tokenizer.train(joined_text, num_merges=300)
 
     # Create the dataset
