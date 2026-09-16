@@ -53,4 +53,5 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 ## Assignments
 
 - Assignment 0 — basic tokenizer (`src/tokenizer.py`)
-- Assignment 1 — improved tokenizer (in progress)
+- Assignment 1 — byte-level BPE tokenizer (`src/bpe_tokenizer.py`)
+- Assignment 2 — PyTorch data loader (in progress)
