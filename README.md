@@ -71,3 +71,10 @@ uv run pytest
 ### AI assistance
 
 The course supports Claude Code and Codex. Both assistants follow the same student-learning and academic-integrity expectations in [AGENTS.md](AGENTS.md).
+
+
+### Progress
+
+A0 - Basic Tokenizer (done)\
+A1 - BPE Tokenizer (done)\
+A2 - Data Loder (TBD)
