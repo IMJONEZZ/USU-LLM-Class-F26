@@ -1,6 +1,5 @@
 import json
 import sys
-from pathlib import Path
 
 import pytest
 
@@ -169,32 +168,29 @@ def test_cli_trains_on_supplied_corpus(corpus_file, monkeypatch, capsys):
     assert f"Training characters: {len(load_corpus(corpus_file))}\n" in output
 
 
-@pytest.fixture(scope="module")
-def star_wars_corpus():
-    """Use the complete real dataset locally; it is excluded from Git and CI."""
-    path = Path(__file__).resolve().parents[1] / "SW_EpisodeIV_VI.json"
-    if not path.exists():
-        pytest.skip(
-            "Full Star Wars dataset is not present; fixture-based tests still run"
-        )
-    with path.open(encoding="utf-8") as file:
-        records = json.load(file)
-    text = load_corpus(path)
-    return records, text
+@pytest.fixture(
+    scope="module",
+    params=["The forest is green. The forest is quiet.", "你好 café🙂\tمرحبا\n"],
+    ids=["english", "multilingual"],
+)
+def sample_corpus(request, tmp_path_factory):
+    """Create local test data instead of depending on the user's dataset."""
+    records = [{"Character": "NARRATOR", "Line": request.param * 3}]
+    path = tmp_path_factory.mktemp("corpus") / "sample.json"
+    path.write_text(json.dumps(records, ensure_ascii=False), encoding="utf-8")
+    return records, load_corpus(path)
 
 
 @pytest.fixture(scope="module")
-def trained_star_wars_tokenizer(star_wars_corpus):
-    _, text = star_wars_corpus
+def trained_sample_tokenizer(sample_corpus):
+    _, text = sample_corpus
     tokenizer = BPETokenizer()
-    ids = tokenizer.train(text)
+    ids = tokenizer.train(text, vocab_size=280)
     return tokenizer, ids
 
 
-def test_training_on_entire_star_wars_corpus(
-    star_wars_corpus, trained_star_wars_tokenizer, tmp_path
-):
-    records, text = star_wars_corpus
+def test_training_on_sample_corpus(sample_corpus, trained_sample_tokenizer, tmp_path):
+    records, text = sample_corpus
     # Independently build the expected text from every field of every record.
     fields = []
     for record in records:
@@ -202,11 +198,11 @@ def test_training_on_entire_star_wars_corpus(
         fields.append(record["Line"])
     assert text == "\n".join(fields)
 
-    tokenizer, ids = trained_star_wars_tokenizer
+    tokenizer, ids = trained_sample_tokenizer
     assert DEFAULT_VOCAB_SIZE == 4096
-    assert len(tokenizer.vocab) == 4096
-    assert len(tokenizer.merges) == 3840
-    model_path = tmp_path / "star_wars_4096.bpe.json"
+    assert 256 < len(tokenizer.vocab) <= 280
+    assert len(tokenizer.merges) == len(tokenizer.vocab) - 256
+    model_path = tmp_path / "sample.bpe.json"
     tokenizer.save(model_path)
     restored = BPETokenizer.load(model_path)
     assert restored.vocab == tokenizer.vocab
@@ -311,8 +307,8 @@ def test_round_trip_of_unseen_text_with_small_fixture(trained_tokenizer, text):
         "<|unk|> <|endoftext|>",
     ],
 )
-def test_round_trip_after_full_corpus_training(trained_star_wars_tokenizer, text):
-    tokenizer, _ = trained_star_wars_tokenizer
+def test_round_trip_after_sample_corpus_training(trained_sample_tokenizer, text):
+    tokenizer, _ = trained_sample_tokenizer
     assert tokenizer.decode(tokenizer.encode(text)) == text
 
 
@@ -489,22 +485,3 @@ def test_cli_rejects_training_arguments_when_loading(
         main()
     assert error.value.code == 2
     assert "--load cannot be combined" in capsys.readouterr().err
-
-
-@pytest.fixture(scope="module")
-def shared_tokenizer():
-    """The committed model must be usable in CI without the training corpus."""
-    path = Path(__file__).resolve().parents[1] / "models" / "star_wars_4096.bpe.json"
-    return BPETokenizer.load(path)
-
-
-def test_shared_model_has_expected_vocabulary(shared_tokenizer):
-    assert len(shared_tokenizer.vocab) == 4096
-    assert len(shared_tokenizer.merges) == 3840
-
-
-@pytest.mark.parametrize(
-    "text", ["", "newwordneverinthecorpus", "  Hello\tthere!\n", "café🙂 你好 دنیا"]
-)
-def test_shared_model_preserves_new_text(shared_tokenizer, text):
-    assert shared_tokenizer.decode(shared_tokenizer.encode(text)) == text

@@ -1,10 +1,9 @@
 """Check sequence construction separately from PyTorch batch assembly."""
 
 # Most tests use tiny ASCII examples whose answers can be checked by hand.
-# A separate integration test uses the saved BPE model and Unicode dialogue.
+# A separate integration test uses a temporary saved BPE tokenizer and Unicode dialogue.
 # These tests check training DATA, not whether a future LLM writes good answers.
 from itertools import pairwise
-from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -213,7 +212,13 @@ def test_shuffle_repeats_across_runs_but_advances_between_epochs(tokenizer):
     assert torch.equal(torch.random.get_rng_state(), rng_before)
 
 
-def test_saved_tokenizer_and_corpus_preserve_dialogue_and_unicode(tmp_path):
+@pytest.mark.parametrize(
+    ("training_text", "vocab_size"),
+    [("The forest is green. " * 3, 257), ("你好 café🙂\n" * 3, 260)],
+)
+def test_saved_tokenizer_and_corpus_preserve_dialogue_and_unicode(
+    tmp_path, training_text, vocab_size
+):
     # tmp_path is a pytest-provided directory unique to this test. A tiny JSON
     # fixture avoids requiring the ignored full corpus or a network download.
     # Two speakers check dialogue boundaries; café and the emoji check UTF-8.
@@ -223,9 +228,11 @@ def test_saved_tokenizer_and_corpus_preserve_dialogue_and_unicode(tmp_path):
         '{"Character": "LUKE", "Line": "Hi, café🙂!"}]',
         encoding="utf-8",
     )
-    # Resolve the model relative to this test file: parents[0] is tests/ and
-    # parents[1] is the repository root. Use the REAL saved A1 tokenizer here.
-    model_path = Path(__file__).resolve().parents[1] / "models/star_wars_4096.bpe.json"
+    # Train and save locally so this test never needs a committed artifact.
+    trained = BPETokenizer()
+    trained.train(training_text, vocab_size=vocab_size)
+    model_path = tmp_path / "sample.bpe.json"
+    trained.save(model_path)
     tokenizer = BPETokenizer.load(model_path)
     text = load_corpus(corpus_path)
     expected = tokenizer.encode(text)

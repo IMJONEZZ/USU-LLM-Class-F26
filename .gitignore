@@ -1,8 +1,9 @@
 #Talha Additions
 SW_EpisodeIV_VI.json
-# Share the assignment model; ignore other locally trained models.
-/models/*.bpe.json
-!/models/star_wars_4096.bpe.json
+# Local datasets and generated tokenizer artifacts.
+/data/
+*.bpe.json
+bpe.json
 explainations_for_personal_memory
 
 # Byte-compiled / optimized / DLL files
