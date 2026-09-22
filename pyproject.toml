@@ -5,6 +5,8 @@ description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "nltk>=3.10.3",
+    "pandas>=3.0.6",
     "regex>=2025.0.0",
     "torch>=2.0.0",
 ]
