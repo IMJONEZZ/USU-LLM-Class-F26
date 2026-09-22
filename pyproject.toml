@@ -8,6 +8,7 @@ dependencies = [
     "datasets>=5.0.1",
     "evaluate[evaluator]>=0.4.6",
     "scikit-learn>=1.9.1",
+    "torch>=2.14.0",
     "transformers>=5.17.0",
     "truststore>=0.10.4",
 ]
