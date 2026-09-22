@@ -1,12 +1,20 @@
 from datasets import load_dataset  # pragma: no cover
 from evaluate import evaluator
 
-data = load_dataset("UCLNLP/adversarial_qa", "adversarialQA", split="validation")
 
-qa_evaluator = evaluator("question-answering")
+# Wrapping logic in function allows you to evaluate subsets of the dataset (split arg)
+def run_evaluation(
+    model_name: str = "csarron/bert-base-uncased-squad-v1", split: str = "validation"
+) -> dict:
+    """Evaluate a SQuAD-fine-tuned BERT model on AdversarialQA."""
+    # Load the AdversarialQA dataset from Hugging Face Datasets
+    data = load_dataset("UCLNLP/adversarial_qa", "adversarialQA", split=split)
 
-results = qa_evaluator.compute(
-    model_or_pipeline="csarron/bert-base-uncased-squad-v1", data=data, metric="squad"
-)
+    qa_evaluator = evaluator("question-answering")
 
-print(results)
+    # squad metric returns the average exact match and F1 scores
+    return qa_evaluator.compute(model_or_pipeline=model_name, data=data, metric="squad")
+
+
+if __name__ == "__main__":  # pragma: no cover
+    print(run_evaluation())
