@@ -4,7 +4,14 @@ version = "0.1.0"
 description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "datasets>=5.0.1",
+    "evaluate[evaluator]>=0.4.6",
+    "scikit-learn>=1.9.1",
+    "torch>=2.14.0",
+    "transformers>=5.17.0",
+    "truststore>=0.10.4",
+]
 
 [dependency-groups]
 dev = [
@@ -15,3 +22,6 @@ dev = [
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"
+markers = [
+    "slow: marks tests as slow (real model inference, excluded by default)",
+]
