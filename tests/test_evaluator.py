@@ -1,5 +1,8 @@
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+from src.dataloader import load_imdb_subset
 from src.evaluator import evaluate_model
 
 
@@ -20,3 +23,12 @@ def test_evaluate_model_passes_correct_arguments(mock_evaluator_factory):
         label_mapping={"NEGATIVE": 0, "POSITIVE": 1},
     )
     assert result == {"accuracy": 0.9}
+
+
+@pytest.mark.slow
+def test_evaluate_model_real_inference():
+    dataset = load_imdb_subset(n=10)
+    result = evaluate_model("lvwerra/distilbert-imdb", dataset)
+
+    assert "accuracy" in result
+    assert 0 <= result["accuracy"] <= 1
