@@ -58,18 +58,24 @@ def load_glue_metric():
     return evaluate.load("glue", DEFAULT_CONFIG)
 
 
-def build_predictor(model_name=DEFAULT_MODEL, label_mapping=None, batch_size=16):
+def build_predictor(
+    model_name=DEFAULT_MODEL, label_mapping=None, batch_size=16, classifier=None
+):
     """Wraps the model in a function that turns sentence pairs into 0s and 1s.
 
-    Keeping this separate is what lets the tests pass in a fake with known
-    answers rather than downloading a few hundred megabytes of weights.
-    Anything that takes a list of (sentence1, sentence2) and gives back a list
-    of ints will work.
+    Pass a classifier in and it gets used as is, which is how the tests avoid
+    downloading a few hundred megabytes of weights. Leave it out and the real
+    pipeline gets built. Either way the thing handed back takes a list of
+    (sentence1, sentence2) and gives back a list of ints.
     """
-    from transformers import pipeline
-
     mapping = LABEL_MAPPING if label_mapping is None else label_mapping
-    classifier = pipeline("text-classification", model=model_name)
+
+    # Not covered by the tests on purpose. Exercising this branch means
+    # actually downloading the model, which is the thing I was avoiding.
+    if classifier is None:  # pragma: no cover
+        from transformers import pipeline
+
+        classifier = pipeline("text-classification", model=model_name)
 
     def predict(pairs):
         if not pairs:
