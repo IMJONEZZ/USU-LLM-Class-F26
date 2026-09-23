@@ -49,3 +49,10 @@ uv run pytest
 ### AI assistance
 
 The course supports Claude Code and Codex. Both assistants follow the same student-learning and academic-integrity expectations in [AGENTS.md](AGENTS.md).
+
+## Assignments
+
+- Assignment 0 — basic tokenizer (`src/tokenizer.py`)
+- Assignment 1 — byte-level BPE tokenizer (`src/bpe_tokenizer.py`)
+- Assignment 2 — PyTorch data loader (`src/dataloader.py`)
+- Assignment 3 — model evaluator (in progress)
