@@ -15,6 +15,10 @@ dev = [
     "pytest-cov>=7.1.0",
     "ruff>=0.16.4",
 ]
+eval = [
+    "datasets>=5.0.1",
+    "transformers>=5.17.0",
+]
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"
