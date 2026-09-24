@@ -60,6 +60,8 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - A0 - Basic Tokenizer (done)
 - A1 - BPE Tokenizer (done)
 - A2 - Data Loader (done)
+- A3 - Evaluators (done)
+- A4 - MLOps (In Progress)
 
 ## Additional Usage
 
@@ -193,3 +195,5 @@ Text metrics compare reconstructed spans with their references. ROUGE reports
 mean per-example F1 without stemming. BLEU uses up to bigrams with smoothing.
 BERTScore uses `roberta-base` without IDF weighting or baseline rescaling; it
 measures semantic similarity, not the percentage of correct reconstructions.
+
+#### Status
