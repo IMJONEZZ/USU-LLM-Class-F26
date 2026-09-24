@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 marimo_notebooks/
+gpu-results/
 
 # C extensions
 *.so
