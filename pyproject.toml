@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "google-colab-cli>=0.7.2",
+    "prek>=0.5.3",
+    "truststore>=0.10.4",
+]
 
 [dependency-groups]
 dev = [
@@ -15,3 +19,6 @@ dev = [
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"
+
+[tool.uv]
+override-dependencies = ["jupyter-kernel-client>=0.9"]
