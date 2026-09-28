@@ -15,6 +15,6 @@ def run_evaluation(model_name: str, split: str = "validation") -> dict:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    model = "csarron/bert-base-uncased-squad-v1"
+    test_model = "csarron/bert-base-uncased-squad-v1"
 
-    print(run_evaluation(model_name=model))
+    print(run_evaluation(model_name=test_model))
