@@ -17,6 +17,8 @@ app = modal.App("qwen3-8b-gpu-test")
     secrets=[modal.Secret.from_name("huggingface")],
 )
 def generate_text(prompt: str) -> str:
+    import subprocess
+
     import torch
     from transformers import BitsAndBytesConfig, pipeline
 
@@ -29,6 +31,7 @@ def generate_text(prompt: str) -> str:
             "dtype": torch.float16,
         },
     )
+    subprocess.run(["nvidia-smi"], check=True)
     output = generator(
         prompt,
         max_new_tokens=50,
