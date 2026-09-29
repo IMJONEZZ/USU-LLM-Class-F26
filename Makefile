@@ -27,4 +27,10 @@ modal_app_list:
 	PYTHONPATH=$$HOME/.pythoncustomize uv run modal app list
 
 modal_test:
-	PYTHONPATH=$$HOME/.pythoncustomize uv run modal run src/generation.py::run_tests
+	@output=$$(PYTHONPATH=$$HOME/.pythoncustomize uv run modal run src/generation.py::run_tests 2>&1); \
+	echo "$$output"; \
+	app_id=$$(echo "$$output" | grep -oE 'ap-[A-Za-z0-9]+' | head -1); \
+	if [ -n "$$app_id" ]; then \
+		echo "--- Fetching persisted logs for $$app_id ---"; \
+		PYTHONPATH=$$HOME/.pythoncustomize uv run modal app logs $$app_id; \
+	fi
