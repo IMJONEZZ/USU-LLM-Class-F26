@@ -11,6 +11,7 @@ dependencies = [
     "torch>=2.14.0",
     "torchvision>=0.29.0",
     "transformers>=4,<5",
+    "zenml[server]>=0.97.0",
 ]
 
 [dependency-groups]

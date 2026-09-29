@@ -185,3 +185,6 @@ cython_debug/
 
 # .DS_Store files (macOS)
 .DS_Store
+
+# ZenML
+.zen/config.yaml
