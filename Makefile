@@ -1,6 +1,6 @@
 FILE ?= src/main.py
 
-.PHONY: add_all gpu_start gpu_add_dependencies gpu_run gpu_stop gpu_test modal_run modal_app_list
+.PHONY: add_all gpu_start gpu_add_dependencies gpu_run gpu_stop gpu_test modal_run modal_app_list modal_test
 
 add_all:
 	uv run ruff check --fix .
@@ -25,3 +25,6 @@ modal_run:
 	PYTHONPATH=$$HOME/.pythoncustomize uv run modal run $(MODAL_FILE)
 modal_app_list:
 	PYTHONPATH=$$HOME/.pythoncustomize uv run modal app list
+
+modal_test:
+	PYTHONPATH=$$HOME/.pythoncustomize uv run modal run src/generation.py::run_tests
