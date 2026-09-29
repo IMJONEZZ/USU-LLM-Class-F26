@@ -18,6 +18,33 @@ def build_test_image() -> modal.Image:
     )
 
 
+def load_model(model_name: str = "unsloth/Llama-3.2-1B"):
+    from unsloth import FastLanguageModel
+
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name=model_name, load_in_16bit=True, load_in_4bit=False
+    )
+    FastLanguageModel.for_inference(model)
+    return model, tokenizer
+
+
+@app.function(gpu="T4", image=build_image())
+def generate() -> None:
+    from transformers import set_seed
+
+    model, tokenizer = load_model()
+
+    set_seed(42)
+    inputs = tokenizer("Once upon a time", return_tensors="pt").to("cuda")
+    output = model.generate(**inputs, temperature=1, do_sample=True)
+    print(tokenizer.decode(output[0], skip_special_tokens=True))
+
+
+@app.local_entrypoint()
+def main() -> None:
+    generate.remote()
+
+
 @app.function(gpu="T4", image=build_test_image())
 def run_tests() -> None:
     import subprocess
