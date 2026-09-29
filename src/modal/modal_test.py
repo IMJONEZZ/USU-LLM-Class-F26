@@ -1,4 +1,4 @@
-import modal
+import modal  # pragma: no cover
 
 MODEL_ID = "meta-llama/Llama-3.2-1B"
 
