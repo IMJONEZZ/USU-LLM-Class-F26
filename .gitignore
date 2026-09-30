@@ -192,3 +192,4 @@ bpe_vocab.json
 # Isolated env for ZenML (it needs Python <3.12 for distutils)
 .zenml-venv/
 .zen_store/
+.zen/
