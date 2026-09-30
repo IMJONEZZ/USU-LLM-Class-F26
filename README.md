@@ -42,8 +42,13 @@ uvx prek install
 
 ### Run checks locally
 
-Tests use small fixtures and mocked services
-without model downloads.
+Tests use small fixtures and mocked services without model downloads. The GPU
+inference tests check script behavior with mocks and run a tiny, locally created
+model on CUDA when available; that test is skipped on CPU-only machines. ZenML
+tests exercise the real Iris training and evaluation steps and prepare the
+pipeline graph without submitting a run or requiring a server or store.
+
+Pytest measures coverage of `src` and requires at least 80% overall coverage.
 
 ```bash
 uv run ruff check
@@ -61,7 +66,7 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - A1 - BPE Tokenizer (done)
 - A2 - Data Loader (done)
 - A3 - Evaluators (done)
-- A4 - MLOps (In Progress)
+- A4 - MLOps (done)
 
 ## Additional Usage
 
@@ -196,4 +201,79 @@ mean per-example F1 without stemming. BLEU uses up to bigrams with smoothing.
 BERTScore uses `roberta-base` without IDF weighting or baseline rescaling; it
 measures semantic similarity, not the percentage of correct reconstructions.
 
-#### Status
+### GPU Inference with Docker
+
+[src/gpu_inference.py](src/gpu_inference.py) runs causal language-model generation
+on `cuda:0`. It loads weights in `float16`, transfers the entire model to the GPU,
+and verifies that all parameters and buffers are on that device. Quantization
+and CPU offloading are disabled, so the model must fit in GPU memory. CUDA is
+required; the script raises an error when it is unavailable.
+
+The [Dockerfile](Dockerfile) uses a Python 3.14 image with `uv`, installs build
+tools for Triton, and installs locked runtime dependencies with
+`uv sync --frozen --no-dev`. Its default command runs the inference script.
+
+Build and run from the repository root on a host with an NVIDIA GPU, compatible
+drivers, and Docker configured for GPU access through the NVIDIA Container
+Toolkit:
+
+```bash
+docker build -t usu-llm-inference .
+docker run --rm --gpus all \
+  -e HF_TOKEN \
+  -e PROMPT="Once upon a time" \
+  -e MAX_NEW_TOKENS=50 \
+  usu-llm-inference
+```
+
+For a model that requires authentication, set `HF_TOKEN` in your host environment
+to a Hugging Face token with access to that model before running the container.
+`-e HF_TOKEN` forwards that variable. Model files are downloaded on first use;
+the image does not bundle model weights.
+
+Configure the script using environment variables:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `MODEL_ID` | `meta-llama/Llama-3.2-1B` | Hugging Face model ID or local model directory visible to the process. |
+| `PROMPT` | `Once upon a time` | Text to continue. |
+| `MAX_NEW_TOKENS` | `50` | Maximum number of generated tokens. |
+| `TEMPERATURE` | `0.7` | Sampling temperature; generation uses sampling. |
+| `PAUSE_SECONDS` | `0` | Pause after loading for inspection with `nvidia-smi`. |
+| `HF_TOKEN` | Unset | Authentication token passed to the tokenizer and model loaders. |
+
+Add `-e VARIABLE=value` before the image name to override a setting. To run
+directly in the project environment with compatible CUDA support:
+
+```bash
+uv run python -m src.gpu_inference
+```
+
+The script prints environment details, model placement, generated text, and
+allocated, reserved, and peak allocated GPU memory. A completed run prints
+`RESULT: SUCCESS`. An exit handler reports the finish time and, when CUDA was
+initialized, final memory statistics even if loading or generation failed.
+
+### ZenML Iris Pipeline
+
+[src/zenml_iris_pipeline.py](src/zenml_iris_pipeline.py) defines three connected
+ZenML steps using scikit-learn's bundled Iris dataset:
+
+1. `load_data` creates pandas features and labels, then splits the 150 examples
+   into 120 training and 30 test examples with shuffling and `random_state=42`.
+2. `train_model` fits an `SVC(gamma=0.001)` classifier on the training data.
+3. `evaluate_model` computes test accuracy, prints it to four decimal places,
+   and returns it as the `test_accuracy` output.
+
+The project dependencies include pandas, scikit-learn, and `zenml[server]`.
+After `uv sync`, initialize a ZenML repository once and run the pipeline from
+the repository root:
+
+```bash
+uv run zenml init
+uv run python -m src.zenml_iris_pipeline
+```
+
+The script submits `iris_training_pipeline` to the active ZenML stack. Local
+repository configuration is stored in `.zen/`, which is ignored by Git. This
+example uses Iris data and does not require the dialogue corpus or a GPU.
