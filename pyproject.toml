@@ -9,6 +9,7 @@ dependencies = [
     "modal>=1.5.5",
     "prek>=0.5.3",
     "truststore>=0.10.4",
+    "zenml[local,server]>=0.97.0",
 ]
 
 [dependency-groups]
