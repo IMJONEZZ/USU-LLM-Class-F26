@@ -12,6 +12,11 @@ dev = [
     "pytest-cov>=7.1.0",
     "ruff>=0.16.4",
 ]
+mlops = [
+    "scikit-learn>=1.9.1",
+    "xgboost>=3.4.1",
+    "zenml[server]>=0.97.0",
+]
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"

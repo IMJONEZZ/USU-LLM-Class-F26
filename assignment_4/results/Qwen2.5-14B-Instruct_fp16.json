@@ -1,0 +1,11 @@
+{
+  "model_id": "Qwen/Qwen2.5-14B-Instruct",
+  "precision": "fp16",
+  "gpu": "Tesla T4",
+  "gpu_total_gib": 14.57,
+  "params_billion": 14.77,
+  "estimated_gib": 27.51,
+  "status": "does not fit",
+  "error": "CUDA out of memory. Tried to allocate 136.00 MiB. GPU 0 has a total capacity of 14.57 GiB of which 9.62 MiB is free. Process 1 has 14.56 GiB memory in use. Of the allocated memory 14.45 GiB is allocated by PyTorch, and 8.26 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)",
+  "peak_allocated_gib": 14.45
+}
