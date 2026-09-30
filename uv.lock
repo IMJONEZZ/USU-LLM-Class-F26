@@ -1668,6 +1668,7 @@ dev = [
     { name = "ruff", specifier = ">=0.16.4" },
 ]
 gpu = [{ name = "modal", specifier = ">=1.6.0" }]
+mlops = []
 
 [[package]]
 name = "watchfiles"

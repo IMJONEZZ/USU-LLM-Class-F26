@@ -21,6 +21,7 @@ dev = [
 gpu = [
     "modal>=1.6.0",
 ]
+mlops = []
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"
