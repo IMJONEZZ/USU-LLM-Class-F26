@@ -18,6 +18,9 @@ dev = [
     "pytest-cov>=7.1.0",
     "ruff>=0.16.4",
 ]
+gpu = [
+    "modal>=1.6.0",
+]
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"
