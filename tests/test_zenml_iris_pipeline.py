@@ -1,6 +1,7 @@
 """Real Iris step tests and graph preparation, without a ZenML server or store."""
 
-from unittest.mock import Mock
+import runpy
+from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
@@ -66,3 +67,12 @@ def test_pipeline_connects_loading_training_and_evaluation():
     assert invocations["load_data"].upstream_steps == set()
     assert invocations["train_model"].upstream_steps == {"load_data"}
     assert invocations["evaluate_model"].upstream_steps == {"load_data", "train_model"}
+
+
+def test_running_script_launches_iris_pipeline():
+    # Exercise the __main__ entry point while intercepting service submission.
+    with patch.object(
+        type(iris.iris_training_pipeline), "__call__", autospec=True
+    ) as launch:
+        namespace = runpy.run_path(iris.__file__, run_name="__main__")
+    launch.assert_called_once_with(namespace["iris_training_pipeline"])
