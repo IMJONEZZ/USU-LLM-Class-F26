@@ -1,0 +1,14 @@
+{
+  "model_id": "Qwen/Qwen2.5-3B-Instruct",
+  "precision": "fp16",
+  "gpu": "Tesla T4",
+  "gpu_total_gib": 14.57,
+  "params_billion": 3.09,
+  "estimated_gib": 5.75,
+  "load_seconds": 32.9,
+  "status": "fits",
+  "tokens_per_second": 13.0,
+  "new_tokens": 95,
+  "sample": "GPU memory limitations affect the size of a language model because larger models require more parameters and computations, which consume more memory. Each parameter in a model needs to be stored in GPU memory, and if the total memory required exceeds the available GPU capacity, the model cannot fit into memory and must be split into smaller parts or run on multiple GPUs. Additionally, the computational complexity of training such large models increases, often necessitating more powerful hardware or specialized techniques to manage memory efficiently.",
+  "peak_allocated_gib": 5.76
+}

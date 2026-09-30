@@ -1,0 +1,14 @@
+{
+  "model_id": "Qwen/Qwen2.5-1.5B-Instruct",
+  "precision": "fp16",
+  "gpu": "Tesla T4",
+  "gpu_total_gib": 14.57,
+  "params_billion": 1.54,
+  "estimated_gib": 2.88,
+  "load_seconds": 21.3,
+  "status": "fits",
+  "tokens_per_second": 14.75,
+  "new_tokens": 94,
+  "sample": "GPU memory is limited compared to CPU memory, which constrains the amount of data that can be processed and stored within a single training or inference run for large-scale models like those used in natural language processing (NLP). This limitation affects both the capacity of individual GPUs and the total system resources available for running such models efficiently. As a result, developers must carefully manage their model sizes and architectures to ensure they fit within these constraints while still achieving high performance and accuracy.",
+  "peak_allocated_gib": 2.89
+}
