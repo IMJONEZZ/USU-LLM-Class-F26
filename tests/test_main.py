@@ -1,6 +1,72 @@
-from src.main import main
+import sys
+from unittest.mock import MagicMock, patch
+
+from src.main import BIT_WIDTHS, MODEL_CHECKPOINTS, main
 
 
-def test_main():
-    assert main([1, 2, 3, 4, 5]) == 15
-    assert main([]) == 0
+def test_main_calls_generate_for_every_model_and_bit_width_combo():
+    fake_torch = MagicMock()
+
+    with (
+        patch("src.main.generate") as mock_generate,
+        patch.dict(sys.modules, {"torch": fake_torch}),
+    ):
+        mock_generate.local.return_value = (True, 1234.0, 8.0)
+        main.local()
+
+    expected_calls = [
+        (model_name, bit_width)
+        for model_name in MODEL_CHECKPOINTS
+        for bit_width in BIT_WIDTHS
+    ]
+    actual_calls = [call.args for call in mock_generate.local.call_args_list]
+    assert actual_calls == expected_calls
+
+    assert fake_torch.cuda.empty_cache.call_count == len(expected_calls)
+
+
+def test_main_reports_no_fit_for_failed_attempts(capsys):
+    fake_torch = MagicMock()
+    failing_combo = (MODEL_CHECKPOINTS[-1], BIT_WIDTHS[-1])
+
+    def fake_local(model_name, bit_width):
+        fits = (model_name, bit_width) != failing_combo
+        peak_mib = 500.0 if fits else 14571.0
+        peak_percent = 3.3 if fits else 94.9
+        return fits, peak_mib, peak_percent
+
+    with (
+        patch("src.main.generate") as mock_generate,
+        patch.dict(sys.modules, {"torch": fake_torch}),
+    ):
+        mock_generate.local.side_effect = fake_local
+        main.local()
+
+    captured = capsys.readouterr()
+    failing_name, failing_bits = failing_combo
+    assert f"{failing_name} ({failing_bits}): NO FIT" in captured.out
+    assert "peak GPU usage: 14571 MiB (94.9%)" in captured.out
+
+
+def test_main_stops_after_first_failure():
+    fake_torch = MagicMock()
+    call_order = []
+
+    def fake_local(model_name, bit_width):
+        call_order.append((model_name, bit_width))
+        if len(call_order) == 2:
+            return False, 14571.0, 94.9
+        return True, 500.0, 3.3
+
+    with (
+        patch("src.main.MODEL_CHECKPOINTS", ["model-a", "model-b", "model-c"]),
+        patch("src.main.BIT_WIDTHS", ["16bit", "4bit"]),
+        patch("src.main.generate") as mock_generate,
+        patch.dict(sys.modules, {"torch": fake_torch}),
+    ):
+        mock_generate.local.side_effect = fake_local
+        main.local()
+
+    total_combos = 3 * 2
+    assert len(call_order) == 2
+    assert len(call_order) < total_combos
