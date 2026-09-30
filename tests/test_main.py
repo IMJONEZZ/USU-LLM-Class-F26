@@ -11,7 +11,7 @@ def test_main_calls_generate_for_every_model_and_bit_width_combo():
         patch("src.main.generate") as mock_generate,
         patch.dict(sys.modules, {"torch": fake_torch}),
     ):
-        mock_generate.local.return_value = True
+        mock_generate.local.return_value = (True, 1234.0, 8.0)
         main.local()
 
     expected_calls = [
@@ -30,7 +30,10 @@ def test_main_reports_no_fit_for_failed_attempts(capsys):
     failing_combo = (MODEL_CHECKPOINTS[-1], BIT_WIDTHS[-1])
 
     def fake_local(model_name, bit_width):
-        return (model_name, bit_width) != failing_combo
+        fits = (model_name, bit_width) != failing_combo
+        peak_mib = 500.0 if fits else 14571.0
+        peak_percent = 3.3 if fits else 94.9
+        return fits, peak_mib, peak_percent
 
     with (
         patch("src.main.generate") as mock_generate,
@@ -42,3 +45,4 @@ def test_main_reports_no_fit_for_failed_attempts(capsys):
     captured = capsys.readouterr()
     failing_name, failing_bits = failing_combo
     assert f"{failing_name} ({failing_bits}): NO FIT" in captured.out
+    assert "peak GPU usage: 14571 MiB (94.9%)" in captured.out

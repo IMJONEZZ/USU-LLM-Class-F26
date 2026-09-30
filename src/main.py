@@ -24,12 +24,15 @@ def main() -> None:
     results = {}
     for model_name in MODEL_CHECKPOINTS:
         for bit_width in BIT_WIDTHS:
-            fits = generate.local(model_name, bit_width)
-            results[(model_name, bit_width)] = fits
+            fits, peak_mib, peak_percent = generate.local(model_name, bit_width)
+            results[(model_name, bit_width)] = (fits, peak_mib, peak_percent)
 
             gc.collect()
             torch.cuda.empty_cache()
 
-    for (model_name, bit_width), fits in results.items():
+    for (model_name, bit_width), (fits, peak_mib, peak_percent) in results.items():
         status = "FIT" if fits else "NO FIT"
-        print(f"[scale-up] {model_name} ({bit_width}): {status}")
+        print(
+            f"[scale-up] {model_name} ({bit_width}): {status}, "
+            f"peak GPU usage: {peak_mib:.0f} MiB ({peak_percent:.1f}%)"
+        )

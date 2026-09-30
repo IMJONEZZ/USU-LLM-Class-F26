@@ -38,7 +38,13 @@ def test_load_model_calls_from_pretrained_and_for_inference():
     fake_unsloth = MagicMock()
     fake_unsloth.FastLanguageModel = fake_fast_language_model
 
-    with patch.dict(sys.modules, {"unsloth": fake_unsloth}):
+    fake_nvidia_smi_result = MagicMock()
+    fake_nvidia_smi_result.stdout = "512, 15360\n"
+
+    with (
+        patch.dict(sys.modules, {"unsloth": fake_unsloth}),
+        patch("src.generation.subprocess.run", return_value=fake_nvidia_smi_result),
+    ):
         model, tokenizer = load_model("unsloth/Llama-3.2-1B")
 
     fake_fast_language_model.from_pretrained.assert_called_once_with(
@@ -81,9 +87,9 @@ def test_generate_calls_expected_pipeline(capsys):
             sys.modules, {"transformers": fake_transformers, "torch": _fake_torch()}
         ),
     ):
-        result = generate.local("unsloth/Llama-3.2-1B")
+        result, peak_mib, peak_percent = generate.local("unsloth/Llama-3.2-1B")
 
-    mock_load_model.assert_called_once_with("unsloth/Llama-3.2-1B", "16bit")
+    mock_load_model.assert_called_once_with("unsloth/Llama-3.2-1B", "16bit", {})
     fake_transformers.set_seed.assert_called_once_with(42)
     fake_tokenizer.assert_called_once_with("Once upon a time", return_tensors="pt")
     fake_encoded.to.assert_called_once_with("cuda")
@@ -94,29 +100,35 @@ def test_generate_calls_expected_pipeline(capsys):
         "fake_output_row", skip_special_tokens=True
     )
     assert result is True
+    assert peak_mib == 0.0
+    assert peak_percent == 0.0
 
     captured = capsys.readouterr()
     assert "generated text" in captured.out
 
 
 def test_generate_returns_false_on_out_of_memory(capsys):
-    def raise_oom(model_name, bit_width):
+    def raise_oom(model_name, bit_width, usage_tracker):
         raise FakeOutOfMemoryError("CUDA out of memory")
 
     with (
         patch("src.generation.load_model", side_effect=raise_oom),
         patch.dict(sys.modules, {"transformers": MagicMock(), "torch": _fake_torch()}),
     ):
-        result = generate.local("unsloth/Llama-3.2-70B")
+        result, peak_mib, peak_percent = generate.local("unsloth/Llama-3.2-70B")
 
     assert result is False
+    assert peak_mib == 0.0
+    assert peak_percent == 0.0
     captured = capsys.readouterr()
     assert "unsloth/Llama-3.2-70B" in captured.out
     assert "T4" in captured.out
+    assert "peak 0 MiB / 0.0%" in captured.out
 
 
 def test_log_gpu_usage_prints_percentage(capsys):
     stop_event = threading.Event()
+    usage_tracker: dict = {}
     fake_result = MagicMock()
     fake_result.stdout = "512, 15360\n"
 
@@ -125,7 +137,9 @@ def test_log_gpu_usage_prints_percentage(capsys):
         return fake_result
 
     with patch("src.generation.subprocess.run", side_effect=fake_run) as mock_run:
-        log_gpu_usage(stop_event, interval=5.0)
+        log_gpu_usage(stop_event, usage_tracker, interval=5.0)
+
+    assert usage_tracker["peak_mib"] == 512.0
 
     mock_run.assert_called_once_with(
         [
@@ -146,7 +160,7 @@ def test_log_gpu_usage_prints_percentage(capsys):
 )
 def test_log_gpu_usage_real_gpu():
     stop_event = threading.Event()
-    monitor = threading.Thread(target=log_gpu_usage, args=(stop_event, 5.0))
+    monitor = threading.Thread(target=log_gpu_usage, args=(stop_event, {}, 5.0))
     monitor.start()
     time.sleep(11)
     stop_event.set()
