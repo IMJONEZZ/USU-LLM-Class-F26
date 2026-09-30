@@ -1,13 +1,18 @@
-from src.pipeline import data_prep, train_model
+from src.pipeline import svc_trainer, training_data_loader
 
 
-def test_data_prep_returns_placeholder_data():
-    result = data_prep.entrypoint()
+def test_training_data_loader_returns_iris_train_test_split():
+    X_train, X_test, y_train, y_test = training_data_loader.entrypoint()
 
-    assert result == [1.0, 2.0, 3.0]
+    assert len(X_train) + len(X_test) == 150
+    assert len(X_train) == len(y_train)
+    assert len(X_test) == len(y_test)
 
 
-def test_train_model_returns_mean_of_data():
-    result = train_model.entrypoint([2.0, 4.0, 6.0])
+def test_svc_trainer_returns_fitted_model_and_accuracy():
+    X_train, X_test, y_train, _y_test = training_data_loader.entrypoint()
 
-    assert result == 4.0
+    model, train_acc = svc_trainer.entrypoint(X_train, y_train)
+
+    assert 0.0 <= train_acc <= 1.0
+    assert model.predict(X_test.to_numpy()) is not None
