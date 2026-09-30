@@ -8,7 +8,7 @@ MODEL_CHECKPOINTS = [
     "unsloth/Meta-Llama-3.1-8B",
     "unsloth/Meta-Llama-3.1-70B",
 ]
-BIT_WIDTHS = ["16bit", "4bit"]
+BIT_WIDTHS = ["4bit", "16bit"]
 
 
 @app.function(

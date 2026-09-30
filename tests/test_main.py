@@ -59,12 +59,14 @@ def test_main_stops_after_first_failure():
         return True, 500.0, 3.3
 
     with (
+        patch("src.main.MODEL_CHECKPOINTS", ["model-a", "model-b", "model-c"]),
+        patch("src.main.BIT_WIDTHS", ["16bit", "4bit"]),
         patch("src.main.generate") as mock_generate,
         patch.dict(sys.modules, {"torch": fake_torch}),
     ):
         mock_generate.local.side_effect = fake_local
         main.local()
 
-    total_combos = len(MODEL_CHECKPOINTS) * len(BIT_WIDTHS)
+    total_combos = 3 * 2
     assert len(call_order) == 2
     assert len(call_order) < total_combos
