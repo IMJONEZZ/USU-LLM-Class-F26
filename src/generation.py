@@ -43,7 +43,16 @@ def log_gpu_usage(stop_event: threading.Event, interval: float = 5.0) -> None:
         stop_event.wait(interval)
 
 
-def load_model(model_name: str = "unsloth/Llama-3.2-1B"):
+def load_model(model_name: str, bit_width: str = "16bit"):
+    if bit_width == "16bit":
+        load_in_16bit, load_in_4bit = True, False
+    elif bit_width == "4bit":
+        load_in_16bit, load_in_4bit = False, True
+    else:
+        raise ValueError(
+            f"Unsupported bit_width: {bit_width!r}. Use '16bit' or '4bit'."
+        )
+
     warnings.filterwarnings("ignore", message=".*inline_inbuilt_nn_modules.*")
 
     from unsloth import FastLanguageModel
@@ -53,7 +62,9 @@ def load_model(model_name: str = "unsloth/Llama-3.2-1B"):
     monitor.start()
     try:
         model, tokenizer = FastLanguageModel.from_pretrained(
-            model_name=model_name, load_in_16bit=True, load_in_4bit=False
+            model_name=model_name,
+            load_in_16bit=load_in_16bit,
+            load_in_4bit=load_in_4bit,
         )
         FastLanguageModel.for_inference(model)
         model.generation_config.max_length = None
@@ -69,11 +80,11 @@ def load_model(model_name: str = "unsloth/Llama-3.2-1B"):
     image=build_image(),
     secrets=[modal.Secret.from_name("huggingface-secret")],
 )
-def generate(model_name: str) -> bool:
+def generate(model_name: str, bit_width: str = "16bit") -> bool:
     import torch
 
     try:
-        model, tokenizer = load_model(model_name)
+        model, tokenizer = load_model(model_name, bit_width)
 
         from transformers import set_seed
 
@@ -86,14 +97,14 @@ def generate(model_name: str) -> bool:
         return True
     except torch.cuda.OutOfMemoryError:
         print(
-            f"[fit check] FAILED: {model_name} does not fit on {GPU_TYPE} (out of memory)"
+            f"[fit check] FAILED: {model_name} ({bit_width}) does not fit on {GPU_TYPE} (out of memory)"
         )
         return False
 
 
 @app.local_entrypoint()
 def main() -> None:
-    generate.remote("unsloth/Llama-3.2-1B")
+    generate.remote(model_name="unsloth/Llama-3.2-1B", bit_width="4bit")
 
 
 @app.function(gpu=GPU_TYPE, image=build_test_image())

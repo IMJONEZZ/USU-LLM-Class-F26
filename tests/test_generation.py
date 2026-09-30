@@ -39,7 +39,7 @@ def test_load_model_calls_from_pretrained_and_for_inference():
     fake_unsloth.FastLanguageModel = fake_fast_language_model
 
     with patch.dict(sys.modules, {"unsloth": fake_unsloth}):
-        model, tokenizer = load_model()
+        model, tokenizer = load_model("unsloth/Llama-3.2-1B")
 
     fake_fast_language_model.from_pretrained.assert_called_once_with(
         model_name="unsloth/Llama-3.2-1B", load_in_16bit=True, load_in_4bit=False
@@ -83,7 +83,7 @@ def test_generate_calls_expected_pipeline(capsys):
     ):
         result = generate.local("unsloth/Llama-3.2-1B")
 
-    mock_load_model.assert_called_once_with("unsloth/Llama-3.2-1B")
+    mock_load_model.assert_called_once_with("unsloth/Llama-3.2-1B", "16bit")
     fake_transformers.set_seed.assert_called_once_with(42)
     fake_tokenizer.assert_called_once_with("Once upon a time", return_tensors="pt")
     fake_encoded.to.assert_called_once_with("cuda")
@@ -100,7 +100,7 @@ def test_generate_calls_expected_pipeline(capsys):
 
 
 def test_generate_returns_false_on_out_of_memory(capsys):
-    def raise_oom(model_name):
+    def raise_oom(model_name, bit_width):
         raise FakeOutOfMemoryError("CUDA out of memory")
 
     with (
