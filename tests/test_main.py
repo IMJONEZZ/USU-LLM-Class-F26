@@ -46,3 +46,25 @@ def test_main_reports_no_fit_for_failed_attempts(capsys):
     failing_name, failing_bits = failing_combo
     assert f"{failing_name} ({failing_bits}): NO FIT" in captured.out
     assert "peak GPU usage: 14571 MiB (94.9%)" in captured.out
+
+
+def test_main_stops_after_first_failure():
+    fake_torch = MagicMock()
+    call_order = []
+
+    def fake_local(model_name, bit_width):
+        call_order.append((model_name, bit_width))
+        if len(call_order) == 2:
+            return False, 14571.0, 94.9
+        return True, 500.0, 3.3
+
+    with (
+        patch("src.main.generate") as mock_generate,
+        patch.dict(sys.modules, {"torch": fake_torch}),
+    ):
+        mock_generate.local.side_effect = fake_local
+        main.local()
+
+    total_combos = len(MODEL_CHECKPOINTS) * len(BIT_WIDTHS)
+    assert len(call_order) == 2
+    assert len(call_order) < total_combos

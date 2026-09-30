@@ -6,6 +6,7 @@ MODEL_CHECKPOINTS = [
     "unsloth/Llama-3.2-1B",
     "unsloth/Llama-3.2-3B",
     "unsloth/Meta-Llama-3.1-8B",
+    "unsloth/Meta-Llama-3.1-70B",
 ]
 BIT_WIDTHS = ["16bit", "4bit"]
 
@@ -29,6 +30,12 @@ def main() -> None:
 
             gc.collect()
             torch.cuda.empty_cache()
+
+            if not fits:
+                break
+        else:
+            continue
+        break
 
     for (model_name, bit_width), (fits, peak_mib, peak_percent) in results.items():
         status = "FIT" if fits else "NO FIT"

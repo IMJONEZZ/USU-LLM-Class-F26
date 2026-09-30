@@ -48,7 +48,10 @@ def test_load_model_calls_from_pretrained_and_for_inference():
         model, tokenizer = load_model("unsloth/Llama-3.2-1B")
 
     fake_fast_language_model.from_pretrained.assert_called_once_with(
-        model_name="unsloth/Llama-3.2-1B", load_in_16bit=True, load_in_4bit=False
+        model_name="unsloth/Llama-3.2-1B",
+        load_in_16bit=True,
+        load_in_4bit=False,
+        device_map={"": 0},
     )
 
     fake_fast_language_model.for_inference.assert_called_once_with(fake_model)

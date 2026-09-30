@@ -75,6 +75,7 @@ def load_model(
             model_name=model_name,
             load_in_16bit=load_in_16bit,
             load_in_4bit=load_in_4bit,
+            device_map={"": 0},
         )
         FastLanguageModel.for_inference(model)
         model.generation_config.max_length = None
