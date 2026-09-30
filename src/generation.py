@@ -1,5 +1,6 @@
 import subprocess
 import threading
+import warnings
 
 import modal
 from modal import FilePatternMatcher
@@ -42,6 +43,8 @@ def log_gpu_usage(stop_event: threading.Event, interval: float = 5.0) -> None:
 
 
 def load_model(model_name: str = "unsloth/Llama-3.2-1B"):
+    warnings.filterwarnings("ignore", message=".*inline_inbuilt_nn_modules.*")
+
     from unsloth import FastLanguageModel
 
     stop_event = threading.Event()
@@ -52,6 +55,7 @@ def load_model(model_name: str = "unsloth/Llama-3.2-1B"):
             model_name=model_name, load_in_16bit=True, load_in_4bit=False
         )
         FastLanguageModel.for_inference(model)
+        model.generation_config.max_length = None
     finally:
         stop_event.set()
         monitor.join()
@@ -59,11 +63,15 @@ def load_model(model_name: str = "unsloth/Llama-3.2-1B"):
     return model, tokenizer
 
 
-@app.function(gpu="T4", image=build_image())
+@app.function(
+    gpu="T4",
+    image=build_image(),
+    secrets=[modal.Secret.from_name("huggingface-secret")],
+)
 def generate() -> None:
-    from transformers import set_seed
 
     model, tokenizer = load_model()
+    from transformers import set_seed
 
     set_seed(42)
     inputs = tokenizer("Once upon a time", return_tensors="pt").to("cuda")
