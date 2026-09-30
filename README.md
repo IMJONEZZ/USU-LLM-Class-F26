@@ -55,4 +55,5 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - Assignment 0 — basic tokenizer (`src/tokenizer.py`)
 - Assignment 1 — byte-level BPE tokenizer (`src/bpe_tokenizer.py`)
 - Assignment 2 — PyTorch data loader (`src/dataloader.py`)
-- Assignment 3 — model evaluator (in progress)
+- Assignment 3 — model evaluator (`src/evaluator.py`)
+- Assignment 4 — GPU inference and a ZenML pipeline (in progress)
