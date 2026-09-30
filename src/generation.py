@@ -6,6 +6,7 @@ import modal
 from modal import FilePatternMatcher
 
 app = modal.App("my_apps_name")
+GPU_TYPE = "T4"
 
 
 def build_image() -> modal.Image:
@@ -64,27 +65,38 @@ def load_model(model_name: str = "unsloth/Llama-3.2-1B"):
 
 
 @app.function(
-    gpu="T4",
+    gpu=GPU_TYPE,
     image=build_image(),
     secrets=[modal.Secret.from_name("huggingface-secret")],
 )
-def generate() -> None:
+def generate(model_name: str) -> bool:
+    import torch
 
-    model, tokenizer = load_model()
-    from transformers import set_seed
+    try:
+        model, tokenizer = load_model(model_name)
 
-    set_seed(42)
-    inputs = tokenizer("Once upon a time", return_tensors="pt").to("cuda")
-    output = model.generate(**inputs, temperature=1, do_sample=True, max_new_tokens=50)
-    print(tokenizer.decode(output[0], skip_special_tokens=True))
+        from transformers import set_seed
+
+        set_seed(42)
+        inputs = tokenizer("Once upon a time", return_tensors="pt").to("cuda")
+        output = model.generate(
+            **inputs, temperature=1, do_sample=True, max_new_tokens=50
+        )
+        print(tokenizer.decode(output[0], skip_special_tokens=True))
+        return True
+    except torch.cuda.OutOfMemoryError:
+        print(
+            f"[fit check] FAILED: {model_name} does not fit on {GPU_TYPE} (out of memory)"
+        )
+        return False
 
 
 @app.local_entrypoint()
 def main() -> None:
-    generate.remote()
+    generate.remote("unsloth/Llama-3.2-1B")
 
 
-@app.function(gpu="T4", image=build_test_image())
+@app.function(gpu=GPU_TYPE, image=build_test_image())
 def run_tests() -> None:
     import subprocess
 

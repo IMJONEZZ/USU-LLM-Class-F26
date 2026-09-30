@@ -50,6 +50,16 @@ def test_load_model_calls_from_pretrained_and_for_inference():
     assert tokenizer is fake_tokenizer
 
 
+class FakeOutOfMemoryError(Exception):
+    pass
+
+
+def _fake_torch() -> MagicMock:
+    fake_torch = MagicMock()
+    fake_torch.cuda.OutOfMemoryError = FakeOutOfMemoryError
+    return fake_torch
+
+
 def test_generate_calls_expected_pipeline(capsys):
     fake_encoded = MagicMock()
     fake_encoded.to.return_value = {"input_ids": "fake_ids"}
@@ -64,11 +74,16 @@ def test_generate_calls_expected_pipeline(capsys):
     fake_transformers = MagicMock()
 
     with (
-        patch("src.generation.load_model", return_value=(fake_model, fake_tokenizer)),
-        patch.dict(sys.modules, {"transformers": fake_transformers}),
+        patch(
+            "src.generation.load_model", return_value=(fake_model, fake_tokenizer)
+        ) as mock_load_model,
+        patch.dict(
+            sys.modules, {"transformers": fake_transformers, "torch": _fake_torch()}
+        ),
     ):
-        generate.local()
+        result = generate.local("unsloth/Llama-3.2-1B")
 
+    mock_load_model.assert_called_once_with("unsloth/Llama-3.2-1B")
     fake_transformers.set_seed.assert_called_once_with(42)
     fake_tokenizer.assert_called_once_with("Once upon a time", return_tensors="pt")
     fake_encoded.to.assert_called_once_with("cuda")
@@ -78,9 +93,26 @@ def test_generate_calls_expected_pipeline(capsys):
     fake_tokenizer.decode.assert_called_once_with(
         "fake_output_row", skip_special_tokens=True
     )
+    assert result is True
 
     captured = capsys.readouterr()
     assert "generated text" in captured.out
+
+
+def test_generate_returns_false_on_out_of_memory(capsys):
+    def raise_oom(model_name):
+        raise FakeOutOfMemoryError("CUDA out of memory")
+
+    with (
+        patch("src.generation.load_model", side_effect=raise_oom),
+        patch.dict(sys.modules, {"transformers": MagicMock(), "torch": _fake_torch()}),
+    ):
+        result = generate.local("unsloth/Llama-3.2-70B")
+
+    assert result is False
+    captured = capsys.readouterr()
+    assert "unsloth/Llama-3.2-70B" in captured.out
+    assert "T4" in captured.out
 
 
 def test_log_gpu_usage_prints_percentage(capsys):
