@@ -17,6 +17,7 @@ from typing import Any
 
 NEGATIVE_LABEL = 0
 POSITIVE_LABEL = 1
+INVALID_LABEL = -1
 LABEL_NAMES = {NEGATIVE_LABEL: "negative", POSITIVE_LABEL: "positive"}
 
 MODEL_ID = "gokuls/bert-base-uncased-sst2"
@@ -25,8 +26,33 @@ DATASET_ID = "nyu-mll/glue"
 DATASET_CONFIG = "sst2"
 DATASET_REVISION = "bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c"
 EXPECTED_VALIDATION_SIZE = 872
+SENTIMENT_SYSTEM_PROMPT = (
+    "Classify the sentiment of the movie review. Reply with exactly one label: "
+    "positive or negative."
+)
 
-Predictor = Callable[[Sequence[str]], Sequence[int]]
+Prediction = int | None
+Predictor = Callable[[Sequence[str]], Sequence[Prediction]]
+
+
+def sentiment_messages(text: str) -> list[dict[str, str]]:
+    """Build the shared chat prompt used for training and evaluation."""
+
+    return [
+        {"role": "system", "content": SENTIMENT_SYSTEM_PROMPT},
+        {"role": "user", "content": text},
+    ]
+
+
+def parse_sentiment_label(generated_text: str) -> Prediction:
+    """Apply the strict generated-label rule from the action plan."""
+
+    normalized = generated_text.strip().casefold()
+    if normalized == LABEL_NAMES[NEGATIVE_LABEL]:
+        return NEGATIVE_LABEL
+    if normalized == LABEL_NAMES[POSITIVE_LABEL]:
+        return POSITIVE_LABEL
+    return None
 
 
 @dataclass(frozen=True)
@@ -47,7 +73,9 @@ class EvaluationResult:
     accuracy: float
     macro_f1: float
     per_class: dict[str, ClassMetrics]
-    confusion_matrix: tuple[tuple[int, int], tuple[int, int]]
+    confusion_matrix: tuple[tuple[int, int, int], tuple[int, int, int]]
+    invalid_prediction_count: int
+    invalid_prediction_rate: float
     majority_class_baseline: float
     accuracy_confidence_interval_95: tuple[float, float]
     accuracy_threshold_met: bool
@@ -67,6 +95,21 @@ def _validate_binary_labels(values: Sequence[int], name: str) -> tuple[int, ...]
     invalid = sorted(set(converted) - set(LABEL_NAMES))
     if invalid:
         raise ValueError(f"{name} must contain only 0 and 1; found {invalid}")
+    return converted
+
+
+def _validate_predictions(values: Sequence[Prediction]) -> tuple[int, ...]:
+    """Normalize missing predictions and enforce the three-value contract."""
+
+    converted = tuple(
+        INVALID_LABEL if value is None else int(value) for value in values
+    )
+    allowed = {NEGATIVE_LABEL, POSITIVE_LABEL, INVALID_LABEL}
+    invalid = sorted(set(converted) - allowed)
+    if invalid:
+        raise ValueError(
+            f"predictions must contain only 0, 1, or an invalid value; found {invalid}"
+        )
     return converted
 
 
@@ -128,7 +171,7 @@ def bootstrap_accuracy_interval(
 
 def calculate_metrics(
     labels: Sequence[int],
-    predictions: Sequence[int],
+    predictions: Sequence[Prediction],
     *,
     confidence: float = 0.95,
     n_resamples: int = 10_000,
@@ -138,15 +181,16 @@ def calculate_metrics(
     """Calculate deterministic binary-classification metrics and quality checks."""
 
     labels = _validate_binary_labels(labels, "labels")
-    predictions = _validate_binary_labels(predictions, "predictions")
+    predictions = _validate_predictions(predictions)
     if not labels:
         raise ValueError("labels cannot be empty")
     if len(labels) != len(predictions):
         raise ValueError("labels and predictions must have the same length")
 
-    confusion = [[0, 0], [0, 0]]
+    confusion = [[0, 0, 0], [0, 0, 0]]
     for expected, predicted in zip(labels, predictions, strict=True):
-        confusion[expected][predicted] += 1
+        column = 2 if predicted == INVALID_LABEL else predicted
+        confusion[expected][column] += 1
 
     per_class: dict[str, ClassMetrics] = {}
     class_f1_scores = []
@@ -164,6 +208,7 @@ def calculate_metrics(
     accuracy = (confusion[0][0] + confusion[1][1]) / example_count
     macro_f1 = sum(class_f1_scores) / len(class_f1_scores)
     majority_class_baseline = max(map(sum, confusion)) / example_count
+    invalid_prediction_count = confusion[0][2] + confusion[1][2]
     confidence_interval = bootstrap_accuracy_interval(
         labels,
         predictions,
@@ -180,9 +225,11 @@ def calculate_metrics(
         macro_f1=macro_f1,
         per_class=per_class,
         confusion_matrix=(
-            (confusion[0][0], confusion[0][1]),
-            (confusion[1][0], confusion[1][1]),
+            (confusion[0][0], confusion[0][1], confusion[0][2]),
+            (confusion[1][0], confusion[1][1], confusion[1][2]),
         ),
+        invalid_prediction_count=invalid_prediction_count,
+        invalid_prediction_rate=invalid_prediction_count / example_count,
         majority_class_baseline=majority_class_baseline,
         accuracy_confidence_interval_95=confidence_interval,
         accuracy_threshold_met=accuracy_threshold_met,
@@ -293,6 +340,63 @@ class BertSST2Predictor:
             with self.torch.inference_mode():
                 logits = self.model(**encoded).logits
             predictions.extend(logits.argmax(dim=-1).cpu().tolist())
+        return predictions
+
+
+class LlamaSST2Predictor:
+    """Deterministic generated-label predictor for a loaded causal Llama model."""
+
+    def __init__(
+        self,
+        model: Any,
+        tokenizer: Any,
+        torch_module: Any,
+        *,
+        batch_size: int = 16,
+        max_new_tokens: int = 3,
+    ) -> None:
+        if batch_size < 1:
+            raise ValueError("batch_size must be positive")
+        if max_new_tokens < 1:
+            raise ValueError("max_new_tokens must be positive")
+        self.model = model
+        self.tokenizer = tokenizer
+        self.torch = torch_module
+        self.batch_size = batch_size
+        self.max_new_tokens = max_new_tokens
+        self.tokenizer.padding_side = "left"
+        if self.tokenizer.pad_token_id is None:
+            self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
+
+    def __call__(self, texts: Sequence[str]) -> list[Prediction]:
+        predictions: list[Prediction] = []
+        for start in range(0, len(texts), self.batch_size):
+            batch = texts[start : start + self.batch_size]
+            conversations = [sentiment_messages(text) for text in batch]
+            encoded = self.tokenizer.apply_chat_template(
+                conversations,
+                add_generation_prompt=True,
+                tokenize=True,
+                padding=True,
+                return_tensors="pt",
+                return_dict=True,
+            )
+            encoded = {
+                name: tensor.to(self.model.device) for name, tensor in encoded.items()
+            }
+            prompt_length = encoded["input_ids"].shape[1]
+            with self.torch.inference_mode():
+                generated = self.model.generate(
+                    **encoded,
+                    do_sample=False,
+                    max_new_tokens=self.max_new_tokens,
+                    pad_token_id=self.tokenizer.pad_token_id,
+                )
+            completions = self.tokenizer.batch_decode(
+                generated[:, prompt_length:],
+                skip_special_tokens=True,
+            )
+            predictions.extend(parse_sentiment_label(text) for text in completions)
         return predictions
 
 

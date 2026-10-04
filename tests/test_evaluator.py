@@ -1,13 +1,62 @@
+from contextlib import nullcontext
+
 import pytest
 
 from src.evaluator import (
+    INVALID_LABEL,
     NEGATIVE_LABEL,
     POSITIVE_LABEL,
     Evaluator,
+    LlamaSST2Predictor,
     bootstrap_accuracy_interval,
     calculate_metrics,
+    parse_sentiment_label,
+    sentiment_messages,
     validate_id2label,
 )
+
+
+class FakeTensor:
+    def __init__(self, *, width=None):
+        self.shape = (2, width) if width is not None else None
+        self.device = None
+
+    def to(self, device):
+        self.device = device
+        return self
+
+    def __getitem__(self, key):
+        return key
+
+
+class FakeLlamaTokenizer:
+    eos_token_id = 128009
+
+    def __init__(self):
+        self.padding_side = "right"
+        self.pad_token_id = None
+        self.conversations = None
+
+    def apply_chat_template(self, conversations, **kwargs):
+        self.conversations = conversations
+        self.template_kwargs = kwargs
+        return {
+            "input_ids": FakeTensor(width=5),
+            "attention_mask": FakeTensor(width=5),
+        }
+
+    def batch_decode(self, generated, **kwargs):
+        self.decoded_slice = generated
+        self.decode_kwargs = kwargs
+        return ["positive", "extra explanation"]
+
+
+class FakeLlamaModel:
+    device = "cuda:0"
+
+    def generate(self, **kwargs):
+        self.generate_kwargs = kwargs
+        return FakeTensor()
 
 
 def test_evaluator_uses_injected_predictor():
@@ -29,7 +78,7 @@ def test_evaluator_uses_injected_predictor():
 
 
 def test_metrics_match_controlled_confusion_matrix():
-    # Rows are true labels and columns are predictions: [[2, 1], [1, 2]].
+    # Rows are true labels; columns are negative, positive, and invalid.
     result = calculate_metrics(
         labels=[0, 0, 0, 1, 1, 1],
         predictions=[0, 0, 1, 0, 1, 1],
@@ -37,7 +86,9 @@ def test_metrics_match_controlled_confusion_matrix():
     )
 
     assert result.example_count == 6
-    assert result.confusion_matrix == ((2, 1), (1, 2))
+    assert result.confusion_matrix == ((2, 1, 0), (1, 2, 0))
+    assert result.invalid_prediction_count == 0
+    assert result.invalid_prediction_rate == 0.0
     assert result.accuracy == pytest.approx(2 / 3)
     assert result.macro_f1 == pytest.approx(2 / 3)
     assert result.per_class["negative"].precision == pytest.approx(2 / 3)
@@ -94,7 +145,7 @@ def test_bootstrap_interval_is_seeded_and_contains_observed_accuracy():
         ([], [], "labels cannot be empty"),
         ([0], [0, 1], "same length"),
         ([0, 2], [0, 1], "labels must contain only 0 and 1"),
-        ([0, 1], [0, -1], "predictions must contain only 0 and 1"),
+        ([0, 1], [0, 2], "predictions must contain only 0, 1, or an invalid value"),
     ],
 )
 def test_invalid_metric_inputs_raise(labels, predictions, message):
@@ -144,4 +195,84 @@ def test_result_converts_to_nested_dictionary():
     converted = result.to_dict()
 
     assert converted["per_class"]["positive"]["recall"] == 1.0
-    assert converted["confusion_matrix"] == ((1, 0), (0, 1))
+    assert converted["confusion_matrix"] == ((1, 0, 0), (0, 1, 0))
+
+
+def test_invalid_predictions_are_counted_as_incorrect():
+    result = calculate_metrics(
+        [0, 1, 1],
+        [INVALID_LABEL, None, 1],
+        n_resamples=100,
+    )
+
+    assert result.accuracy == pytest.approx(1 / 3)
+    assert result.invalid_prediction_count == 2
+    assert result.invalid_prediction_rate == pytest.approx(2 / 3)
+    assert result.confusion_matrix == ((0, 0, 1), (0, 1, 1))
+    assert result.per_class["negative"].recall == 0.0
+    assert result.per_class["positive"].recall == 0.5
+
+
+@pytest.mark.parametrize(
+    ("generated", "expected"),
+    [
+        ("positive", POSITIVE_LABEL),
+        ("  NEGATIVE\n", NEGATIVE_LABEL),
+        ("This review is positive.", None),
+        ("positive.", None),
+        ("", None),
+    ],
+)
+def test_strict_generated_label_parser(generated, expected):
+    assert parse_sentiment_label(generated) is expected
+
+
+def test_sentiment_messages_use_one_shared_output_contract():
+    messages = sentiment_messages("A lovely movie.")
+
+    assert messages[-1] == {"role": "user", "content": "A lovely movie."}
+    assert "exactly one label" in messages[0]["content"]
+    assert "positive or negative" in messages[0]["content"]
+
+
+def test_llama_predictor_uses_chat_template_and_decodes_only_new_tokens():
+    model = FakeLlamaModel()
+    tokenizer = FakeLlamaTokenizer()
+    predictor = LlamaSST2Predictor(
+        model,
+        tokenizer,
+        type("FakeTorch", (), {"inference_mode": nullcontext}),
+        batch_size=2,
+        max_new_tokens=3,
+    )
+
+    predictions = predictor(["great", "unclear"])
+
+    assert predictions == [POSITIVE_LABEL, None]
+    assert tokenizer.padding_side == "left"
+    assert tokenizer.pad_token_id == tokenizer.eos_token_id
+    assert tokenizer.conversations[0][-1]["content"] == "great"
+    assert tokenizer.template_kwargs == {
+        "add_generation_prompt": True,
+        "tokenize": True,
+        "padding": True,
+        "return_tensors": "pt",
+        "return_dict": True,
+    }
+    assert model.generate_kwargs["do_sample"] is False
+    assert model.generate_kwargs["max_new_tokens"] == 3
+    assert tokenizer.decoded_slice == (slice(None), slice(5, None))
+    assert tokenizer.decode_kwargs == {"skip_special_tokens": True}
+
+
+@pytest.mark.parametrize("argument", ["batch_size", "max_new_tokens"])
+def test_llama_predictor_rejects_nonpositive_settings(argument):
+    kwargs = {argument: 0}
+
+    with pytest.raises(ValueError, match="positive"):
+        LlamaSST2Predictor(
+            FakeLlamaModel(),
+            FakeLlamaTokenizer(),
+            type("FakeTorch", (), {"inference_mode": nullcontext}),
+            **kwargs,
+        )
