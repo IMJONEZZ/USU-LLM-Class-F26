@@ -92,6 +92,12 @@ def _write_json(name: str, value: dict[str, Any]) -> None:
     artifacts.commit()
 
 
+def _json_safe(value: dict[str, Any]) -> dict[str, Any]:
+    """Remove library-specific scalar subclasses before Modal serializes output."""
+
+    return json.loads(json.dumps(value))
+
+
 @app.function(
     image=gpu_image,
     gpu="T4",
@@ -127,7 +133,7 @@ def smoke() -> dict[str, Any]:
     }
     _show_gpu()
     _write_json("smoke/summary.json", payload)
-    return payload
+    return _json_safe(payload)
 
 
 @app.function(
@@ -176,7 +182,7 @@ def evaluate(checkpoint: str = "base") -> dict[str, Any]:
     _show_gpu()
     _write_json(f"evaluation_{checkpoint}.json", payload)
     print(json.dumps(payload, indent=2, sort_keys=True))
-    return payload
+    return _json_safe(payload)
 
 
 @app.function(
@@ -210,7 +216,7 @@ def train(pilot: bool = True) -> dict[str, Any]:
     _show_gpu()
     _write_json(f"{run_name}/summary.json", payload)
     print(json.dumps(payload, indent=2, sort_keys=True))
-    return payload
+    return _json_safe(payload)
 
 
 @app.local_entrypoint()

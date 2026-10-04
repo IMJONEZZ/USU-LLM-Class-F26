@@ -337,6 +337,7 @@ def test_train_sst2_orchestrates_pilot_without_leakage(tmp_path):
         sft_config=fake_config,
         sft_trainer=fake_trainer,
         torch=SimpleNamespace(cuda=FakeCuda(), inference_mode=nullcontext),
+        train_runner=lambda selected_trainer: selected_trainer.train(),
     )
     config = TrainingConfig(
         pilot_size=10,

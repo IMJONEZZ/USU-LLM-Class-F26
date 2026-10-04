@@ -107,6 +107,7 @@ class TrainingStack:
     sft_config: Any
     sft_trainer: Any
     torch: Any
+    train_runner: Callable[[Any], Any]
 
 
 @dataclass(frozen=True)
@@ -233,7 +234,7 @@ def load_training_stack() -> TrainingStack:
     from datasets import Dataset, load_dataset
     from transformers import TrainerCallback
     from trl import SFTConfig, SFTTrainer
-    from unsloth import FastLanguageModel
+    from unsloth import FastLanguageModel, unsloth_train
 
     class EvaluateAtEpochEnd(TrainerCallback):
         """Request evaluation and a checkpoint at every epoch boundary."""
@@ -253,6 +254,7 @@ def load_training_stack() -> TrainingStack:
         sft_config=SFTConfig,
         sft_trainer=SFTTrainer,
         torch=torch,
+        train_runner=unsloth_train,
     )
 
 
@@ -359,6 +361,7 @@ def run_training(
     training_examples: int,
     development_examples: int,
     torch_module: Any,
+    train_runner: Callable[[Any], Any] | None = None,
     clock: Callable[[], float] = time.perf_counter,
 ) -> TrainingResult:
     """Run training while collecting wall-time, loss, and peak-VRAM evidence."""
@@ -366,7 +369,7 @@ def run_training(
     torch_module.cuda.reset_peak_memory_stats()
     torch_module.cuda.synchronize()
     started = clock()
-    trainer_output = trainer.train()
+    trainer_output = trainer.train() if train_runner is None else train_runner(trainer)
     torch_module.cuda.synchronize()
     wall_time = clock() - started
 
@@ -460,6 +463,7 @@ def train_sst2(
         training_examples=len(training),
         development_examples=len(development),
         torch_module=stack.torch,
+        train_runner=stack.train_runner,
     )
     write_result(result, config.result_path)
     return result
