@@ -22,8 +22,9 @@ MODEL_CACHE_PATH = "/model_cache"
 
 app = modal.App(APP_NAME)
 
-# These versions mirror Modal's documented Unsloth example.  The repository's
-# Python 3.14 CI environment intentionally does not install this GPU-only stack.
+# This current Unsloth stack supports TRL prompt/completion datasets.  The older
+# stack in Modal's example requires a formatting function and cannot preserve
+# completion-only loss for this dataset.  Python 3.14 CI remains GPU-free.
 gpu_image = (
     modal.Image.debian_slim(python_version="3.11")
     .uv_pip_install(
@@ -31,11 +32,11 @@ gpu_image = (
         "datasets==3.6.0",
         "hf-transfer==0.1.9",
         "huggingface_hub==0.34.2",
-        "peft==0.16.0",
-        "transformers==4.54.0",
-        "trl==0.19.1",
-        "unsloth[cu128-torch270]==2025.7.8",
-        "unsloth_zoo==2025.7.10",
+        "peft==0.18.0",
+        "transformers==4.56.2",
+        "trl==0.24.0",
+        "unsloth[cu128-torch270]==2026.9.14",
+        "unsloth_zoo==2026.9.9",
     )
     .env(
         {
