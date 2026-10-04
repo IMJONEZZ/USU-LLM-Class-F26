@@ -67,6 +67,7 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - A2 - Data Loader (done)
 - A3 - Evaluators (done)
 - A4 - MLOps (done)
+- A5 - Training a Model (In Progress)
 
 ## Additional Usage
 
