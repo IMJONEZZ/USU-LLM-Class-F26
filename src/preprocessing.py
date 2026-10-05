@@ -1,6 +1,9 @@
 import re
-import string
 import unicodedata
+
+import pandas as pd
+
+from src.config import N_RESUMES, SEED
 
 NON_ASCII_MAP = {
     "\xa0": " ",
@@ -30,9 +33,6 @@ NON_ASCII_MAP = {
     "\u274f": "-",
     "\uf0a7": "-",
 }
-ALLOWED_CHARS = set(
-    string.ascii_letters + string.digits + string.whitespace + string.punctuation
-)
 
 URL_PATTERN = re.compile(r"https?://\S+|www\.\S+", re.IGNORECASE)
 EMAIL_PATTERN = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
@@ -56,21 +56,30 @@ def redact_pii(text):
     return PHONE_PATTERN.sub("[PHONE]", text)
 
 
-def garbage_ratio(text):
-    normalized = normalize_text(text)
-    if not normalized:
-        return 0.0
-    return sum(ch not in ALLOWED_CHARS for ch in normalized) / len(normalized)
-
-
-def whitespace_ratio(text):
-    normalized = normalize_text(text)
-    if not normalized:
-        return 0.0
-    return sum(ch.isspace() for ch in normalized) / len(normalized)
-
-
 def clean_resume(text):
     normalized = normalize_text(text)
     without_links = strip_links_and_handles(normalized)
     return redact_pii(without_links).strip()
+
+
+def allocate_proportional_quotas(available_per_category, n_total):
+    exact_quotas = available_per_category / available_per_category.sum() * n_total
+    quotas = exact_quotas.astype(int)
+    shortfall = n_total - quotas.sum()
+    largest_remainders = (exact_quotas - quotas).sort_values(
+        ascending=False, kind="stable"
+    )
+    quotas.loc[largest_remainders.index[:shortfall]] += 1
+    return quotas
+
+
+def sample_stratified(resumes, n_total=N_RESUMES, seed=SEED):
+    shuffled_resumes = resumes.sample(frac=1, random_state=seed)
+    quotas = allocate_proportional_quotas(
+        shuffled_resumes["Category"].value_counts(), n_total
+    )
+    sampled_by_category = [
+        shuffled_resumes[shuffled_resumes["Category"] == category].head(quota)
+        for category, quota in quotas.items()
+    ]
+    return pd.concat(sampled_by_category)
