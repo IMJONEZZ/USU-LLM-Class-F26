@@ -9,7 +9,15 @@ hf_cache = modal.Volume.from_name("hf-cache", create_if_missing=True)
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .uv_pip_install(
-        "unsloth", "datasets", "pandas==3.0.6", "sentence-transformers", "tqdm"
+        "torch==2.12.1",
+        "torchao==0.18.0",
+        "unsloth==2026.9.14",
+        "transformers==5.5.0",
+        "sentence-transformers==6.1.0",
+        "datasets==4.3.0",
+        "pandas==3.0.6",
+        "numpy==2.4.6",
+        "tqdm",
     )
     .env({"HF_HOME": "/hf_cache"})
     .add_local_dir("src", remote_path="/root/src")
