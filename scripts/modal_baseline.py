@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import modal
 
 app = modal.App("resume-baseline-eval")
@@ -14,25 +17,47 @@ image = (
 
 
 @app.function(gpu="T4", image=image, volumes={"/hf_cache": hf_cache}, timeout=3600)
-def run_baseline(model_name, n, batch_size, max_seq_length):
+def run_baseline(model_name, batch_size, max_seq_length):
+    from unsloth import FastLanguageModel  # isort: skip  (unsloth must be first)
+
+    from importlib import metadata
+
     import pandas as pd
     from datasets import load_dataset
-    from unsloth import FastLanguageModel  # unsloth must be imported first
 
-    from src.evaluator import evaluate_model, load_eval_subset
-    from src.generation import make_generate_fn
+    from src.config import SEED
+    from src.evaluator import evaluate_model, load_eval_subset, majority_category
+    from src.generation import (
+        make_constant_generate_fn,
+        make_generate_fn,
+        make_random_generate_fn,
+    )
     from src.metrics import load_embedding_model
     from src.preprocessing import sample_stratified, split_stratified
     from src.prompts import format_prompt
     from src.utils import GpuMonitor, Timer, peak_memory_allocated_mib
 
+    # and then we record the exact package versions this run used
+    versions = {
+        package: metadata.version(package)
+        for package in [
+            "torch",
+            "torchao",
+            "unsloth",
+            "transformers",
+            "sentence-transformers",
+            "datasets",
+            "pandas",
+            "numpy",
+        ]
+    }
+    print("versions:", versions)
+
     # and then we rebuild the same seeded splits the local pipeline makes
     resumes = load_dataset("Divyaamith/Kaggle-Resume")["train"].to_pandas()
     sampled_resumes = sample_stratified(resumes)
-    _train_resumes, _validation_resumes, test_resumes = split_stratified(
-        sampled_resumes
-    )
-    eval_resumes = load_eval_subset(test_resumes, n=n)
+    train_resumes, _validation_resumes, test_resumes = split_stratified(sampled_resumes)
+    eval_resumes = load_eval_subset(test_resumes, n=len(test_resumes))
     print("first test-split IDs (compare with local):", list(test_resumes["ID"][:5]))
     print("test split size:", len(test_resumes), "| evaluating:", len(eval_resumes))
 
@@ -44,6 +69,7 @@ def run_baseline(model_name, n, batch_size, max_seq_length):
         device_map={"": 0},
     )
     FastLanguageModel.for_inference(model)
+    model.generation_config.max_length = None
 
     # and then we check how many prompts exceed the context limit we set
     categories = sorted(resumes["Category"].unique())
@@ -62,27 +88,63 @@ def run_baseline(model_name, n, batch_size, max_seq_length):
     for generated, expected in zip(sample_generations, eval_resumes["Category"][:3]):
         print(f"generated={generated!r} | expected={expected!r}")
 
-    # and then we run the full evaluation with the timer and GPU monitor on
+    # and then we score the base model with the timer and GPU monitor on
     embedding_model = load_embedding_model()
-    categories = sorted(resumes["Category"].unique())
     with Timer() as timer, GpuMonitor() as gpu_monitor:
-        results = evaluate_model(
+        base_model_results = evaluate_model(
             generate_fn, eval_resumes, categories, embedding_model, batch_size
         )
 
-    print("results:", results)
-    print(f"eval seconds: {timer.elapsed_seconds:.1f}")
+    # and then we score two no-model baselines with the same evaluator
+    majority_label = majority_category(train_resumes)
+    majority_results = evaluate_model(
+        make_constant_generate_fn(majority_label),
+        eval_resumes,
+        categories,
+        embedding_model,
+        batch_size,
+    )
+    random_results = evaluate_model(
+        make_random_generate_fn(categories, SEED),
+        eval_resumes,
+        categories,
+        embedding_model,
+        batch_size,
+    )
+
+    print("base model results:", base_model_results)
+    print(f"majority class ({majority_label!r}) results:", majority_results)
+    print("random guess results:", random_results)
+    print(f"base model eval seconds: {timer.elapsed_seconds:.1f}")
     print("gpu summary:", gpu_monitor.summary)
     print(f"peak torch memory allocated (MiB): {peak_memory_allocated_mib():.0f}")
     hf_cache.commit()
-    return results
+    return {
+        "model_name": model_name,
+        "test_size": len(test_resumes),
+        "batch_size": batch_size,
+        "max_seq_length": max_seq_length,
+        "versions": versions,
+        "majority_label": majority_label,
+        "metrics": {
+            "base_model": base_model_results,
+            "majority_class": majority_results,
+            "random_guess": random_results,
+        },
+        "base_model_eval_seconds": timer.elapsed_seconds,
+        "gpu_summary": gpu_monitor.summary,
+        "peak_torch_memory_allocated_mib": peak_memory_allocated_mib(),
+    }
 
 
 @app.local_entrypoint()
 def main(
     model_name: str = "unsloth/Llama-3.2-1B",
-    n: int = 100,
     batch_size: int = 8,
     max_seq_length: int = 4096,
 ):
-    run_baseline.remote(model_name, n, batch_size, max_seq_length)
+    baseline_results = run_baseline.remote(model_name, batch_size, max_seq_length)
+    Path("results").mkdir(exist_ok=True)
+    Path("results/baseline_eval.json").write_text(
+        json.dumps(baseline_results, indent=2)
+    )

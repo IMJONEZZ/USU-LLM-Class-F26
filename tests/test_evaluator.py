@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.evaluator import evaluate_model, load_eval_subset
+from src.evaluator import evaluate_model, load_eval_subset, majority_category
 from src.prompts import format_prompt
 
 CATEGORIES = ["HR", "BPO"]
@@ -81,3 +81,8 @@ def test_load_eval_subset_is_reproducible_with_same_seed():
     first = load_eval_subset(make_eval_resumes(), n=2, seed=7)
     second = load_eval_subset(make_eval_resumes(), n=2, seed=7)
     pd.testing.assert_frame_equal(first, second)
+
+
+def test_majority_category_returns_the_most_common_label():
+    resumes = pd.DataFrame({"Category": ["HR", "BPO", "HR", "HR", "BPO"]})
+    assert majority_category(resumes) == "HR"
