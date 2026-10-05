@@ -67,8 +67,8 @@ def test_evaluate_model_sends_format_prompt_text_in_batches_of_batch_size():
     )
 
     assert generate_fn.batches == [
-        [format_prompt("r1"), format_prompt("r2")],
-        [format_prompt("r3")],
+        [format_prompt("r1", CATEGORIES), format_prompt("r2", CATEGORIES)],
+        [format_prompt("r3", CATEGORIES)],
     ]
 
 

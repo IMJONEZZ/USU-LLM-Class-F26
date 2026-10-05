@@ -12,7 +12,10 @@ def load_eval_subset(test_resumes, n=100, seed=SEED):
 def evaluate_model(
     generate_fn, eval_resumes, categories, embedding_model, batch_size=8
 ):
-    prompts = [format_prompt(resume_text) for resume_text in eval_resumes["Resume_str"]]
+    prompts = [
+        format_prompt(resume_text, categories)
+        for resume_text in eval_resumes["Resume_str"]
+    ]
     generated_labels = []
     for start in tqdm(range(0, len(prompts), batch_size)):
         generated_labels.extend(generate_fn(prompts[start : start + batch_size]))

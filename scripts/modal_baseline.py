@@ -46,7 +46,8 @@ def run_baseline(model_name, n, batch_size, max_seq_length):
     FastLanguageModel.for_inference(model)
 
     # and then we check how many prompts exceed the context limit we set
-    prompts = [format_prompt(text) for text in eval_resumes["Resume_str"]]
+    categories = sorted(resumes["Category"].unique())
+    prompts = [format_prompt(text, categories) for text in eval_resumes["Resume_str"]]
     prompt_lengths = pd.Series([len(tokenizer(p)["input_ids"]) for p in prompts])
     print("prompt token lengths:")
     print(prompt_lengths.describe(percentiles=[0.5, 0.9, 0.99]).round(0))
