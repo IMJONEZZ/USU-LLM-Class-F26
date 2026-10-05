@@ -4,13 +4,20 @@ version = "0.1.0"
 description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "numpy>=2.5.3",
+    "torch>=2.14.0",
+]
 
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.4",
+]
+eval = [
+    "datasets>=5.0.1",
+    "transformers>=5.17.0",
 ]
 
 [tool.pytest.ini_options]
