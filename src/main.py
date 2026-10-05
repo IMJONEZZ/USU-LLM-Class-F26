@@ -1,26 +1,32 @@
 import pandas as pd
 
 from src.config import DATA_PATH
-from src.preprocessing import sample_stratified
+from src.preprocessing import sample_stratified, split_stratified
 
 
 def main():
     resumes = pd.read_csv(DATA_PATH)
     sampled_resumes = sample_stratified(resumes)
+    train, validation, test = split_stratified(sampled_resumes)
 
     print(f"Sampled {len(sampled_resumes)} of {len(resumes)} resumes")
-    print("Category share: all resumes vs sampled resumes:")
+    print(
+        f"Split sizes: train {len(train)}, "
+        f"validation {len(validation)}, test {len(test)}"
+    )
+    print("Resumes per category in each split:")
     print(
         pd.DataFrame(
             {
-                "all_share": resumes["Category"].value_counts(normalize=True),
-                "sampled_share": sampled_resumes["Category"].value_counts(
-                    normalize=True
-                ),
+                "train": train["Category"].value_counts(),
+                "validation": validation["Category"].value_counts(),
+                "test": test["Category"].value_counts(),
             }
-        ).round(3)
+        )
+        .fillna(0)
+        .astype(int)
     )
-    return sampled_resumes
+    return train, validation, test
 
 
 if __name__ == "__main__":  # pragma: no cover
