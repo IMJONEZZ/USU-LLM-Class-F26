@@ -4,6 +4,7 @@ Examples:
     modal run assignment_5/modal_job.py --mode smoke
     modal run assignment_5/modal_job.py --mode baseline
     modal run assignment_5/modal_job.py --mode pilot
+    modal run assignment_5/modal_job.py --mode pilot-lower-lr
     modal run assignment_5/modal_job.py --mode final
     modal run assignment_5/modal_job.py --mode after
 """
@@ -193,7 +194,11 @@ def evaluate(checkpoint: str = "base") -> dict[str, Any]:
     timeout=6 * 60 * 60,
     single_use_containers=True,
 )
-def train(pilot: bool = True) -> dict[str, Any]:
+def train(
+    pilot: bool = True,
+    learning_rate: float = 2e-4,
+    run_name: str = "",
+) -> dict[str, Any]:
     """Run the planned pilot or a fresh full training job."""
 
     import unsloth  # noqa: F401, I001
@@ -201,9 +206,10 @@ def train(pilot: bool = True) -> dict[str, Any]:
 
     from src.trainer import TrainingConfig, train_sst2
 
-    run_name = "pilot" if pilot else "final"
+    run_name = run_name or ("pilot" if pilot else "final")
     _show_gpu()
     config = TrainingConfig(
+        learning_rate=learning_rate,
         output_dir=str(ARTIFACT_ROOT / run_name / "adapter"),
         result_path=str(ARTIFACT_ROOT / run_name / "training_result.json"),
     )
@@ -229,10 +235,14 @@ def main(mode: str = "smoke") -> None:
         result = evaluate.remote("base")
     elif mode == "pilot":
         result = train.remote(True)
+    elif mode == "pilot-lower-lr":
+        result = train.remote(True, 1e-4, "pilot-lower-lr")
     elif mode == "final":
-        result = train.remote(False)
+        result = train.remote(False, 1e-4)
     elif mode == "after":
         result = evaluate.remote("final")
     else:
-        raise ValueError("mode must be smoke, baseline, pilot, final, or after")
+        raise ValueError(
+            "mode must be smoke, baseline, pilot, pilot-lower-lr, final, or after"
+        )
     print(json.dumps(result, indent=2, sort_keys=True))

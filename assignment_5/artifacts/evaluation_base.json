@@ -1,0 +1,55 @@
+{
+  "checkpoint": "base",
+  "evaluation": {
+    "accuracy": 0.6100917431192661,
+    "accuracy_confidence_interval_95": [
+      0.5779529816513763,
+      0.6422018348623854
+    ],
+    "accuracy_threshold_met": false,
+    "confidence_above_baseline": true,
+    "confusion_matrix": [
+      [
+        264,
+        12,
+        152
+      ],
+      [
+        81,
+        268,
+        95
+      ]
+    ],
+    "example_count": 872,
+    "invalid_prediction_count": 247,
+    "invalid_prediction_rate": 0.28325688073394495,
+    "macro_f1": 0.7116922659081002,
+    "majority_class_baseline": 0.5091743119266054,
+    "per_class": {
+      "negative": {
+        "f1": 0.683053040103493,
+        "precision": 0.7652173913043478,
+        "recall": 0.616822429906542,
+        "support": 428
+      },
+      "positive": {
+        "f1": 0.7403314917127073,
+        "precision": 0.9571428571428572,
+        "recall": 0.6036036036036037,
+        "support": 444
+      }
+    },
+    "quality_bar_met": false
+  },
+  "model_path": "meta-llama/Llama-3.2-1B-Instruct",
+  "runtime": {
+    "cuda_version": "12.6",
+    "datasets_version": "3.6.0",
+    "gpu_name": "Tesla T4",
+    "gpu_total_memory_gib": 14.57080078125,
+    "torch_version": "2.7.0+cu126",
+    "transformers_version": "4.56.2",
+    "trl_version": "0.24.0",
+    "unsloth_version": "2026.9.14"
+  }
+}
