@@ -9,10 +9,6 @@ def load_eval_subset(test_resumes, n=100, seed=SEED):
     return test_resumes.sample(frac=1, random_state=seed).head(n)
 
 
-def majority_category(train_resumes):
-    return train_resumes["Category"].mode()[0]
-
-
 def evaluate_model(
     generate_fn, eval_resumes, categories, embedding_model, batch_size=8
 ):

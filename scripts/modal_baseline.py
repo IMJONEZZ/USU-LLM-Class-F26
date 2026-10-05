@@ -25,13 +25,8 @@ def run_baseline(model_name, batch_size, max_seq_length):
     import pandas as pd
     from datasets import load_dataset
 
-    from src.config import SEED
-    from src.evaluator import evaluate_model, load_eval_subset, majority_category
-    from src.generation import (
-        make_constant_generate_fn,
-        make_generate_fn,
-        make_random_generate_fn,
-    )
+    from src.evaluator import evaluate_model, load_eval_subset
+    from src.generation import make_generate_fn
     from src.metrics import load_embedding_model
     from src.preprocessing import sample_stratified, split_stratified
     from src.prompts import format_prompt
@@ -56,7 +51,9 @@ def run_baseline(model_name, batch_size, max_seq_length):
     # and then we rebuild the same seeded splits the local pipeline makes
     resumes = load_dataset("Divyaamith/Kaggle-Resume")["train"].to_pandas()
     sampled_resumes = sample_stratified(resumes)
-    train_resumes, _validation_resumes, test_resumes = split_stratified(sampled_resumes)
+    _train_resumes, _validation_resumes, test_resumes = split_stratified(
+        sampled_resumes
+    )
     eval_resumes = load_eval_subset(test_resumes, n=len(test_resumes))
     print("first test-split IDs (compare with local):", list(test_resumes["ID"][:5]))
     print("test split size:", len(test_resumes), "| evaluating:", len(eval_resumes))
@@ -88,34 +85,15 @@ def run_baseline(model_name, batch_size, max_seq_length):
     for generated, expected in zip(sample_generations, eval_resumes["Category"][:3]):
         print(f"generated={generated!r} | expected={expected!r}")
 
-    # and then we score the base model with the timer and GPU monitor on
+    # and then we run the full evaluation with the timer and GPU monitor on
     embedding_model = load_embedding_model()
     with Timer() as timer, GpuMonitor() as gpu_monitor:
-        base_model_results = evaluate_model(
+        results = evaluate_model(
             generate_fn, eval_resumes, categories, embedding_model, batch_size
         )
 
-    # and then we score two no-model baselines with the same evaluator
-    majority_label = majority_category(train_resumes)
-    majority_results = evaluate_model(
-        make_constant_generate_fn(majority_label),
-        eval_resumes,
-        categories,
-        embedding_model,
-        batch_size,
-    )
-    random_results = evaluate_model(
-        make_random_generate_fn(categories, SEED),
-        eval_resumes,
-        categories,
-        embedding_model,
-        batch_size,
-    )
-
-    print("base model results:", base_model_results)
-    print(f"majority class ({majority_label!r}) results:", majority_results)
-    print("random guess results:", random_results)
-    print(f"base model eval seconds: {timer.elapsed_seconds:.1f}")
+    print("results:", results)
+    print(f"eval seconds: {timer.elapsed_seconds:.1f}")
     print("gpu summary:", gpu_monitor.summary)
     print(f"peak torch memory allocated (MiB): {peak_memory_allocated_mib():.0f}")
     hf_cache.commit()
@@ -125,13 +103,8 @@ def run_baseline(model_name, batch_size, max_seq_length):
         "batch_size": batch_size,
         "max_seq_length": max_seq_length,
         "versions": versions,
-        "majority_label": majority_label,
-        "metrics": {
-            "base_model": base_model_results,
-            "majority_class": majority_results,
-            "random_guess": random_results,
-        },
-        "base_model_eval_seconds": timer.elapsed_seconds,
+        "metrics": results,
+        "eval_seconds": timer.elapsed_seconds,
         "gpu_summary": gpu_monitor.summary,
         "peak_torch_memory_allocated_mib": peak_memory_allocated_mib(),
     }

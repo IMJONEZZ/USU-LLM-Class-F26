@@ -2,11 +2,7 @@ from unittest.mock import MagicMock
 
 import torch
 
-from src.generation import (
-    make_constant_generate_fn,
-    make_generate_fn,
-    make_random_generate_fn,
-)
+from src.generation import make_generate_fn
 
 
 class FakeBatch(dict):
@@ -67,23 +63,3 @@ def test_make_generate_fn_pads_on_the_left_and_fills_missing_pad_token():
 
     assert tokenizer.padding_side == "left"
     assert tokenizer.pad_token == "<eos>"
-
-
-def test_constant_generate_fn_returns_the_label_for_every_prompt():
-    generate_fn = make_constant_generate_fn("HR")
-    assert generate_fn(["a", "b", "c"]) == ["HR", "HR", "HR"]
-
-
-def test_random_generate_fn_returns_one_given_category_per_prompt():
-    generate_fn = make_random_generate_fn(["A", "B", "C"], seed=0)
-
-    labels = generate_fn(["prompt"] * 50)
-
-    assert len(labels) == 50
-    assert set(labels) <= {"A", "B", "C"}
-
-
-def test_random_generate_fn_is_reproducible_with_same_seed():
-    first = make_random_generate_fn(["A", "B", "C"], seed=7)(["prompt"] * 20)
-    second = make_random_generate_fn(["A", "B", "C"], seed=7)(["prompt"] * 20)
-    assert first == second
