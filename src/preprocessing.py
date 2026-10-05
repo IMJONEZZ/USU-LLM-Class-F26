@@ -3,7 +3,7 @@ import unicodedata
 
 import pandas as pd
 
-from src.config import N_RESUMES, SEED
+from src.config import N_RESUMES, SEED, SPLIT_FRACTIONS
 
 NON_ASCII_MAP = {
     "\xa0": " ",
@@ -83,3 +83,17 @@ def sample_stratified(resumes, n_total=N_RESUMES, seed=SEED):
         for category, quota in quotas.items()
     ]
     return pd.concat(sampled_by_category)
+
+
+def split_stratified(
+    resumes, stratify_by="Category", fractions=SPLIT_FRACTIONS, seed=SEED
+):
+    shuffled_resumes = resumes.sample(frac=1, random_state=seed)
+    parts_per_split = [[] for _ in fractions]
+    for _, group in shuffled_resumes.groupby(stratify_by):
+        quotas = allocate_proportional_quotas(pd.Series(fractions), len(group))
+        start = 0
+        for split_index, quota in enumerate(quotas):
+            parts_per_split[split_index].append(group.iloc[start : start + quota])
+            start += quota
+    return tuple(pd.concat(parts) for parts in parts_per_split)

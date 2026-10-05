@@ -6,6 +6,7 @@ from src.preprocessing import (
     normalize_text,
     redact_pii,
     sample_stratified,
+    split_stratified,
     strip_links_and_handles,
 )
 
@@ -85,3 +86,63 @@ def test_sample_stratified_is_reproducible_with_same_seed():
     first = sample_stratified(make_resumes(), n_total=11, seed=7)
     second = sample_stratified(make_resumes(), n_total=11, seed=7)
     pd.testing.assert_frame_equal(first, second)
+
+
+def make_resumes_for_split():
+    rows = [
+        {"ID": f"{category}{i}", "Category": category}
+        for category, count in {"A": 20, "B": 10, "C": 3}.items()
+        for i in range(count)
+    ]
+    return pd.DataFrame(rows)
+
+
+def split_counts(split_resumes):
+    return split_resumes["Category"].value_counts().to_dict()
+
+
+def test_split_stratified_sets_have_no_id_overlap():
+    train, validation, test = split_stratified(make_resumes_for_split(), seed=0)
+    train_ids, validation_ids, test_ids = (
+        set(train["ID"]),
+        set(validation["ID"]),
+        set(test["ID"]),
+    )
+    assert not train_ids & validation_ids
+    assert not train_ids & test_ids
+    assert not validation_ids & test_ids
+
+
+def test_split_stratified_covers_every_resume_exactly_once():
+    resumes = make_resumes_for_split()
+    train, validation, test = split_stratified(resumes, seed=0)
+    all_ids = list(train["ID"]) + list(validation["ID"]) + list(test["ID"])
+    assert sorted(all_ids) == sorted(resumes["ID"])
+
+
+def test_split_stratified_keeps_70_20_10_within_each_category():
+    train, validation, test = split_stratified(make_resumes_for_split(), seed=0)
+    assert split_counts(train) == {"A": 14, "B": 7, "C": 2}
+    assert split_counts(validation) == {"A": 4, "B": 2, "C": 1}
+    assert split_counts(test) == {"A": 2, "B": 1}
+
+
+def test_split_stratified_handles_category_smaller_than_ten_rows():
+    train, validation, test = split_stratified(make_resumes_for_split(), seed=0)
+    sparse_counts = [
+        split_counts(split).get("C", 0) for split in (train, validation, test)
+    ]
+    assert sparse_counts == [2, 1, 0]
+
+
+def test_split_stratified_is_reproducible_with_same_seed():
+    first = split_stratified(make_resumes_for_split(), seed=7)
+    second = split_stratified(make_resumes_for_split(), seed=7)
+    for first_split, second_split in zip(first, second):
+        pd.testing.assert_frame_equal(first_split, second_split)
+
+
+def test_split_stratified_stratifies_by_the_column_it_is_given():
+    resumes = make_resumes_for_split().rename(columns={"Category": "Group"})
+    train, _, _ = split_stratified(resumes, stratify_by="Group", seed=0)
+    assert train["Group"].value_counts().to_dict() == {"A": 14, "B": 7, "C": 2}
