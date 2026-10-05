@@ -8,6 +8,7 @@ dependencies = [
     "datasets>=5.0.1",
     "kagglehub>=1.0.2",
     "modal>=1.6.1",
+    "sentence-transformers>=6.1.0",
 ]
 
 [dependency-groups]
@@ -15,7 +16,9 @@ dev = [
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.4",
+    "truststore>=0.10.4",
 ]
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"
+markers = ["slow: loads a real model; deselect with -m 'not slow'"]
