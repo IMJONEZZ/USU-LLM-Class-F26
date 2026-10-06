@@ -62,6 +62,10 @@ def clean_resume(text):
     return redact_pii(without_links).strip()
 
 
+def clean_resume_column(resumes):
+    return resumes.assign(Resume_str=resumes["Resume_str"].fillna("").map(clean_resume))
+
+
 def allocate_proportional_quotas(available_per_category, n_total):
     exact_quotas = available_per_category / available_per_category.sum() * n_total
     quotas = exact_quotas.astype(int)

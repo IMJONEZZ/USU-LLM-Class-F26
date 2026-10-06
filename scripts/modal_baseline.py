@@ -32,12 +32,17 @@ def run_baseline(model_name, batch_size, max_seq_length):
 
     import pandas as pd
     from datasets import load_dataset
+    from tqdm import tqdm
 
     from src.evaluator import evaluate_model, load_eval_subset
     from src.generation import make_generate_fn
     from src.metrics import load_embedding_model
-    from src.preprocessing import sample_stratified, split_stratified
-    from src.prompts import format_prompt
+    from src.preprocessing import (
+        clean_resume_column,
+        sample_stratified,
+        split_stratified,
+    )
+    from src.prompts import format_example, format_prompt
     from src.utils import GpuMonitor, Timer, peak_memory_allocated_mib
 
     # and then we record the exact package versions this run used
@@ -56,12 +61,11 @@ def run_baseline(model_name, batch_size, max_seq_length):
     }
     print("versions:", versions)
 
-    # and then we rebuild the same seeded splits the local pipeline makes
+    # and then we clean the resumes once, then rebuild the same seeded splits
     resumes = load_dataset("Divyaamith/Kaggle-Resume")["train"].to_pandas()
-    sampled_resumes = sample_stratified(resumes)
-    _train_resumes, _validation_resumes, test_resumes = split_stratified(
-        sampled_resumes
-    )
+    cleaned_resumes = clean_resume_column(resumes)
+    sampled_resumes = sample_stratified(cleaned_resumes)
+    train_resumes, validation_resumes, test_resumes = split_stratified(sampled_resumes)
     eval_resumes = load_eval_subset(test_resumes, n=len(test_resumes))
     print("first test-split IDs (compare with local):", list(test_resumes["ID"][:5]))
     print("test split size:", len(test_resumes), "| evaluating:", len(eval_resumes))
@@ -76,18 +80,31 @@ def run_baseline(model_name, batch_size, max_seq_length):
     FastLanguageModel.for_inference(model)
     model.generation_config.max_length = None
 
-    # and then we check how many prompts exceed the context limit we set
+    # and then we measure token lengths of full training strings in every split
     categories = sorted(resumes["Category"].unique())
-    prompts = [format_prompt(text, categories) for text in eval_resumes["Resume_str"]]
-    prompt_lengths = pd.Series([len(tokenizer(p)["input_ids"]) for p in prompts])
-    print("prompt token lengths:")
-    print(prompt_lengths.describe(percentiles=[0.5, 0.9, 0.99]).round(0))
-    print(
-        f"prompts longer than max_seq_length={max_seq_length}:",
-        int((prompt_lengths > max_seq_length).sum()),
-    )
+    for split_name, split_resumes in [
+        ("train", train_resumes),
+        ("validation", validation_resumes),
+        ("test", test_resumes),
+    ]:
+        split_lengths = pd.Series(
+            [
+                len(tokenizer(format_example(text, category, categories))["input_ids"])
+                for text, category in tqdm(
+                    zip(split_resumes["Resume_str"], split_resumes["Category"]),
+                    total=len(split_resumes),
+                )
+            ]
+        )
+        print(f"{split_name} token lengths (prompt + label):")
+        print(split_lengths.describe(percentiles=[0.5, 0.9, 0.99]).round(0))
+        print(
+            f"{split_name} examples longer than max_seq_length={max_seq_length}:",
+            int((split_lengths > max_seq_length).sum()),
+        )
 
     # and then we read a few raw generations by eye before trusting any metric
+    prompts = [format_prompt(text, categories) for text in eval_resumes["Resume_str"]]
     generate_fn = make_generate_fn(model, tokenizer)
     sample_generations = generate_fn(prompts[:3])
     for generated, expected in zip(sample_generations, eval_resumes["Category"][:3]):

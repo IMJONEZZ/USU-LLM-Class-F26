@@ -3,6 +3,7 @@ import pandas as pd
 from src.preprocessing import (
     allocate_proportional_quotas,
     clean_resume,
+    clean_resume_column,
     normalize_text,
     redact_pii,
     sample_stratified,
@@ -45,6 +46,30 @@ def test_clean_resume_removes_all_pii_and_links():
     assert "@" not in result
     assert result.startswith("HR ADMINISTRATOR")
     assert "cafes" in result
+
+
+def test_clean_resume_column_cleans_the_text_and_keeps_other_columns():
+    resumes = pd.DataFrame(
+        {
+            "ID": [1, 2],
+            "Resume_str": ["  Chef\xa0jane@example.com  ", "Cook (555) 123-4567"],
+            "Category": ["CHEF", "CHEF"],
+        }
+    )
+
+    cleaned_resumes = clean_resume_column(resumes)
+
+    assert list(cleaned_resumes["Resume_str"]) == ["Chef [EMAIL]", "Cook [PHONE]"]
+    assert list(cleaned_resumes["ID"]) == [1, 2]
+    assert list(cleaned_resumes["Category"]) == ["CHEF", "CHEF"]
+
+
+def test_clean_resume_column_does_not_modify_the_input_frame():
+    resumes = pd.DataFrame({"Resume_str": ["  Chef  "]})
+
+    clean_resume_column(resumes)
+
+    assert list(resumes["Resume_str"]) == ["  Chef  "]
 
 
 def make_resumes():
