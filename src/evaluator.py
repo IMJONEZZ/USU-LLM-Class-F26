@@ -77,4 +77,4 @@ def run_evaluation(
 
 
 if __name__ == "__main__":  # pragma: no cover
-    print(run_evaluation(model_name="models/star-wars-llama"))
+    print(run_evaluation(model_name="meta-llama/Llama-3.2-1B"))
