@@ -32,7 +32,7 @@ def evaluate_model(
     ]
     return {
         "n": len(expected_labels),
-        "mean_semantic_similarity": sum(similarities) / len(similarities),
-        "valid_category_rate": sum(valid_flags) / len(valid_flags),
-        "exact_match_rate": sum(exact_flags) / len(exact_flags),
+        "mean_semantic_similarity": round(sum(similarities) / len(similarities), 4),
+        "valid_category_rate": round(sum(valid_flags) / len(valid_flags), 4),
+        "exact_match_rate": round(sum(exact_flags) / len(exact_flags), 4),
     }

@@ -1,5 +1,5 @@
 {
-  "model_name": "unsloth/Llama-3.2-1B-Instruct",
+  "model_name": "unsloth/Llama-3.2-1B",
   "test_size": 102,
   "batch_size": 8,
   "max_seq_length": 4096,
@@ -15,17 +15,17 @@
   },
   "metrics": {
     "n": 102,
-    "mean_semantic_similarity": 0.3705123162225765,
+    "mean_semantic_similarity": 0.19187411097535753,
     "valid_category_rate": 0.0,
     "exact_match_rate": 0.0
   },
-  "eval_seconds": 58.871943935999994,
+  "eval_seconds": 50.972769916000004,
   "gpu_summary": {
-    "n_samples": 12,
-    "peak_memory_mib": 3803.0,
-    "peak_memory_percent": 24.759114583333332,
-    "mean_utilization_percent": 87.16666666666667,
+    "n_samples": 11,
+    "peak_memory_mib": 3903.0,
+    "peak_memory_percent": 25.41015625,
+    "mean_utilization_percent": 82.0,
     "peak_utilization_percent": 100.0
   },
-  "peak_torch_memory_allocated_mib": 3399.5830078125
+  "peak_torch_memory_allocated_mib": 3398.7490234375
 }

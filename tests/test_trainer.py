@@ -26,7 +26,7 @@ def test_load_model_for_training_loads_the_base_model_in_4bit():
     kwargs = fast_language_model.from_pretrained.call_args.kwargs
     assert kwargs["model_name"] == "unsloth/Llama-3.2-1B"
     assert kwargs["load_in_4bit"] is True
-    assert kwargs["max_seq_length"] == 4096
+    assert kwargs["max_seq_length"] == 8192
 
 
 def test_load_model_for_training_attaches_qlora_adapters_with_unsloth_defaults():

@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.evaluator import evaluate_model, load_eval_subset
 from src.prompts import format_prompt
@@ -50,9 +49,9 @@ def test_evaluate_model_hand_checked_metrics():
     )
 
     assert result["n"] == 3
-    assert result["mean_semantic_similarity"] == pytest.approx((1 + 0 + 2**-0.5) / 3)
-    assert result["valid_category_rate"] == pytest.approx(2 / 3)
-    assert result["exact_match_rate"] == pytest.approx(1 / 3)
+    assert result["mean_semantic_similarity"] == 0.569
+    assert result["valid_category_rate"] == 0.6667
+    assert result["exact_match_rate"] == 0.3333
 
 
 def test_evaluate_model_sends_format_prompt_text_in_batches_of_batch_size():
