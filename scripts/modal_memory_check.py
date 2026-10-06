@@ -21,8 +21,9 @@ image = (
 )
 
 
-@app.function(gpu="T4", image=image, volumes={"/hf_cache": hf_cache}, timeout=1800)
-def check_worst_case_memory(batch_sizes):
+@app.function(gpu="L4", image=image, volumes={"/hf_cache": hf_cache}, timeout=1800)
+def check_worst_case_memory(row_lengths):
+    import unsloth  # isort: skip  # noqa: F401  (unsloth must be first)
 
     import torch
 
@@ -36,26 +37,24 @@ def check_worst_case_memory(batch_sizes):
     vocab_size = model.config.vocab_size
     print(f"max_seq_length={MAX_SEQ_LENGTH}, vocab_size={vocab_size}")
 
-    # and then we run one forward and backward pass on a full-length batch
+    # and then we run one forward and backward pass on a single row of each length
     outcomes = []
-    for batch_size in batch_sizes:
+    for row_length in row_lengths:
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()
-        input_ids = torch.randint(
-            0, vocab_size, (batch_size, MAX_SEQ_LENGTH), device="cuda"
-        )
+        input_ids = torch.randint(0, vocab_size, (1, row_length), device="cuda")
         try:
             with GpuMonitor(interval=1.0) as gpu_monitor:
                 loss = model(input_ids=input_ids, labels=input_ids).loss
                 loss.backward()
             outcome = {
-                "batch_size": batch_size,
+                "row_length": row_length,
                 "fits": True,
                 "peak_torch_memory_allocated_mib": peak_memory_allocated_mib(),
                 "gpu_summary": gpu_monitor.summary,
             }
         except torch.cuda.OutOfMemoryError:
-            outcome = {"batch_size": batch_size, "fits": False}
+            outcome = {"row_length": row_length, "fits": False}
         model.zero_grad(set_to_none=True)
         print(outcome)
         outcomes.append(outcome)
@@ -64,6 +63,6 @@ def check_worst_case_memory(batch_sizes):
 
 @app.local_entrypoint()
 def main():
-    outcomes = check_worst_case_memory.remote([1, 2])
+    outcomes = check_worst_case_memory.remote([4096, 7306, 8192])
     for outcome in outcomes:
         print(outcome)

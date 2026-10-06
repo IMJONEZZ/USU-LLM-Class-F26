@@ -143,8 +143,8 @@ def test_build_trainer_configures_guide_defaults_and_evaluates_every_10_steps():
 
     kwargs = fake_trl.SFTConfig.call_args.kwargs
     assert kwargs["output_dir"] == "out"
-    assert kwargs["per_device_train_batch_size"] == 2
-    assert kwargs["gradient_accumulation_steps"] == 8
+    assert kwargs["per_device_train_batch_size"] == 1
+    assert kwargs["gradient_accumulation_steps"] == 16
     assert kwargs["learning_rate"] == 2e-4
     assert kwargs["max_steps"] == 30
     assert kwargs["eval_strategy"] == "steps"
@@ -159,20 +159,20 @@ def test_build_trainer_configures_guide_defaults_and_evaluates_every_10_steps():
 def test_build_trainer_uses_a_small_eval_batch_size_for_long_examples():
     fake_trl, _, _ = build_trainer_with_fakes()
 
-    assert fake_trl.SFTConfig.call_args.kwargs["per_device_eval_batch_size"] == 2
+    assert fake_trl.SFTConfig.call_args.kwargs["per_device_eval_batch_size"] == 1
 
 
 def test_build_trainer_accepts_overrides_for_steps_and_batching():
     fake_trl, _, _ = build_trainer_with_fakes(
         max_steps=100,
-        per_device_train_batch_size=1,
-        gradient_accumulation_steps=16,
+        per_device_train_batch_size=4,
+        gradient_accumulation_steps=4,
     )
 
     kwargs = fake_trl.SFTConfig.call_args.kwargs
     assert kwargs["max_steps"] == 100
-    assert kwargs["per_device_train_batch_size"] == 1
-    assert kwargs["gradient_accumulation_steps"] == 16
+    assert kwargs["per_device_train_batch_size"] == 4
+    assert kwargs["gradient_accumulation_steps"] == 4
 
 
 def test_build_trainer_does_not_truncate_below_the_longest_example():

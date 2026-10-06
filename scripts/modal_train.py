@@ -26,7 +26,7 @@ image = (
 
 
 @app.function(
-    gpu="T4",
+    gpu="L40S",
     image=image,
     volumes={"/hf_cache": hf_cache, "/checkpoints": checkpoints},
     timeout=7200,

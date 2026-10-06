@@ -24,7 +24,7 @@ image = (
 )
 
 
-@app.function(gpu="T4", image=image, volumes={"/hf_cache": hf_cache}, timeout=3600)
+@app.function(gpu="L40S", image=image, volumes={"/hf_cache": hf_cache}, timeout=3600)
 def run_baseline(model_name, batch_size, max_seq_length):
     from unsloth import FastLanguageModel  # isort: skip  (unsloth must be first)
 

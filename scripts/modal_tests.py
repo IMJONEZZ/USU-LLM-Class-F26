@@ -27,7 +27,7 @@ image = (
 )
 
 
-@app.function(gpu="T4", image=image, volumes={"/hf_cache": hf_cache}, timeout=1800)
+@app.function(gpu="L4", image=image, volumes={"/hf_cache": hf_cache}, timeout=1800)
 def run_gpu_tests():
     import subprocess
 
