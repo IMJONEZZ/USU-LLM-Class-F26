@@ -15,17 +15,17 @@
   },
   "metrics": {
     "n": 102,
-    "mean_semantic_similarity": 0.19187411097535753,
+    "mean_semantic_similarity": 0.1798,
     "valid_category_rate": 0.0,
     "exact_match_rate": 0.0
   },
-  "eval_seconds": 50.972769916000004,
+  "eval_seconds": 9.988516127000004,
   "gpu_summary": {
-    "n_samples": 11,
-    "peak_memory_mib": 3903.0,
-    "peak_memory_percent": 25.41015625,
-    "mean_utilization_percent": 82.0,
-    "peak_utilization_percent": 100.0
+    "n_samples": 2,
+    "peak_memory_mib": 4297.0,
+    "peak_memory_percent": 9.32751584614049,
+    "mean_utilization_percent": 48.5,
+    "peak_utilization_percent": 97.0
   },
   "peak_torch_memory_allocated_mib": 3398.7490234375
 }
