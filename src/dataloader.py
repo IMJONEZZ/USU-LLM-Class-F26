@@ -1,59 +1,94 @@
-import torch
-from torch.utils.data import DataLoader, Dataset
+"""Load, group, and tokenize the Star Wars dialogue corpus."""
 
-from src.tokenizer import SentencePieceTokenizer
+from collections.abc import Iterable, Mapping
 
-
-class StarWarsDataset(Dataset):
-    def __init__(self, text, tokenizer, max_length, stride):
-        self.input_ids = []
-        self.target_ids = []
-
-        token_ids = tokenizer.encode(text)
-
-        # Use a sliding window to chunk the tokenized text into overlapping sequences
-        for i in range(0, len(token_ids) - max_length, stride):
-            input_seq = token_ids[i : i + max_length]
-            target_seq = token_ids[i + 1 : i + max_length + 1]
-
-            self.input_ids.append(torch.tensor(input_seq))
-            self.target_ids.append(torch.tensor(target_seq))
-
-    def __len__(self):
-        return len(self.input_ids)
-
-    def __getitem__(self, idx):
-        return self.input_ids[idx], self.target_ids[idx]
+DATASET_NAME = "IMJONEZZ/star-wars-dataset"
+VALIDATION_FILM = "ep5_empire_strikes_back"
+TEST_FILM = "ep6_return_of_the_jedi"
 
 
-def create_dataloader(
-    text,
-    batch_size=16,
-    max_length=128,
-    stride=64,
-    shuffle=True,
-    drop_last=True,
-    num_workers=0,
-):
-    # Initialize the tokenizer
-    tokenizer = SentencePieceTokenizer()
+def combine_consecutive_lines(
+    rows: Iterable[Mapping[str, object]],
+) -> list[dict[str, str]]:
+    """Join adjacent lines from the same speaker and film, preserving row order."""
+    combined: list[dict[str, str]] = []
+    current: dict[str, str] | None = None
 
-    # Text should be a single string. If a list of strings, join them into one string.
-    joined_text = " ".join(text) if isinstance(text, list) else text
+    for row in rows:
+        film = row.get("film")
+        speaker = row.get("speaker")
+        text = row.get("text")
+        if not isinstance(film, str) or not isinstance(text, str) or not text.strip():
+            current = None
+            continue
 
-    # Custom tokenizer requires number of merges to be specified.
-    tokenizer.train(joined_text, num_merges=300)
+        can_join = (
+            current is not None
+            and isinstance(speaker, str)
+            and bool(speaker.strip())
+            and current["speaker"] == str(speaker)
+            and current["film"] == film
+        )
+        if can_join:
+            current["text"] = f"{current['text']} {text.strip()}"
+        else:
+            current = {
+                "film": film,
+                "speaker": "" if speaker is None else str(speaker),
+                "text": text.strip(),
+            }
+            combined.append(current)
 
-    # Create the dataset
-    dataset = StarWarsDataset(joined_text, tokenizer, max_length, stride)
+    return combined
 
-    # Create the DataLoader
-    dataloader = DataLoader(
-        dataset,
-        batch_size=batch_size,
-        shuffle=shuffle,
-        drop_last=drop_last,
-        num_workers=num_workers,
-    )
 
-    return dataloader
+def _make_lm_dataset(texts: list[str], tokenizer, block_size: int, dataset_type):
+    """Tokenize dialogue and split it into fixed-size causal-LM examples."""
+    examples: list[list[int]] = []
+    eos_id = tokenizer.eos_token_id
+
+    for text in texts:
+        token_ids = tokenizer.encode(text, add_special_tokens=False)
+        if eos_id is not None:
+            token_ids.append(eos_id)
+
+        for start in range(0, len(token_ids), block_size):
+            block = token_ids[start : start + block_size]
+            if len(block) > 1:
+                examples.append(block)
+
+    return dataset_type.from_dict({"input_ids": examples})
+
+
+def create_datasets(
+    tokenizer,
+    dataset_name: str = DATASET_NAME,
+    block_size: int = 256,
+) -> dict[str, object]:
+    """Return tokenized train, validation, and test datasets.
+
+    Training uses every film other than Episodes V and VI. Those two films are
+    held out as validation and test data respectively.
+    """
+    if block_size < 2:
+        raise ValueError("block_size must be at least 2 tokens")
+
+    from datasets import Dataset, load_dataset
+
+    source = load_dataset(dataset_name, "cues", split="train")
+    grouped = combine_consecutive_lines(source)
+    texts_by_split = {
+        "train": [
+            row["text"]
+            for row in grouped
+            if row["film"] not in {VALIDATION_FILM, TEST_FILM}
+        ],
+        "validation": [
+            row["text"] for row in grouped if row["film"] == VALIDATION_FILM
+        ],
+        "test": [row["text"] for row in grouped if row["film"] == TEST_FILM],
+    }
+    return {
+        split: _make_lm_dataset(texts, tokenizer, block_size, Dataset)
+        for split, texts in texts_by_split.items()
+    }

@@ -1,5 +1,7 @@
-"""Unit tests for the offline evaluation setup."""
+"""Tests for ROUGE evaluation on Episode VI continuations."""
 
+import sys
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -7,60 +9,74 @@ import pytest
 from src import evaluator as evaluator_module
 
 
-@pytest.fixture
-def expected_results():
-    """Provide the result shape returned by Hugging Face's QA evaluator."""
-    return {
-        "exact_match": 42.0,
-        "f1": 61.5,
-        "total_time_in_seconds": 1.2,
-        "samples_per_second": 10.0,
-        "latency_in_seconds": 0.1,
-    }
+def test_make_continuation_examples_splits_tokens_in_half():
+    tokenizer = MagicMock()
+    tokenizer.encode.return_value = [1, 2, 3, 4, 5, 6]
+    tokenizer.decode.side_effect = lambda tokens, skip_special_tokens: str(tokens)
+
+    prompts, references = evaluator_module.make_continuation_examples(
+        ["dialogue"], tokenizer
+    )
+
+    assert prompts == ["[1, 2, 3]"]
+    assert references == ["[4, 5, 6]"]
 
 
-@pytest.fixture
-def mocked_dependencies(monkeypatch, expected_results):
-    """Replace network/model-dependent collaborators with local mocks."""
-    data = object()
-    load_dataset = MagicMock(return_value=data)
-    task_evaluator = MagicMock()
-    task_evaluator.compute.return_value = expected_results
-    evaluator_factory = MagicMock(return_value=task_evaluator)
+def test_make_continuation_examples_skips_very_short_lines():
+    tokenizer = MagicMock()
+    tokenizer.encode.return_value = [1, 2, 3]
 
-    monkeypatch.setattr(evaluator_module, "load_dataset", load_dataset)
-    monkeypatch.setattr(evaluator_module, "evaluator", evaluator_factory)
-
-    return data, load_dataset, evaluator_factory, task_evaluator
+    assert evaluator_module.make_continuation_examples(["short"], tokenizer) == (
+        [],
+        [],
+    )
 
 
-def test_run_evaluation_uses_validation_by_default(
-    mocked_dependencies, expected_results
-):
-    """The default call loads AdversarialQA validation and returns QA metrics."""
-    data, load_dataset, evaluator_factory, task_evaluator = mocked_dependencies
+def test_run_evaluation_uses_episode_six_and_returns_rouge(monkeypatch):
+    source = [
+        {"film": "ep5_empire_strikes_back", "speaker": "Luke", "text": "not test"},
+        {
+            "film": "ep6_return_of_the_jedi",
+            "speaker": "Luke",
+            "text": "Luke is a Jedi Knight now.",
+        },
+    ]
+    tokenizer = MagicMock()
+    tokenizer.pad_token = "<eos>"
+    tokenizer.pad_token_id = 0
+    tokenizer.encode.return_value = [1, 2, 3, 4, 5, 6]
+    tokenizer.decode.side_effect = lambda tokens, skip_special_tokens: str(tokens)
+    generation = MagicMock(return_value=[[{"generated_text": "continuation"}]])
+    metric = MagicMock()
+    metric.compute.return_value = {"rouge1": 0.5, "rouge2": 0.2, "rougeL": 0.4}
+    load_dataset = MagicMock(return_value=source)
+    evaluate_module = SimpleNamespace(load=MagicMock(return_value=metric))
+    datasets_module = SimpleNamespace(load_dataset=load_dataset)
+    transformers_module = SimpleNamespace(
+        AutoTokenizer=SimpleNamespace(
+            from_pretrained=MagicMock(return_value=tokenizer)
+        ),
+        pipeline=MagicMock(return_value=generation),
+    )
+    monkeypatch.setitem(sys.modules, "datasets", datasets_module)
+    monkeypatch.setitem(sys.modules, "evaluate", evaluate_module)
+    monkeypatch.setitem(sys.modules, "transformers", transformers_module)
+    monkeypatch.setattr("torch.cuda.is_available", lambda: False)
 
-    results = evaluator_module.run_evaluation(model_name="any-compatible-qa-model")
+    result = evaluator_module.run_evaluation("trained-model")
 
-    assert results == expected_results
-    assert results["exact_match"] == 42.0
-    assert results["f1"] == 61.5
+    assert result["rouge1"] == 0.5
     load_dataset.assert_called_once_with(
-        "UCLNLP/adversarial_qa", "adversarialQA", split="validation"
+        "IMJONEZZ/star-wars-dataset", "cues", split="train"
     )
-    evaluator_factory.assert_called_once_with("question-answering")
-    task_evaluator.compute.assert_called_once_with(
-        model_or_pipeline="any-compatible-qa-model",
-        data=data,
-        metric="squad",
+    transformers_module.pipeline.assert_called_once()
+    metric.compute.assert_called_once_with(
+        predictions=["continuation"],
+        references=["[4, 5, 6]"],
+        use_stemmer=True,
     )
 
 
-@pytest.mark.parametrize("split", ["train", "validation"])
-def test_run_evaluation_forwards_supported_splits(mocked_dependencies, split):
-    """Callers can choose either labeled AdversarialQA split."""
-    _, load_dataset, _, _ = mocked_dependencies
-
-    evaluator_module.run_evaluation(model_name="another-qa-model", split=split)
-
-    assert load_dataset.call_args.kwargs["split"] == split
+def test_run_evaluation_rejects_non_test_split():
+    with pytest.raises(ValueError, match="Episode VI"):
+        evaluator_module.run_evaluation("trained-model", split="validation")
