@@ -12,6 +12,7 @@ from src.config import (
     MAX_SEQ_LENGTH,
     MAX_STEPS,
     MODEL_NAME,
+    PER_DEVICE_EVAL_BATCH_SIZE,
     PER_DEVICE_TRAIN_BATCH_SIZE,
     SEED,
 )
@@ -51,7 +52,16 @@ def make_early_stopping_callback():
     return EarlyStoppingCallback(early_stopping_patience=EARLY_STOPPING_PATIENCE)
 
 
-def build_trainer(model, tokenizer, train_dataset, eval_dataset, output_dir):
+def build_trainer(
+    model,
+    tokenizer,
+    train_dataset,
+    eval_dataset,
+    output_dir,
+    max_steps=MAX_STEPS,
+    per_device_train_batch_size=PER_DEVICE_TRAIN_BATCH_SIZE,
+    gradient_accumulation_steps=GRADIENT_ACCUMULATION_STEPS,
+):
     from trl import SFTConfig, SFTTrainer
     from unsloth.chat_templates import train_on_responses_only
 
@@ -62,10 +72,11 @@ def build_trainer(model, tokenizer, train_dataset, eval_dataset, output_dir):
         eval_dataset=eval_dataset,
         args=SFTConfig(
             output_dir=output_dir,
-            per_device_train_batch_size=PER_DEVICE_TRAIN_BATCH_SIZE,
-            gradient_accumulation_steps=GRADIENT_ACCUMULATION_STEPS,
+            per_device_train_batch_size=per_device_train_batch_size,
+            per_device_eval_batch_size=PER_DEVICE_EVAL_BATCH_SIZE,
+            gradient_accumulation_steps=gradient_accumulation_steps,
             learning_rate=LEARNING_RATE,
-            max_steps=MAX_STEPS,
+            max_steps=max_steps,
             eval_strategy="steps",
             eval_steps=EVAL_STEPS,
             save_strategy="steps",

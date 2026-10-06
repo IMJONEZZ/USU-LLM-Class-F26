@@ -101,3 +101,9 @@ def split_stratified(
             parts_per_split[split_index].append(group.iloc[start : start + quota])
             start += quota
     return tuple(pd.concat(parts) for parts in parts_per_split)
+
+
+def make_splits(resumes):
+    cleaned_resumes = clean_resume_column(resumes)
+    sampled_resumes = sample_stratified(cleaned_resumes)
+    return split_stratified(sampled_resumes)

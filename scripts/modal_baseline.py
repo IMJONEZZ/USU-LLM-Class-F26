@@ -37,11 +37,7 @@ def run_baseline(model_name, batch_size, max_seq_length):
     from src.evaluator import evaluate_model, load_eval_subset
     from src.generation import make_generate_fn
     from src.metrics import load_embedding_model
-    from src.preprocessing import (
-        clean_resume_column,
-        sample_stratified,
-        split_stratified,
-    )
+    from src.preprocessing import make_splits
     from src.prompts import format_example, format_prompt
     from src.utils import GpuMonitor, Timer, peak_memory_allocated_mib
 
@@ -61,11 +57,9 @@ def run_baseline(model_name, batch_size, max_seq_length):
     }
     print("versions:", versions)
 
-    # and then we clean the resumes once, then rebuild the same seeded splits
+    # and then we rebuild the same cleaned, seeded splits the other scripts use
     resumes = load_dataset("Divyaamith/Kaggle-Resume")["train"].to_pandas()
-    cleaned_resumes = clean_resume_column(resumes)
-    sampled_resumes = sample_stratified(cleaned_resumes)
-    train_resumes, validation_resumes, test_resumes = split_stratified(sampled_resumes)
+    train_resumes, validation_resumes, test_resumes = make_splits(resumes)
     eval_resumes = load_eval_subset(test_resumes, n=len(test_resumes))
     print("first test-split IDs (compare with local):", list(test_resumes["ID"][:5]))
     print("test split size:", len(test_resumes), "| evaluating:", len(eval_resumes))

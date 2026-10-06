@@ -1,20 +1,16 @@
 import pandas as pd
 
 from src.config import DATA_PATH
-from src.preprocessing import (
-    clean_resume_column,
-    sample_stratified,
-    split_stratified,
-)
+from src.preprocessing import make_splits
 
 
 def main():
     resumes = pd.read_csv(DATA_PATH)
-    cleaned_resumes = clean_resume_column(resumes)
-    sampled_resumes = sample_stratified(cleaned_resumes)
-    train, validation, test = split_stratified(sampled_resumes)
+    train, validation, test = make_splits(resumes)
 
-    print(f"Sampled {len(sampled_resumes)} of {len(resumes)} resumes")
+    print(
+        f"Sampled {len(train) + len(validation) + len(test)} of {len(resumes)} resumes"
+    )
     print(
         f"Split sizes: train {len(train)}, "
         f"validation {len(validation)}, test {len(test)}"

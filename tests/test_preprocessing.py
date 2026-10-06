@@ -4,6 +4,7 @@ from src.preprocessing import (
     allocate_proportional_quotas,
     clean_resume,
     clean_resume_column,
+    make_splits,
     normalize_text,
     redact_pii,
     sample_stratified,
@@ -171,3 +172,18 @@ def test_split_stratified_stratifies_by_the_column_it_is_given():
     resumes = make_resumes_for_split().rename(columns={"Category": "Group"})
     train, _, _ = split_stratified(resumes, stratify_by="Group", seed=0)
     assert train["Group"].value_counts().to_dict() == {"A": 14, "B": 7, "C": 2}
+
+
+def test_make_splits_cleans_the_text_then_samples_and_splits():
+    resumes = pd.DataFrame(
+        {
+            "ID": range(30),
+            "Resume_str": ["  Chef\xa0jane@example.com  "] * 30,
+            "Category": ["A"] * 10 + ["B"] * 10 + ["C"] * 10,
+        }
+    )
+
+    train, validation, test = make_splits(resumes)
+
+    assert (len(train), len(validation), len(test)) == (21, 6, 3)
+    assert set(train["Resume_str"]) == {"Chef [EMAIL]"}

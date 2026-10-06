@@ -120,7 +120,7 @@ def test_early_stopping_callback_keeps_training_while_eval_loss_improves():
     assert control.should_training_stop is False
 
 
-def build_trainer_with_fakes():
+def build_trainer_with_fakes(**overrides):
     fake_trl = MagicMock()
     fake_chat_templates = MagicMock()
     fake_chat_templates.train_on_responses_only.return_value = "masked_trainer"
@@ -132,7 +132,9 @@ def build_trainer_with_fakes():
         "unsloth.chat_templates": fake_chat_templates,
     }
     with patch.dict("sys.modules", fake_modules):
-        result = build_trainer("model", "tokenizer", "train_data", "eval_data", "out")
+        result = build_trainer(
+            "model", "tokenizer", "train_data", "eval_data", "out", **overrides
+        )
     return fake_trl, fake_chat_templates, result
 
 
@@ -152,6 +154,25 @@ def test_build_trainer_configures_guide_defaults_and_evaluates_every_10_steps():
     assert kwargs["load_best_model_at_end"] is True
     assert kwargs["metric_for_best_model"] == "eval_loss"
     assert kwargs["dataset_text_field"] == "text"
+
+
+def test_build_trainer_uses_a_small_eval_batch_size_for_long_examples():
+    fake_trl, _, _ = build_trainer_with_fakes()
+
+    assert fake_trl.SFTConfig.call_args.kwargs["per_device_eval_batch_size"] == 2
+
+
+def test_build_trainer_accepts_overrides_for_steps_and_batching():
+    fake_trl, _, _ = build_trainer_with_fakes(
+        max_steps=100,
+        per_device_train_batch_size=1,
+        gradient_accumulation_steps=16,
+    )
+
+    kwargs = fake_trl.SFTConfig.call_args.kwargs
+    assert kwargs["max_steps"] == 100
+    assert kwargs["per_device_train_batch_size"] == 1
+    assert kwargs["gradient_accumulation_steps"] == 16
 
 
 def test_build_trainer_does_not_truncate_below_the_longest_example():
