@@ -5,6 +5,7 @@ import modal
 
 app = modal.App("resume-baseline-eval")
 hf_cache = modal.Volume.from_name("hf-cache", create_if_missing=True)
+checkpoints = modal.Volume.from_name("resume-checkpoints", create_if_missing=True)
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
@@ -24,8 +25,13 @@ image = (
 )
 
 
-@app.function(gpu="L40S", image=image, volumes={"/hf_cache": hf_cache}, timeout=3600)
-def run_baseline(model_name, batch_size, max_seq_length):
+@app.function(
+    gpu="L40S",
+    image=image,
+    volumes={"/hf_cache": hf_cache, "/checkpoints": checkpoints},
+    timeout=3600,
+)
+def run_baseline(model_name, batch_size, max_seq_length, adapter_path):
     from unsloth import FastLanguageModel  # isort: skip  (unsloth must be first)
 
     from importlib import metadata
@@ -64,9 +70,9 @@ def run_baseline(model_name, batch_size, max_seq_length):
     print("first test-split IDs (compare with local):", list(test_resumes["ID"][:5]))
     print("test split size:", len(test_resumes), "| evaluating:", len(eval_resumes))
 
-    # and then we load the base model in 4-bit, like the QLoRA run will use
+    # and then we load the model in 4-bit (the saved adapter if one is given)
     model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=model_name,
+        model_name=adapter_path or model_name,
         max_seq_length=max_seq_length,
         load_in_4bit=True,
         device_map={"": 0},
@@ -118,6 +124,7 @@ def run_baseline(model_name, batch_size, max_seq_length):
     hf_cache.commit()
     return {
         "model_name": model_name,
+        "adapter_path": adapter_path,
         "test_size": len(test_resumes),
         "batch_size": batch_size,
         "max_seq_length": max_seq_length,
@@ -134,9 +141,11 @@ def main(
     model_name: str = "unsloth/Llama-3.2-1B",
     batch_size: int = 8,
     max_seq_length: int = 4096,
+    adapter_path: str = "",
+    output_name: str = "baseline_eval",
 ):
-    baseline_results = run_baseline.remote(model_name, batch_size, max_seq_length)
-    Path("results").mkdir(exist_ok=True)
-    Path("results/baseline_eval.json").write_text(
-        json.dumps(baseline_results, indent=2)
+    eval_results = run_baseline.remote(
+        model_name, batch_size, max_seq_length, adapter_path
     )
+    Path("results").mkdir(exist_ok=True)
+    Path(f"results/{output_name}.json").write_text(json.dumps(eval_results, indent=2))
