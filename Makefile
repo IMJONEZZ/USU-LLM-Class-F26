@@ -1,6 +1,6 @@
 MODAL_FILE ?= scripts/modal_baseline.py
 
-.PHONY: add_all modal_run modal_app_list
+.PHONY: add_all modal_run modal_app_list modal_test
 
 add_all:
 	uv run ruff check --fix .
@@ -12,3 +12,6 @@ modal_run:
 
 modal_app_list:
 	PYTHONPATH=$$HOME/.pythoncustomize uv run modal app list
+
+modal_test:
+	PYTHONPATH=$$HOME/.pythoncustomize uv run modal run scripts/modal_tests.py
