@@ -48,7 +48,12 @@ def run_training(
 
     from src.config import MAX_STEPS, SEED
     from src.preprocessing import make_splits
-    from src.trainer import build_text_dataset, build_trainer, load_model_for_training
+    from src.trainer import (
+        build_text_dataset,
+        build_trainer,
+        load_model_for_training,
+        save_adapter,
+    )
     from src.utils import GpuMonitor, Timer, peak_memory_allocated_mib
 
     # and then we record the exact package versions this run used
@@ -104,8 +109,7 @@ def run_training(
 
     # and then we save the best adapter for the after-training evaluation
     final_dir = f"/checkpoints/{run_name}/final"
-    trainer.save_model(final_dir)
-    tokenizer.save_pretrained(final_dir)
+    save_adapter(trainer, tokenizer, final_dir)
     checkpoints.commit()
     hf_cache.commit()
 

@@ -40,6 +40,25 @@ def load_model_for_training():
     return peft_model, tokenizer
 
 
+def save_adapter(trainer, tokenizer, output_dir):
+    trainer.save_model(output_dir)
+    tokenizer.save_pretrained(output_dir)
+
+
+def load_model_for_inference(model_name_or_path, max_seq_length=MAX_SEQ_LENGTH):
+    from unsloth import FastLanguageModel
+
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name=model_name_or_path,
+        max_seq_length=max_seq_length,
+        load_in_4bit=True,
+        device_map={"": 0},
+    )
+    FastLanguageModel.for_inference(model)
+    model.generation_config.max_length = None
+    return model, tokenizer
+
+
 def build_text_dataset(resumes, categories, eos_token):
     texts = [
         format_example(resume_text, category, categories) + eos_token

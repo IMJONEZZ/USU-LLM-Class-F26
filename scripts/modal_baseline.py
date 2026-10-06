@@ -32,7 +32,7 @@ image = (
     timeout=3600,
 )
 def run_baseline(model_name, batch_size, max_seq_length, adapter_path):
-    from unsloth import FastLanguageModel  # isort: skip  (unsloth must be first)
+    import unsloth  # isort: skip  # noqa: F401  (unsloth must be first)
 
     from importlib import metadata
 
@@ -45,6 +45,7 @@ def run_baseline(model_name, batch_size, max_seq_length, adapter_path):
     from src.metrics import load_embedding_model
     from src.preprocessing import make_splits
     from src.prompts import format_example, format_prompt
+    from src.trainer import load_model_for_inference
     from src.utils import GpuMonitor, Timer, peak_memory_allocated_mib
 
     # and then we record the exact package versions this run used
@@ -71,14 +72,9 @@ def run_baseline(model_name, batch_size, max_seq_length, adapter_path):
     print("test split size:", len(test_resumes), "| evaluating:", len(eval_resumes))
 
     # and then we load the model in 4-bit (the saved adapter if one is given)
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=adapter_path or model_name,
-        max_seq_length=max_seq_length,
-        load_in_4bit=True,
-        device_map={"": 0},
+    model, tokenizer = load_model_for_inference(
+        adapter_path or model_name, max_seq_length
     )
-    FastLanguageModel.for_inference(model)
-    model.generation_config.max_length = None
 
     # and then we measure token lengths of full training strings in every split
     categories = sorted(resumes["Category"].unique())

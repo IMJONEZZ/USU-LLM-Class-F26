@@ -10,8 +10,10 @@ from src.prompts import INSTRUCTION_MARKER, RESPONSE_MARKER, format_example
 from src.trainer import (
     build_text_dataset,
     build_trainer,
+    load_model_for_inference,
     load_model_for_training,
     make_early_stopping_callback,
+    save_adapter,
 )
 
 
@@ -227,3 +229,79 @@ def test_masking_leaves_only_the_category_and_one_eos_token_unmasked(tmp_path):
     eos = tokenizer.eos_token
     unmasked_ids = batch["input_ids"][batch["labels"] != -100]
     assert tokenizer.decode(unmasked_ids) in {f"HR{eos}BPO{eos}", f"BPO{eos}HR{eos}"}
+
+
+def test_save_adapter_saves_the_model_and_tokenizer_to_the_directory():
+    trainer = MagicMock()
+    tokenizer = MagicMock()
+
+    save_adapter(trainer, tokenizer, "some/dir")
+
+    trainer.save_model.assert_called_once_with("some/dir")
+    tokenizer.save_pretrained.assert_called_once_with("some/dir")
+
+
+def test_load_model_for_inference_loads_the_path_in_4bit_in_inference_mode():
+    fake_unsloth = MagicMock()
+    loaded_model = MagicMock()
+    fake_unsloth.FastLanguageModel.from_pretrained.return_value = (
+        loaded_model,
+        "tokenizer",
+    )
+
+    with patch.dict("sys.modules", {"unsloth": fake_unsloth}):
+        model, tokenizer = load_model_for_inference("some/path", max_seq_length=123)
+
+    fast_language_model = fake_unsloth.FastLanguageModel
+    kwargs = fast_language_model.from_pretrained.call_args.kwargs
+    assert kwargs["model_name"] == "some/path"
+    assert kwargs["max_seq_length"] == 123
+    assert kwargs["load_in_4bit"] is True
+    fast_language_model.for_inference.assert_called_once_with(loaded_model)
+    assert model.generation_config.max_length is None
+    assert (model, tokenizer) == (loaded_model, "tokenizer")
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs a CUDA GPU")
+def test_saved_adapter_reloads_with_the_trained_weights(tmp_path):
+    model, tokenizer = load_model_for_training()
+    categories = ["BPO", "HR"]
+    resumes = pd.DataFrame(
+        {
+            "Resume_str": ["Managed payroll and hiring.", "Answered customer calls."],
+            "Category": ["HR", "BPO"],
+        }
+    )
+    dataset = build_text_dataset(resumes, categories, tokenizer.eos_token)
+    trainer = build_trainer(
+        model,
+        tokenizer,
+        dataset,
+        dataset,
+        str(tmp_path / "run"),
+        max_steps=5,
+        per_device_train_batch_size=1,
+        gradient_accumulation_steps=1,
+    )
+    inputs = tokenizer("Managed payroll", return_tensors="pt").to("cuda")
+
+    def last_token_logits(candidate):
+        candidate.eval()
+        with torch.no_grad():
+            return candidate(**inputs).logits[0, -1].float().cpu()
+
+    untrained = last_token_logits(model)
+    trainer.train()
+    trained = last_token_logits(model)
+    adapter_dir = tmp_path / "adapter"
+    save_adapter(trainer, tokenizer, str(adapter_dir))
+    reloaded_model, _ = load_model_for_inference(str(adapter_dir))
+    reloaded = last_token_logits(reloaded_model)
+
+    assert (adapter_dir / "adapter_config.json").exists()
+    assert (adapter_dir / "adapter_model.safetensors").exists()
+    training_changed_by = (trained - untrained).abs().max()
+    reload_differs_by = (trained - reloaded).abs().max()
+    assert training_changed_by > 0
+    assert reload_differs_by < 0.5 * training_changed_by
