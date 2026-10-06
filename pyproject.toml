@@ -5,12 +5,16 @@ description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "accelerate>=1.15.0",
     "datasets>=5.0.1",
     "evaluate>=0.4.6",
     "numpy>=2.5.3",
     "scikit-learn>=1.9.1",
     "torch>=2.14.0",
     "transformers>=5.17.0",
+    "trl<0.20.0",
+    "unsloth>=2025.7.2",
+    "unsloth-zoo>=2025.7.4",
 ]
 
 [dependency-groups]
@@ -22,3 +26,11 @@ dev = [
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu130" }

@@ -3,33 +3,61 @@ import json
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from src.bpe_tokenizer import BPETokenizer, load_dialogue, train_bpe
+from src.bpe_tokenizer import BPETokenizer, train_bpe
 
-DATA_PATH = "data/SW_EpisodeIV_VI.json"
+DATA_PATH = "data/star_wars_script.jsonl"
 SPECIAL_TOKEN = "<|endoftext|>"
+VAL_MOVIE = "Revenge of the Sith"
+TEST_MOVIE = "Return of the Jedi 4K83"
 
 
-def build_training_text(data_path=DATA_PATH, separator=SPECIAL_TOKEN):
+def load_scenes(path=DATA_PATH):
+    """Load all scenes from the jsonl dataset file."""
+    scenes = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            scenes.append(json.loads(line))
+    return scenes
+
+
+def split_scenes_by_movie(scenes, val_movie=VAL_MOVIE, test_movie=TEST_MOVIE):
     """
-    Load the Star Wars dialogue dataset and join every line together into one
-    long piece of text, inserting `separator` between each line so line
-    boundaries are explicit rather than lines running directly into each other.
+    Split scenes into train/val/test based on the movie field, so that
+    validation and test data come from entirely different films than
+    training data -- preventing data leakage between the DataLoader and
+    the Evaluator.
     """
-    with open(data_path, encoding="utf-8") as f:
-        data = json.load(f)
-    lines = [entry["Line"] for entry in data]
-    return f" {separator} ".join(lines)
+    train, val, test = [], [], []
+    for scene in scenes:
+        movie = scene["movie"]
+        if movie == val_movie:
+            val.append(scene)
+        elif movie == test_movie:
+            test.append(scene)
+        else:
+            train.append(scene)
+    return train, val, test
+
+
+def scenes_to_text(scenes, separator=SPECIAL_TOKEN):
+    """
+    Flatten a list of scenes into one text blob. Lines within the same
+    scene are joined with spaces; different scenes are joined with the
+    special separator token, so the tokenizer/model can tell where one
+    scene ends and the next begins.
+    """
+    scene_texts = []
+    for scene in scenes:
+        lines = [turn["text"] for turn in scene["turns"]]
+        scene_texts.append(" ".join(lines))
+    return f" {separator} ".join(scene_texts)
 
 
 def encode_with_special_token(tokenizer, text, special_token=SPECIAL_TOKEN):
     """
-    Encode text using the given BPE tokenizer, treating `special_token` as a
-    single, indivisible token rather than letting it get broken down into
-    subword pieces like ordinary text would be.
-
-    We do this by splitting the text on the special token first, encoding
-    each surrounding piece of real text normally, and manually inserting the
-    special token's ID between pieces.
+    Encode text using the given BPE tokenizer, treating `special_token` as
+    a single, indivisible token rather than letting it get broken down
+    into subword pieces like ordinary text would be.
     """
     special_id = tokenizer.str_to_int[special_token]
     segments = text.split(special_token)
@@ -80,9 +108,7 @@ def create_dataloader(
     drop_last=True,
     num_workers=0,
 ):
-    """
-    Build a TextDataset from `text` and wrap it in a PyTorch DataLoader.
-    """
+    """Build a TextDataset from `text` and wrap it in a PyTorch DataLoader."""
     dataset = TextDataset(text, tokenizer, max_length, stride)
     dataloader = DataLoader(
         dataset,
@@ -95,18 +121,19 @@ def create_dataloader(
 
 
 if __name__ == "__main__":  # pragma: no cover
-    raw_text = load_dialogue(DATA_PATH)
-    merges, vocab_symbols = train_bpe(raw_text, num_merges=300)
+    scenes = load_scenes()
+    train_scenes, val_scenes, test_scenes = split_scenes_by_movie(scenes)
+
+    print(f"Train scenes: {len(train_scenes)}")
+    print(f"Val scenes: {len(val_scenes)}")
+    print(f"Test scenes: {len(test_scenes)}")
+
+    train_text = scenes_to_text(train_scenes)
+    val_text = scenes_to_text(val_scenes)
+    test_text = scenes_to_text(test_scenes)
+
+    merges, vocab_symbols = train_bpe(train_text, num_merges=300)
     tokenizer = BPETokenizer(merges, vocab_symbols)
 
-    training_text = build_training_text()
-    dataloader = create_dataloader(training_text, tokenizer)
-
-    print(f"Number of batches: {len(dataloader)}")
-
-    first_batch = next(iter(dataloader))
-    inputs, targets = first_batch
-    print("Input batch shape:", inputs.shape)
-    print("Target batch shape:", targets.shape)
-    print("First input sequence (first 10 tokens):", inputs[0][:10].tolist())
-    print("First target sequence (first 10 tokens):", targets[0][:10].tolist())
+    train_dataloader = create_dataloader(train_text, tokenizer)
+    print(f"Number of training batches: {len(train_dataloader)}")

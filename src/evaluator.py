@@ -1,106 +1,105 @@
 """
-Evaluate a pretrained BERT model on the SST-2 sentiment classification task
-using Hugging Face's `evaluate` library.
-
-Model: textattack/bert-base-uncased-SST-2
-    A BERT model fine-tuned specifically for binary sentiment classification
-    on the SST-2 dataset (part of the GLUE benchmark).
-
-Dataset: glue/sst2 (validation split)
-    Short sentences labeled 0 (negative) or 1 (positive). We use the
-    validation split since SST-2's test split has no public labels.
+Evaluator for measuring a causal language model's loss/perplexity on
+held-out Star Wars dialogue (the Return of the Jedi test split), used to
+compare model performance before and after fine-tuning.
 """
 
-import evaluate
+import math
+
 import torch
-from datasets import load_dataset
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from peft import PeftModel
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
-MODEL_NAME = "textattack/bert-base-uncased-SST-2"
-DATASET_NAME = "nyu-mll/glue"
-DATASET_CONFIG = "sst2"
-DATASET_SPLIT = "validation"
+from src.dataloader import load_scenes, scenes_to_text, split_scenes_by_movie
+
+MODEL_ID = "unsloth/Llama-3.2-1B"
+MAX_LENGTH = 128
+STRIDE = 32
 
 
-def load_model_and_tokenizer(model_name=MODEL_NAME):
-    """Load the pretrained BERT model and its matching tokenizer."""
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(model_name)
+def load_test_text(data_path="data/star_wars_script.jsonl"):
+    """Load and flatten the held-out test split (Return of the Jedi) into text."""
+    scenes = load_scenes(data_path)
+    _, _, test_scenes = split_scenes_by_movie(scenes)
+    return scenes_to_text(test_scenes)
+
+
+def compute_loss(
+    model, tokenizer, text, max_length=MAX_LENGTH, stride=STRIDE, device="cuda"
+):
+    """
+    Compute average loss (and perplexity) of `model` on `text`, using a
+    sliding window of `max_length` tokens with the given `stride`, so long
+    documents can be evaluated in fixed-size chunks.
+    """
     model.eval()
+    encodings = tokenizer(text, return_tensors="pt")
+    input_ids = encodings.input_ids.to(device)
+    seq_len = input_ids.size(1)
+
+    total_loss = 0.0
+    total_chunks = 0
+
+    with torch.no_grad():
+        for i in range(0, seq_len - max_length, stride):
+            chunk = input_ids[:, i : i + max_length]
+            outputs = model(chunk, labels=chunk)
+            total_loss += outputs.loss.item()
+            total_chunks += 1
+
+    if total_chunks == 0:
+        raise ValueError("Text too short to form even one evaluation chunk.")
+
+    avg_loss = total_loss / total_chunks
+    perplexity = math.exp(avg_loss)
+    return avg_loss, perplexity
+
+
+def load_base_model(model_id=MODEL_ID, device="cuda"):  # pragma: no cover
+    """Load the plain, un-fine-tuned base model and tokenizer."""
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    model = AutoModelForCausalLM.from_pretrained(model_id, device_map=device)
     return model, tokenizer
 
 
-def load_eval_dataset(
-    dataset_name=DATASET_NAME,
-    dataset_config=DATASET_CONFIG,
-    split=DATASET_SPLIT,
-    num_samples=None,
-):
+def load_finetuned_model(
+    adapter_path, model_id=MODEL_ID, device="cuda"
+):  # pragma: no cover
     """
-    Load the SST-2 validation dataset. Optionally limit to `num_samples`
-    examples, which keeps evaluation fast during development and testing.
+    Load the base model, then attach the saved LoRA adapter on top of it,
+    producing the fine-tuned model for evaluation.
     """
-    dataset = load_dataset(dataset_name, dataset_config, split=split)
-    if num_samples is not None:
-        dataset = dataset.select(range(min(num_samples, len(dataset))))
-    return dataset
+    tokenizer = AutoTokenizer.from_pretrained(adapter_path)
+    base_model = AutoModelForCausalLM.from_pretrained(model_id, device_map=device)
+    model = PeftModel.from_pretrained(base_model, adapter_path)
+    model = (
+        model.merge_and_unload()
+    )  # merge LoRA weights into the base model for clean inference
+    return model, tokenizer
 
 
-def predict_labels(model, tokenizer, texts, batch_size=16):
+def evaluate_model(
+    model, tokenizer, data_path="data/star_wars_script.jsonl", device="cuda"
+):  # pragma: no cover
     """
-    Run the model on a list of texts and return predicted labels as a list
-    of ints (0 = negative, 1 = positive), matching SST-2's label convention.
+    Full evaluation pipeline: given an already-loaded model/tokenizer,
+    compute loss/perplexity on the held-out test split.
     """
-    predictions = []
-
-    for i in range(0, len(texts), batch_size):
-        batch = texts[i : i + batch_size]
-        inputs = tokenizer(batch, padding=True, truncation=True, return_tensors="pt")
-        with torch.no_grad():
-            outputs = model(**inputs)
-        batch_preds = torch.argmax(outputs.logits, dim=-1).tolist()
-        predictions.extend(batch_preds)
-
-    return predictions
-
-
-def compute_metrics(predictions, references):
-    """
-    Compute accuracy and F1 score comparing model predictions against the
-    true SST-2 labels.
-    """
-    accuracy_metric = evaluate.load("accuracy")
-    f1_metric = evaluate.load("f1")
-
-    accuracy_result = accuracy_metric.compute(
-        predictions=predictions, references=references
-    )
-    f1_result = f1_metric.compute(predictions=predictions, references=references)
-
-    return {
-        "accuracy": accuracy_result["accuracy"],
-        "f1": f1_result["f1"],
-    }
-
-
-def run_evaluation(num_samples=200):
-    """
-    Full evaluation pipeline: load the model, load a subset of SST-2, run
-    predictions, and compute accuracy/F1 against the true labels.
-    """
-    model, tokenizer = load_model_and_tokenizer()
-    dataset = load_eval_dataset(num_samples=num_samples)
-
-    texts = dataset["sentence"]
-    references = dataset["label"]
-
-    predictions = predict_labels(model, tokenizer, texts)
-    metrics = compute_metrics(predictions, references)
-
-    return metrics
+    test_text = load_test_text(data_path)
+    avg_loss, perplexity = compute_loss(model, tokenizer, test_text, device=device)
+    return {"loss": avg_loss, "perplexity": perplexity}
 
 
 if __name__ == "__main__":  # pragma: no cover
-    results = run_evaluation(num_samples=200)
-    print(f"Accuracy: {results['accuracy']:.4f}")
-    print(f"F1 Score: {results['f1']:.4f}")
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] == "finetuned":
+        print("Evaluating FINE-TUNED model...")
+        model, tokenizer = load_finetuned_model("outputs/star_wars_lora")
+    else:
+        print("Evaluating BASE (pre-fine-tuning) model...")
+        model, tokenizer = load_base_model()
+
+    results = evaluate_model(model, tokenizer)
+    print(f"Loss: {results['loss']:.4f}")
+    print(f"Perplexity: {results['perplexity']:.4f}")

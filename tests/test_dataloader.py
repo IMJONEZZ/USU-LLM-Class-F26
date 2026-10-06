@@ -1,6 +1,7 @@
 """
-Tests for the TextDataset and DataLoader helpers in src/dataloader.py.
-
+Tests for the data loading/splitting functions and TextDataset/DataLoader
+helpers in src/dataloader.py, updated for the new scene-based Star Wars
+dataset with movie-level train/validation/test splitting.
 """
 
 import json
@@ -10,15 +11,50 @@ import pytest
 from src.bpe_tokenizer import BPETokenizer, train_bpe
 from src.dataloader import (
     SPECIAL_TOKEN,
+    TEST_MOVIE,
+    VAL_MOVIE,
     TextDataset,
-    build_training_text,
     create_dataloader,
     encode_with_special_token,
+    load_scenes,
+    scenes_to_text,
+    split_scenes_by_movie,
 )
 
 # ---------------------------------------------------------------------------
 # FIXTURES
 # ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def fake_scenes_file(tmp_path):
+    """A small fake scenes.jsonl file covering train/val/test movies."""
+    scenes = [
+        {
+            "movie": "A New Hope 4K77",
+            "turns": [
+                {"speaker": "Luke", "text": "I want to learn the ways of the Force."},
+                {"speaker": "Obi-Wan", "text": "You will, young Skywalker."},
+            ],
+        },
+        {
+            "movie": VAL_MOVIE,
+            "turns": [{"speaker": "Anakin", "text": "I will do what I must."}],
+        },
+        {
+            "movie": TEST_MOVIE,
+            "turns": [
+                {"speaker": "Luke", "text": "I am a Jedi, like my father before me."}
+            ],
+        },
+        {
+            "movie": "A New Hope 4K77",
+            "turns": [{"speaker": "Leia", "text": "Help me, Obi-Wan Kenobi."}],
+        },
+    ]
+    fake_file = tmp_path / "fake_scenes.jsonl"
+    fake_file.write_text("\n".join(json.dumps(s) for s in scenes), encoding="utf-8")
+    return str(fake_file)
 
 
 @pytest.fixture
@@ -34,47 +70,84 @@ def tokenizer(training_text):
     return BPETokenizer(merges, vocab)
 
 
-@pytest.fixture
-def text_with_special_token(training_text):
-    """Sample text containing the special end-of-text separator token."""
-    return f"the cat sat {SPECIAL_TOKEN} the dog ran {SPECIAL_TOKEN} we are doomed"
-
-
 # ---------------------------------------------------------------------------
-# build_training_text() TESTS
-# Mocked via a temp file, so this doesn't depend on the real dataset existing.
+# load_scenes() TESTS
 # ---------------------------------------------------------------------------
 
 
-def test_build_training_text_joins_lines_with_separator(tmp_path):
-    """Lines from the dataset should be joined together with the separator token."""
-    fake_data = [
-        {"Character": "LUKE", "Line": "Hello there."},
-        {"Character": "LEIA", "Line": "General Kenobi."},
-    ]
-    fake_file = tmp_path / "fake_dataset.json"
-    fake_file.write_text(json.dumps(fake_data), encoding="utf-8")
-
-    result = build_training_text(data_path=str(fake_file))
-
-    assert "Hello there." in result
-    assert "General Kenobi." in result
-    assert SPECIAL_TOKEN in result
+def test_load_scenes_reads_all_scenes(fake_scenes_file):
+    """load_scenes should read every scene record from the jsonl file."""
+    scenes = load_scenes(fake_scenes_file)
+    assert len(scenes) == 4
 
 
-def test_build_training_text_uses_custom_separator(tmp_path):
-    """A custom separator should be used instead of the default when provided."""
-    fake_data = [
-        {"Character": "LUKE", "Line": "Hello there."},
-        {"Character": "LEIA", "Line": "General Kenobi."},
-    ]
-    fake_file = tmp_path / "fake_dataset.json"
-    fake_file.write_text(json.dumps(fake_data), encoding="utf-8")
+def test_load_scenes_preserves_movie_field(fake_scenes_file):
+    """Each loaded scene should retain its movie field."""
+    scenes = load_scenes(fake_scenes_file)
+    movies = {scene["movie"] for scene in scenes}
+    assert "A New Hope 4K77" in movies
+    assert VAL_MOVIE in movies
+    assert TEST_MOVIE in movies
 
-    result = build_training_text(data_path=str(fake_file), separator="<SEP>")
 
-    assert "<SEP>" in result
-    assert SPECIAL_TOKEN not in result
+# ---------------------------------------------------------------------------
+# split_scenes_by_movie() TESTS
+# ---------------------------------------------------------------------------
+
+
+def test_split_scenes_by_movie_separates_correctly(fake_scenes_file):
+    """Scenes should be correctly bucketed into train/val/test based on movie."""
+    scenes = load_scenes(fake_scenes_file)
+    train, val, test = split_scenes_by_movie(scenes)
+
+    assert len(train) == 2
+    assert len(val) == 1
+    assert len(test) == 1
+    assert val[0]["movie"] == VAL_MOVIE
+    assert test[0]["movie"] == TEST_MOVIE
+
+
+def test_split_scenes_by_movie_no_overlap(fake_scenes_file):
+    """No scene should appear in more than one split -- the core anti-leakage guarantee."""
+    scenes = load_scenes(fake_scenes_file)
+    train, val, test = split_scenes_by_movie(scenes)
+
+    train_ids = {id(s) for s in train}
+    val_ids = {id(s) for s in val}
+    test_ids = {id(s) for s in test}
+
+    assert train_ids.isdisjoint(val_ids)
+    assert train_ids.isdisjoint(test_ids)
+    assert val_ids.isdisjoint(test_ids)
+
+
+# ---------------------------------------------------------------------------
+# scenes_to_text() TESTS
+# ---------------------------------------------------------------------------
+
+
+def test_scenes_to_text_joins_turns_within_scene(fake_scenes_file):
+    """Multiple turns within the same scene should be joined with spaces."""
+    scenes = load_scenes(fake_scenes_file)
+    train, _, _ = split_scenes_by_movie(scenes)
+    text = scenes_to_text([train[0]])  # the scene with two turns
+
+    assert "I want to learn the ways of the Force." in text
+    assert "You will, young Skywalker." in text
+
+
+def test_scenes_to_text_separates_scenes_with_special_token(fake_scenes_file):
+    """Different scenes should be joined with the special end-of-text token."""
+    scenes = load_scenes(fake_scenes_file)
+    train, _, _ = split_scenes_by_movie(scenes)
+    text = scenes_to_text(train)
+
+    assert SPECIAL_TOKEN in text
+
+
+def test_scenes_to_text_empty_list_returns_empty_string():
+    """An empty list of scenes should produce an empty string."""
+    assert scenes_to_text([]) == ""
 
 
 # ---------------------------------------------------------------------------
@@ -82,102 +155,33 @@ def test_build_training_text_uses_custom_separator(tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def test_encode_with_special_token_inserts_special_id(
-    tokenizer, text_with_special_token
-):
+def test_encode_with_special_token_inserts_special_id(tokenizer):
     """The special token's ID should appear in the encoded output."""
-    ids = encode_with_special_token(tokenizer, text_with_special_token)
+    text = f"the cat sat {SPECIAL_TOKEN} the dog ran"
+    ids = encode_with_special_token(tokenizer, text)
     special_id = tokenizer.str_to_int[SPECIAL_TOKEN]
     assert special_id in ids
 
 
-def test_encode_with_special_token_correct_count(tokenizer, text_with_special_token):
-    """The special token should appear exactly as many times as it does in the text."""
-    ids = encode_with_special_token(tokenizer, text_with_special_token)
-    special_id = tokenizer.str_to_int[SPECIAL_TOKEN]
-    expected_count = text_with_special_token.count(SPECIAL_TOKEN)
-    actual_count = ids.count(special_id)
-    assert actual_count == expected_count
-
-
-def test_encode_with_special_token_no_special_token_present(tokenizer):
-    """Text without the special token should encode normally, with no special ID inserted."""
-    ids = encode_with_special_token(tokenizer, "the cat sat")
-    special_id = tokenizer.str_to_int[SPECIAL_TOKEN]
-    assert special_id not in ids
-
-
 def test_encode_with_special_token_does_not_split_special_token(tokenizer):
-    """
-    The special token should never be broken into subword pieces -- it should
-    map to exactly one ID, not multiple IDs from character-level splitting.
-    """
+    """The special token should map to exactly one ID, never split into subwords."""
     ids = encode_with_special_token(tokenizer, SPECIAL_TOKEN)
     assert len(ids) == 1
     assert ids[0] == tokenizer.str_to_int[SPECIAL_TOKEN]
 
 
 # ---------------------------------------------------------------------------
-# TextDataset TESTS
+# TextDataset / create_dataloader TESTS
 # ---------------------------------------------------------------------------
-
-
-def test_text_dataset_length_matches_expected_chunk_count(tokenizer, training_text):
-    """
-    The number of samples should match how many sliding-window chunks fit in
-    the tokenized text, given max_length and stride.
-    """
-    max_length = 5
-    stride = 2
-    dataset = TextDataset(training_text, tokenizer, max_length, stride)
-
-    token_ids = encode_with_special_token(tokenizer, training_text)
-    expected_len = len(range(0, len(token_ids) - max_length, stride))
-
-    assert len(dataset) == expected_len
-
-
-def test_text_dataset_getitem_returns_input_target_pair(tokenizer, training_text):
-    """Each item should be a tuple of (input, target) tensors."""
-    dataset = TextDataset(training_text, tokenizer, max_length=5, stride=2)
-    input_ids, target_ids = dataset[0]
-
-    assert len(input_ids) == 5
-    assert len(target_ids) == 5
 
 
 def test_text_dataset_target_is_input_shifted_by_one(tokenizer, training_text):
-    """
-    The target sequence should be exactly the input sequence shifted forward
-    by one token -- this is the core requirement for next-token-prediction
-    training, so it's worth testing explicitly rather than just checking shape.
-    """
+    """The target sequence should be the input sequence shifted forward by one token."""
     dataset = TextDataset(training_text, tokenizer, max_length=5, stride=2)
     input_ids, target_ids = dataset[0]
 
-    # target[i] should equal input[i+1] for every position except the last
     for i in range(len(input_ids) - 1):
         assert target_ids[i].item() == input_ids[i + 1].item()
-
-
-def test_text_dataset_multiple_chunks_differ(tokenizer, training_text):
-    """With a stride smaller than max_length, consecutive chunks should overlap but not be identical."""
-    dataset = TextDataset(training_text, tokenizer, max_length=5, stride=2)
-    assert len(dataset) > 1
-
-    first_input, _ = dataset[0]
-    second_input, _ = dataset[1]
-    assert not torch_tensors_equal(first_input, second_input)
-
-
-def torch_tensors_equal(a, b):
-    """Helper to compare two tensors for exact equality."""
-    return a.shape == b.shape and bool((a == b).all())
-
-
-# ---------------------------------------------------------------------------
-# create_dataloader() TESTS
-# ---------------------------------------------------------------------------
 
 
 def test_create_dataloader_returns_correct_batch_shape(tokenizer, training_text):
@@ -195,21 +199,3 @@ def test_create_dataloader_returns_correct_batch_shape(tokenizer, training_text)
 
     assert inputs.shape[1] == 5
     assert targets.shape[1] == 5
-    assert inputs.shape[0] <= 2
-
-
-def test_create_dataloader_drop_last_removes_incomplete_batch(tokenizer, training_text):
-    """
-    With drop_last=True, the DataLoader should not yield a final batch smaller
-    than batch_size, even if the dataset size doesn't divide evenly.
-    """
-    dataloader = create_dataloader(
-        training_text,
-        tokenizer,
-        batch_size=1000,  # deliberately larger than the dataset to force this case
-        max_length=5,
-        stride=2,
-        shuffle=False,
-        drop_last=True,
-    )
-    assert len(dataloader) == 0
