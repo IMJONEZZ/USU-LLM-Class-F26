@@ -205,7 +205,7 @@ def _evaluate_model():
     }
 
 
-if modal is not None:
+if modal is not None and "HF_TOKEN" in os.environ:
     evaluate_model = app.function(image=image, gpu="T4", secrets=[hf_secret])(
         _evaluate_model
     )
