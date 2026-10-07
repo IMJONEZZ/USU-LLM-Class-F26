@@ -565,6 +565,8 @@ def generate_answers(
                         "generated_ids": generated,
                         "terminated_with_eos": terminated,
                         "format_issues": issues,
+                        # "ok" means generation ended with EOS, not that the
+                        # answer is correct; correctness is recorded in "exact".
                         "status": "empty"
                         if not normalized
                         else "ok"

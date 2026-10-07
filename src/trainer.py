@@ -270,6 +270,8 @@ def train_epoch(
             group.append(batch)
         if not group:
             break
+        # Four lexical words can have different token counts. Weight each batch
+        # by its supervised tokens to match one combined batch's mean loss.
         counts = [int((b["labels"][:, 1:] != -100).sum()) for b in group]
         retries = 0
         while True:
@@ -383,6 +385,7 @@ def fit(
         "timing_scope": "Training epoch loops including batching, backward and optimizer; excludes loading, dev evaluation and checkpoint saves",
     }
     gpu = str(device).startswith("cuda")
+    # Keep the calibrated scale across epochs instead of repeating overflows.
     scaler = torch.amp.GradScaler("cuda", enabled=gpu)
     for epoch in range(1, epochs + 1):
         print(
@@ -425,6 +428,8 @@ def fit(
                 "loss_scale": stats["loss_scale"],
             }
         )
+        # Strict improvement keeps the earlier checkpoint on a tie; the last
+        # epoch is not automatically best, and test scores never select it.
         if result["best_dev_loss"] is None or dev_loss < result["best_dev_loss"]:
             result.update(best_epoch=epoch, best_dev_loss=dev_loss)
             model.save_pretrained(output / "best")
@@ -582,6 +587,8 @@ def run_gpu(args):
         "example_counts": {s: len(r) for s, r in data["examples"].items()},
     }
     write_json(args.output / "config.json", metadata)
+    # Feasibility is only a compatibility gate. Reload the original base and
+    # initialize fresh adapters rather than continuing its short training run.
     model, _ = FastLanguageModel.from_pretrained(
         model_name=data["model"],
         revision=data["revision"],
