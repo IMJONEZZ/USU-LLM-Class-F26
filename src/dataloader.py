@@ -3,6 +3,12 @@
 from collections.abc import Iterable, Mapping
 
 DATASET_NAME = "IMJONEZZ/star-wars-dataset"
+TRAIN_FILMS = {
+    "ep1_the_phantom_menace",
+    "ep2_attack_of_the_clones",
+    "ep3_revenge_of_the_sith",
+    "ep4_a_new_hope",
+}
 VALIDATION_FILM = "ep5_empire_strikes_back"
 TEST_FILM = "ep6_return_of_the_jedi"
 
@@ -67,8 +73,8 @@ def create_datasets(
 ) -> dict[str, object]:
     """Return tokenized train, validation, and test datasets.
 
-    Training uses every film other than Episodes V and VI. Those two films are
-    held out as validation and test data respectively.
+    Training uses Episodes I through IV. Episode V is validation data and
+    Episode VI is test data.
     """
     if block_size < 2:
         raise ValueError("block_size must be at least 2 tokens")
@@ -78,11 +84,7 @@ def create_datasets(
     source = load_dataset(dataset_name, "cues", split="train")
     grouped = combine_consecutive_lines(source)
     texts_by_split = {
-        "train": [
-            row["text"]
-            for row in grouped
-            if row["film"] not in {VALIDATION_FILM, TEST_FILM}
-        ],
+        "train": [row["text"] for row in grouped if row["film"] in TRAIN_FILMS],
         "validation": [
             row["text"] for row in grouped if row["film"] == VALIDATION_FILM
         ],

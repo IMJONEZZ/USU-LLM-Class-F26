@@ -2,6 +2,8 @@
 
 from src.dataloader import DATASET_NAME, TEST_FILM, combine_consecutive_lines
 
+MODEL_NAME = "meta-llama/Llama-3.2-1B"
+
 
 def make_continuation_examples(
     texts: list[str], tokenizer
@@ -23,6 +25,7 @@ def make_continuation_examples(
 
 def run_evaluation(
     model_name: str,
+    adapter_path: str | None = None,
     split: str = "test",
     dataset_name: str = DATASET_NAME,
     max_new_tokens: int = 64,
@@ -35,7 +38,8 @@ def run_evaluation(
     import evaluate
     import torch
     from datasets import load_dataset
-    from transformers import AutoTokenizer, pipeline
+    from peft import PeftModel
+    from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
     source = load_dataset(dataset_name, "cues", split="train")
     test_rows = (row for row in source if row["film"] == TEST_FILM)
@@ -51,9 +55,16 @@ def run_evaluation(
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "left"
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+    )
+    if adapter_path is not None:
+        model = PeftModel.from_pretrained(model, adapter_path)
+
     generator = pipeline(
         "text-generation",
-        model=model_name,
+        model=model,
         tokenizer=tokenizer,
         device=0 if torch.cuda.is_available() else -1,
     )
@@ -77,4 +88,4 @@ def run_evaluation(
 
 
 if __name__ == "__main__":  # pragma: no cover
-    print(run_evaluation(model_name="meta-llama/Llama-3.2-1B"))
+    print(run_evaluation(model_name=MODEL_NAME))

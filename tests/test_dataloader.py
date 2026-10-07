@@ -11,16 +11,20 @@ from src.dataloader import combine_consecutive_lines, create_datasets
 
 def test_combine_consecutive_lines_groups_only_matching_speaker_and_film():
     rows = [
-        {"film": "ep4", "speaker": "Leia", "text": "Help me."},
-        {"film": "ep4", "speaker": "Leia", "text": "You're my only hope."},
-        {"film": "ep4", "speaker": "Luke", "text": "Who is she?"},
-        {"film": "ep5", "speaker": "Luke", "text": "I am ready."},
+        {"film": "ep4_a_new_hope", "speaker": "Leia", "text": "Help me."},
+        {"film": "ep4_a_new_hope", "speaker": "Leia", "text": "You're my only hope."},
+        {"film": "ep4_a_new_hope", "speaker": "Luke", "text": "Who is she?"},
+        {"film": "ep5_empire_strikes_back", "speaker": "Luke", "text": "I am ready."},
     ]
 
     assert combine_consecutive_lines(rows) == [
-        {"film": "ep4", "speaker": "Leia", "text": "Help me. You're my only hope."},
-        {"film": "ep4", "speaker": "Luke", "text": "Who is she?"},
-        {"film": "ep5", "speaker": "Luke", "text": "I am ready."},
+        {
+            "film": "ep4_a_new_hope",
+            "speaker": "Leia",
+            "text": "Help me. You're my only hope.",
+        },
+        {"film": "ep4_a_new_hope", "speaker": "Luke", "text": "Who is she?"},
+        {"film": "ep5_empire_strikes_back", "speaker": "Luke", "text": "I am ready."},
     ]
 
 
@@ -36,9 +40,25 @@ def test_combine_consecutive_lines_does_not_merge_unknown_speakers():
     ]
 
 
-def test_create_datasets_reserves_episodes_five_and_six(monkeypatch):
+def test_create_datasets_uses_episodes_one_through_four_and_reserves_five_six(
+    monkeypatch,
+):
     source = [
-        {"film": "ep4", "speaker": "Leia", "text": "Training text here."},
+        {
+            "film": "ep1_the_phantom_menace",
+            "speaker": "Qui-Gon",
+            "text": "Episode one training text.",
+        },
+        {
+            "film": "ep4_a_new_hope",
+            "speaker": "Leia",
+            "text": "Episode four training text.",
+        },
+        {
+            "film": "rogue_one",
+            "speaker": "Jyn",
+            "text": "Not in the training range.",
+        },
         {
             "film": "ep5_empire_strikes_back",
             "speaker": "Luke",
@@ -67,7 +87,7 @@ def test_create_datasets_reserves_episodes_five_and_six(monkeypatch):
     result = create_datasets(tokenizer, block_size=512)
 
     assert set(result) == {"train", "validation", "test"}
-    assert len(result["train"]) == 1
+    assert len(result["train"]) == 2
     assert len(result["validation"]) == 1
     assert len(result["test"]) == 1
     datasets_module.load_dataset.assert_called_once_with(
@@ -75,7 +95,8 @@ def test_create_datasets_reserves_episodes_five_and_six(monkeypatch):
     )
     tokenized_texts = [call.args[0] for call in tokenizer.encode.call_args_list]
     assert tokenized_texts == [
-        "Training text here.",
+        "Episode one training text.",
+        "Episode four training text.",
         "Validation text here.",
         "Test text here.",
     ]

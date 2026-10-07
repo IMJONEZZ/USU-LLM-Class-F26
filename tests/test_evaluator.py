@@ -47,29 +47,44 @@ def test_run_evaluation_uses_episode_six_and_returns_rouge(monkeypatch):
     tokenizer.encode.return_value = [1, 2, 3, 4, 5, 6]
     tokenizer.decode.side_effect = lambda tokens, skip_special_tokens: str(tokens)
     generation = MagicMock(return_value=[[{"generated_text": "continuation"}]])
+    base_model = MagicMock()
+    adapted_model = MagicMock()
     metric = MagicMock()
     metric.compute.return_value = {"rouge1": 0.5, "rouge2": 0.2, "rougeL": 0.4}
     load_dataset = MagicMock(return_value=source)
     evaluate_module = SimpleNamespace(load=MagicMock(return_value=metric))
     datasets_module = SimpleNamespace(load_dataset=load_dataset)
     transformers_module = SimpleNamespace(
+        AutoModelForCausalLM=SimpleNamespace(
+            from_pretrained=MagicMock(return_value=base_model)
+        ),
         AutoTokenizer=SimpleNamespace(
             from_pretrained=MagicMock(return_value=tokenizer)
         ),
         pipeline=MagicMock(return_value=generation),
     )
+    peft_module = SimpleNamespace(
+        PeftModel=SimpleNamespace(from_pretrained=MagicMock(return_value=adapted_model))
+    )
     monkeypatch.setitem(sys.modules, "datasets", datasets_module)
     monkeypatch.setitem(sys.modules, "evaluate", evaluate_module)
     monkeypatch.setitem(sys.modules, "transformers", transformers_module)
+    monkeypatch.setitem(sys.modules, "peft", peft_module)
     monkeypatch.setattr("torch.cuda.is_available", lambda: False)
 
-    result = evaluator_module.run_evaluation("trained-model")
+    result = evaluator_module.run_evaluation(
+        "meta-llama/Llama-3.2-1B", adapter_path="adapter-directory"
+    )
 
     assert result["rouge1"] == 0.5
     load_dataset.assert_called_once_with(
         "IMJONEZZ/star-wars-dataset", "cues", split="train"
     )
     transformers_module.pipeline.assert_called_once()
+    peft_module.PeftModel.from_pretrained.assert_called_once_with(
+        base_model, "adapter-directory"
+    )
+    assert transformers_module.pipeline.call_args.kwargs["model"] is adapted_model
     metric.compute.assert_called_once_with(
         predictions=["continuation"],
         references=["[4, 5, 6]"],
