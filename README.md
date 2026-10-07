@@ -56,4 +56,5 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - Assignment 1 — byte-level BPE tokenizer (`src/bpe_tokenizer.py`)
 - Assignment 2 — PyTorch data loader (`src/dataloader.py`)
 - Assignment 3 — model evaluator (`src/evaluator.py`)
-- Assignment 4 — GPU inference and a ZenML pipeline (in progress)
+- Assignment 4 — GPU inference and a ZenML pipeline (`gpu/`, `pipelines/`)
+- Assignment 5 — fine-tuning Llama 3.2 1B (in progress)
