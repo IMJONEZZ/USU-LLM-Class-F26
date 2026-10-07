@@ -322,77 +322,67 @@ measured comparison is saved in `data/assignment5/docker-run/results.md`.
 Local reports and the detailed notes are
 preserved under ignored `data/assignment5/`; they are not files to push.
 
-Build when the source or dependencies change. Rebuild to include the overflow fix:
+The root `Makefile` wraps the Docker commands, persistent mounts, authentication
+and logging. Run `make help` to list targets. From the repository root, a complete
+**new** experiment is one command:
 
 ```bash
-sudo docker build --platform linux/amd64 -f Dockerfile.training -t usu-llm-training:a5 .
-sudo docker run --rm --user "$(id -u):$(id -g)" usu-llm-training:a5 \
-  -m pytest -c /app/pyproject.toml --no-cov -p no:cacheprovider -q \
-  /app/tests/test_trainer.py /app/tests/test_llama_evaluator.py \
-  /app/tests/test_training_report.py /app/tests/test_trainer_gpu.py
+make a5-run RUN=experiment-2
 ```
 
-From the repository root, paste this into Bash once. It defines `a5` to run Python
-inside Docker with read-only inputs and persistent outputs/cache owned by your UID.
-Choose a fresh output directory for each experiment; existing outputs are never
-silently overwritten. Authentication uses your existing `HF_TOKEN` or login token
-file at runtime; no credentials enter the image.
+This builds the image, runs CPU tests and the GPU check, prepares data, checks
+feasibility, evaluates the original model, trains, evaluates the selected adapter,
+and generates the report. Stages run sequentially and stop on the first error.
+It requires the existing corpus and `data/evaluation/splits.json`; it never creates
+a replacement split. Choose an unused RUN name to preserve completed experiments.
+
+To run stages individually, use these in order, stopping if any stage fails:
 
 ```bash
-A5_OUTPUT_DIR="$PWD/data/assignment5/docker-run"
-A5_CACHE_DIR="$PWD/.cache/assignment5-docker"
-mkdir -p "$A5_OUTPUT_DIR" "$A5_CACHE_DIR"
-A5_AUTH=()
-A5_TOKEN_FILE="${HF_TOKEN_PATH:-${HF_HOME:-$HOME/.cache/huggingface}/token}"
-if [[ -f "$A5_TOKEN_FILE" ]]; then
-  A5_AUTH=(--mount "type=bind,src=$A5_TOKEN_FILE,dst=/run/secrets/hf_token,readonly"
-           -e HF_TOKEN_PATH=/run/secrets/hf_token)
-fi
-
-a5() {
-  sudo --preserve-env=HF_TOKEN docker run --rm --gpus all \
-    --user "$(id -u):$(id -g)" \
-    --mount "type=bind,src=$PWD/SW_EpisodeIV_VI.json,dst=/inputs/corpus.json,readonly" \
-    --mount "type=bind,src=$PWD/data/evaluation,dst=/inputs/evaluation,readonly" \
-    --mount "type=bind,src=$A5_OUTPUT_DIR,dst=/outputs" \
-    --mount "type=bind,src=$A5_CACHE_DIR,dst=/tmp/a5-cache" \
-    -e HF_TOKEN "${A5_AUTH[@]}" usu-llm-training:a5 "$@"
-}
+make a5-build
+make a5-test
+make a5-gpu
+make a5-prepare
+make a5-feasibility
+make a5-baseline
+make a5-train
+make a5-evaluate
+make a5-report
 ```
 
-Run these **one at a time**, proceeding only after the previous command succeeds:
+Defaults are `RUN=docker-run`, `TRAIN=train`, and `EPOCHS=3`. Results and logs go to
+`data/assignment5/$(RUN)/`, with the adapter in `$(TRAIN)/best`. Existing output
+artifacts are refused, and logs are appended with container failures propagated
+through `tee`. CPU tests, preparation and report generation do not request a GPU.
+Build again after source or dependency changes; invoking a single stage does not
+automatically rebuild the image or rerun its prerequisites.
+
+For a failed training attempt, choose a fresh training directory and use it in
+subsequent stages:
 
 ```bash
-# Prepare fixed spans using the real data and existing split manifest.
-a5 -m src.trainer prepare --corpus /inputs/corpus.json \
-  --splits /inputs/evaluation/splits.json --output /outputs/prepared
-
-# Two real optimizer updates; a success marker is required before full training.
-a5 -m src.trainer feasibility --prepared /outputs/prepared --output /outputs/feasibility
-
-# Evaluate the unmodified base model.
-a5 -m src.evaluator llama --prepared /outputs/prepared --output /outputs/before.json
-
-# Train from the original base; select the lowest development-loss checkpoint.
-a5 -m src.trainer train --prepared /outputs/prepared \
-  --feasibility /outputs/feasibility --epochs 3 --output /outputs/train
-
-# Evaluate the selected adapter, then produce a measured results draft.
-a5 -m src.evaluator llama --prepared /outputs/prepared \
-  --adapter /outputs/train/best --output /outputs/after.json
-a5 -m src.training_report --before /outputs/before.json --after /outputs/after.json \
-  --training /outputs/train/training.json --output /outputs/results.md
+make a5-train TRAIN=train-retry2
+make a5-evaluate TRAIN=train-retry2
+make a5-report TRAIN=train-retry2
 ```
 
-Results/checkpoints persist at `$A5_OUTPUT_DIR`, including `train/best`,
-`training.json` inside `train`, and `results.md`. Failures retain configuration and
-sanitized errors. An OOM never triggers quantization, offloading or paid cloud work.
-For a retry after failure, keep the failed directory and choose a fresh output such
-as `/outputs/train-retry1`; use that same path for subsequent evaluation/reporting.
-When piping commands to `tee`, enable `set -o pipefail` so a failed container still
-returns a nonzero exit status.
-If it cannot fit locally, use the same image and data on a larger GPU after deciding
-whether to incur that cost. Keep the same preparation and settings for comparisons.
+These evaluation/report targets also require their output files to be absent.
+For the already completed experiment, the selected adapter is `TRAIN=train-retry1`;
+its final evaluation and report already exist, so there is **nothing to rerun**.
+Use a fresh RUN for an additional complete experiment.
+
+Docker runs via `sudo --preserve-env=HF_TOKEN` by default. If your account can access
+Docker directly, pass `DOCKER=docker`. Hugging Face authentication uses an exported
+`HF_TOKEN` or your existing token file (`HF_TOKEN_PATH`, then `$HF_HOME/token`, then
+`$HOME/.cache/huggingface/token`); the token file is mounted read-only. Credentials
+are never copied into the image or printed by Make. Outputs/cache are mounted and
+owned by your host UID. You can override `A5_OUTPUT_DIR`, `A5_CACHE_DIR`, `A5_CORPUS`
+and `A5_SPLITS_DIR` with absolute paths, and `A5_IMAGE` with another image tag.
+
+The Makefile runs `docker build --platform linux/amd64 -f Dockerfile.training` and
+`docker run --gpus all` for GPU stages. `make -n a5-train` displays the wrapper
+without launching training. An OOM never triggers quantization, offloading or paid
+cloud work; a larger GPU requires a separate decision.
 
 The task uses **meta-llama/Llama-3.2-1B base**, frozen FP16 weights, rank-4 LoRA on
 q_proj/v_proj, batch size 1, accumulation 8, sequence limit 256 and at most 3 epochs.
