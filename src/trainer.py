@@ -52,7 +52,8 @@ def build_splits(tokenizer, path=None, max_length=MAX_SEQ_LENGTH, val_fraction=0
 
 
 def windows(token_ids, max_length=MAX_SEQ_LENGTH):
-    """Chop a token stream into non overlapping chunks of max_length."""
+    # Anything left over at the end that isn't a full chunk gets dropped,
+    # otherwise a short final chunk would skew the mean loss.
     return [
         token_ids[i : i + max_length]
         for i in range(0, len(token_ids) - max_length + 1, max_length)
