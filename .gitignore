@@ -1,3 +1,18 @@
+#Talha Additions
+SW_EpisodeIV_VI.json
+# Local datasets and generated tokenizer artifacts.
+/data/
+# Local experiment outputs and model weights; dependency locks stay tracked.
+/checkpoints/
+/outputs/
+*.safetensors
+/unsloth_compiled_cache/
+*.bpe.json
+bpe.json
+explainations_for_personal_memory
+docs
+.zen
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -129,6 +144,8 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
+!.env.example
 .venv
 env/
 venv/

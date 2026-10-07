@@ -1,0 +1,16 @@
+# Linux NVIDIA training image; isolated from the Python 3.14 course project.
+# Notebook-compatible Transformers/TRL, ordinary FP16 LoRA (no quantization).
+unsloth>=2026.9
+unsloth_zoo>=2026.9
+datasets==4.3.0
+torch==2.9.1
+torchao==0.14.1
+transformers==4.57.6
+trl==0.22.2
+peft==0.18.0
+xformers==0.0.33.post2
+bert-score==0.3.13
+evaluate==0.4.6
+rouge-score==0.1.2
+pytest
+pytest-cov
