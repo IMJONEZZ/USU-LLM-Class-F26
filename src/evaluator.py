@@ -1,5 +1,25 @@
+try:
+    import modal
+except ModuleNotFoundError:  # Modal is only needed when launching remote inference.
+    modal = None
+
+import os
+
 import nltk.translate.bleu_score as bleu
 import pandas as pd
+
+if modal is not None and "HF_TOKEN" in os.environ:
+    app = modal.App("ppa-model-evaluation")
+    hf_secret = modal.Secret.from_local_environ(["HF_TOKEN"])
+    image = modal.Image.debian_slim().pip_install(
+        "torch",
+        "transformers",
+        "peft",
+        "accelerate",
+        "huggingface_hub",
+        "nltk",
+        "pandas",
+    )
 
 data = pd.DataFrame(
     {
@@ -72,7 +92,34 @@ data = pd.DataFrame(
     }
 )
 
-# model = instructor
+
+def generate_prediction(
+    model,
+    tokenizer,
+    source: str,
+    device: str = "cuda",
+    max_new_tokens: int = 512,
+) -> str:
+    """Generate one output using the same prompt format used for training."""
+    import torch
+
+    prompt = f"Convert to PPA:\n{source}\nOutput:\n"
+    inputs = tokenizer(prompt, return_tensors="pt").to(device)
+    prompt_length = inputs["input_ids"].shape[1]
+
+    with torch.inference_mode():
+        generated = model.generate(
+            **inputs,
+            max_new_tokens=max_new_tokens,
+            do_sample=False,
+            pad_token_id=tokenizer.pad_token_id,
+            eos_token_id=tokenizer.eos_token_id,
+        )
+
+    return tokenizer.decode(
+        generated[0, prompt_length:],
+        skip_special_tokens=True,
+    ).strip()
 
 
 class Evaluator:
@@ -106,11 +153,64 @@ class Evaluator:
         return scores
 
 
-if __name__ == "__main__":
-    inputs, expected = pd.Series(data["input"]), pd.Series(data["expected"])
-    evaluator, predicted = Evaluator(bleu.sentence_bleu), pd.Series(data["predicted"])
-    scores, avg_score = evaluator.evaluate(expected, predicted), 0
+def _evaluate_model():
+    import os
+
+    import torch
+    from huggingface_hub import HfApi
+    from peft import PeftModel
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    hf_token = os.environ["HF_TOKEN"]
+    username = HfApi(token=hf_token).whoami()["name"]
+    adapter_repo = f"{username}/ppa-llama-3.2-1b-lora"
+    base_model_id = "meta-llama/Llama-3.2-1B"
+
+    tokenizer = AutoTokenizer.from_pretrained(base_model_id, token=hf_token)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    base_model = AutoModelForCausalLM.from_pretrained(
+        base_model_id,
+        torch_dtype=torch.float16,
+        token=hf_token,
+    ).to("cuda")
+    model = PeftModel.from_pretrained(
+        base_model,
+        adapter_repo,
+        token=hf_token,
+    )
+    model.eval()
+
+    predictions = []
+    for idx, source in enumerate(data["input"]):
+        prediction = generate_prediction(model, tokenizer, source)
+        predictions.append(prediction)
+        print(f"{idx + 1}/{len(data)}: generated prediction")
+
+    expected = pd.Series(data["expected"])
+    predicted = pd.Series(predictions)
+    evaluator = Evaluator(bleu.sentence_bleu)
+    scores = evaluator.evaluate(expected, predicted)
+    average_score = sum(scores) / len(scores)
+
     for idx, score in enumerate(scores):
-        print(f"Expected: {expected[idx]}\nPredicted: {predicted[idx]}\nScore: {score}")
-        avg_score += score / len(scores)
-    print(f"Average Score: {avg_score}")
+        print(f"Expected: {expected[idx]}\nPredicted: {predicted[idx]}\nBLEU: {score}")
+    print(f"Average BLEU: {average_score}")
+
+    return {
+        "predictions": predictions,
+        "scores": scores,
+        "average_bleu": average_score,
+    }
+
+
+if modal is not None:
+    evaluate_model = app.function(image=image, gpu="T4", secrets=[hf_secret])(
+        _evaluate_model
+    )
+
+    @app.local_entrypoint()
+    def main():
+        results = evaluate_model.remote()
+        print(f"Average BLEU: {results['average_bleu']}")
