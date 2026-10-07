@@ -128,11 +128,18 @@ def create_dataloader(
     # generator will not consume its shuffle sequence. Seed once at creation:
     # reuse the loader for subsequent epochs to let its state advance.
     # Recreating it with the same seed reproduces the order in the same setup.
+    return seeded_loader(dataset, batch_size, shuffle, seed)
+
+
+def seeded_loader(dataset, batch_size=1, shuffle=False, seed=0, collate_fn=None):
+    """Shared CPU batching policy for next-token and reconstruction datasets."""
+    _require_positive_integer("batch_size", batch_size)
     generator = torch.Generator().manual_seed(seed)
     return DataLoader(
         dataset,
-        # PyTorch's default collation stacks corresponding sample tensors.
-        # With our defaults, inputs and targets each have shape [8, 256].
+        collate_fn=collate_fn,
+        # Next-token examples use default tensor stacking; reconstruction
+        # supplies a collator for variable lengths and answer-only labels.
         batch_size=batch_size,
         # Shuffle whole examples, never the token order inside an example.
         # False is useful when inspecting windows in chronological order.

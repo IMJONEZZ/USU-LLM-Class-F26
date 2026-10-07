@@ -1,5 +1,7 @@
 """Train and use byte-level BPE on all character names and dialogue in the corpus."""
 
+from __future__ import annotations
+
 import argparse
 import json
 from itertools import pairwise

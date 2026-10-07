@@ -1,0 +1,39 @@
+# Assignment 5 only. The original Dockerfile remains the Assignment 4 inference image.
+# Published Linux/amd64 manifests, pinned so base layers cannot drift with a tag.
+FROM python:3.12.14-slim-bookworm@sha256:1aaa65a85fda306ffb8b910824d4e93bdce61e212c7e87168123ea3073b41a1a
+COPY --from=ghcr.io/astral-sh/uv:0.12.10@sha256:34c0f9a55abeb840c34391bb7b63a1a06f8cb9281e028f27757a01a1a8a2d461 /uv /usr/local/bin/uv
+
+# Triton needs a compiler at runtime; CUDA userspace libraries come from the lock.
+# NVIDIA drivers and GPU access are supplied by the host's container runtime.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY requirements-training.lock /app/requirements-training.lock
+RUN uv pip sync --system --no-cache /app/requirements-training.lock \
+    && uv pip check --system
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    HF_HOME=/tmp/a5-cache/huggingface \
+    XDG_CACHE_HOME=/tmp/a5-cache \
+    TRITON_CACHE_DIR=/tmp/a5-cache/triton \
+    TORCHINDUCTOR_CACHE_DIR=/tmp/a5-cache/torchinductor \
+    UNSLOTH_COMPILE_LOCATION=/tmp/a5-cache/unsloth
+
+# --user may supply a UID absent from /etc/passwd. Python's getpass.getuser()
+# (called during TorchInductor import) consults LOGNAME before the passwd DB.
+# This supplies a display name only; Docker's numeric UID/GID still controls access.
+ENV LOGNAME=student
+
+COPY src/ /app/src/
+COPY tests/ /app/tests/
+COPY pyproject.toml /app/pyproject.toml
+
+# Run as the invoking host UID/GID (see guide) to keep bind-mounted outputs owned
+# by the student. A writable workdir also accommodates third-party runtime files.
+ENV PYTHONPATH=/app
+WORKDIR /tmp
+ENTRYPOINT ["python"]
+CMD ["-m", "src.trainer", "--help"]

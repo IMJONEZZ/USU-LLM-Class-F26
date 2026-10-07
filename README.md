@@ -278,3 +278,143 @@ uv run python -m src.zenml_iris_pipeline
 The script submits `iris_training_pipeline` to the active ZenML stack. Local
 repository configuration is stored in `.zen/`, which is ignored by Git. This
 example uses Iris data and does not require the dialogue corpus or a GPU.
+
+### Assignment 5: Docker LoRA training
+
+`Dockerfile.training` packages Python 3.12 and the pinned dependencies in
+`requirements-training.lock`. Maintain those pins through `requirements-training.in`.
+The Assignment 4 inference Dockerfile and CPU CI remain unchanged. No host training
+virtual environment is required.
+
+Validated in Docker: **35 CPU tests passed, 1 opt-in GPU test skipped**, followed by
+a successful real Unsloth feasibility run on the Quadro T2000: two optimizer steps
+in 38.25 seconds of training-loop time, 2.46 GiB peak allocated / 2.69 GiB reserved,
+and development loss 5.6116 → 5.5203. The adapter and success marker were saved.
+The original-model baseline completed on 133 test examples: exact match 0/133,
+ROUGE-1 0.04110, ROUGE-L 0.04052, BLEU 0.00785 and BERTScore F1 0.79750.
+The saved report confirms no adapter was loaded; 124 outputs reached the fixed
+generation limit. The first full training attempt failed before completing epoch 1
+because strict gradient clipping interrupted FP16 loss-scale overflow recovery.
+The loop now retries the same accumulation group at a reduced scale and preserves
+the scaler across epochs; CPU regression tests cover recovery and persistent
+failure. The corrected GPU run completed all three epochs (366 optimizer updates)
+in 58 minutes 45 seconds of training-loop time, with one recovered overflow.
+Development losses were 2.7907, 2.6454 and 2.5884, down from 5.6116 before training;
+epoch 3 was selected. Peak GPU memory was 2.46 GiB allocated / 2.82 GiB reserved.
+The measured run is saved under `data/assignment5/docker-run/train-retry1/`;
+use its `best` adapter for final evaluation. Final evaluation completed on the same
+133 test examples with matching model revision, prompts and generation settings:
+
+| Metric | Original base | Selected adapter |
+| --- | ---: | ---: |
+| Exact-span match | 0/133 | 0/133 |
+| ROUGE-1 | 0.04110 | 0.18425 |
+| ROUGE-L | 0.04052 | 0.18425 |
+| BLEU | 0.00785 | 0.10224 |
+| BERTScore F1 | 0.79750 | 0.82560 |
+| Four-word outputs | 0/133 | 122/133 |
+| Outputs reaching the generation limit | 124/133 | 0/133 |
+
+The adapter improved output format and partial text similarity, but did not recover
+any complete reference span exactly. BERTScore is not a percentage accuracy, and
+lower development loss does not establish exact reconstruction success. The
+measured comparison is saved in `data/assignment5/docker-run/results.md`.
+Local reports and the detailed notes are
+preserved under ignored `data/assignment5/`; they are not files to push.
+
+Build when the source or dependencies change. Rebuild to include the overflow fix:
+
+```bash
+sudo docker build --platform linux/amd64 -f Dockerfile.training -t usu-llm-training:a5 .
+sudo docker run --rm --user "$(id -u):$(id -g)" usu-llm-training:a5 \
+  -m pytest -c /app/pyproject.toml --no-cov -p no:cacheprovider -q \
+  /app/tests/test_trainer.py /app/tests/test_llama_evaluator.py \
+  /app/tests/test_training_report.py /app/tests/test_trainer_gpu.py
+```
+
+From the repository root, paste this into Bash once. It defines `a5` to run Python
+inside Docker with read-only inputs and persistent outputs/cache owned by your UID.
+Choose a fresh output directory for each experiment; existing outputs are never
+silently overwritten. Authentication uses your existing `HF_TOKEN` or login token
+file at runtime; no credentials enter the image.
+
+```bash
+A5_OUTPUT_DIR="$PWD/data/assignment5/docker-run"
+A5_CACHE_DIR="$PWD/.cache/assignment5-docker"
+mkdir -p "$A5_OUTPUT_DIR" "$A5_CACHE_DIR"
+A5_AUTH=()
+A5_TOKEN_FILE="${HF_TOKEN_PATH:-${HF_HOME:-$HOME/.cache/huggingface}/token}"
+if [[ -f "$A5_TOKEN_FILE" ]]; then
+  A5_AUTH=(--mount "type=bind,src=$A5_TOKEN_FILE,dst=/run/secrets/hf_token,readonly"
+           -e HF_TOKEN_PATH=/run/secrets/hf_token)
+fi
+
+a5() {
+  sudo --preserve-env=HF_TOKEN docker run --rm --gpus all \
+    --user "$(id -u):$(id -g)" \
+    --mount "type=bind,src=$PWD/SW_EpisodeIV_VI.json,dst=/inputs/corpus.json,readonly" \
+    --mount "type=bind,src=$PWD/data/evaluation,dst=/inputs/evaluation,readonly" \
+    --mount "type=bind,src=$A5_OUTPUT_DIR,dst=/outputs" \
+    --mount "type=bind,src=$A5_CACHE_DIR,dst=/tmp/a5-cache" \
+    -e HF_TOKEN "${A5_AUTH[@]}" usu-llm-training:a5 "$@"
+}
+```
+
+Run these **one at a time**, proceeding only after the previous command succeeds:
+
+```bash
+# Prepare fixed spans using the real data and existing split manifest.
+a5 -m src.trainer prepare --corpus /inputs/corpus.json \
+  --splits /inputs/evaluation/splits.json --output /outputs/prepared
+
+# Two real optimizer updates; a success marker is required before full training.
+a5 -m src.trainer feasibility --prepared /outputs/prepared --output /outputs/feasibility
+
+# Evaluate the unmodified base model.
+a5 -m src.evaluator llama --prepared /outputs/prepared --output /outputs/before.json
+
+# Train from the original base; select the lowest development-loss checkpoint.
+a5 -m src.trainer train --prepared /outputs/prepared \
+  --feasibility /outputs/feasibility --epochs 3 --output /outputs/train
+
+# Evaluate the selected adapter, then produce a measured results draft.
+a5 -m src.evaluator llama --prepared /outputs/prepared \
+  --adapter /outputs/train/best --output /outputs/after.json
+a5 -m src.training_report --before /outputs/before.json --after /outputs/after.json \
+  --training /outputs/train/training.json --output /outputs/results.md
+```
+
+Results/checkpoints persist at `$A5_OUTPUT_DIR`, including `train/best`,
+`training.json` inside `train`, and `results.md`. Failures retain configuration and
+sanitized errors. An OOM never triggers quantization, offloading or paid cloud work.
+For a retry after failure, keep the failed directory and choose a fresh output such
+as `/outputs/train-retry1`; use that same path for subsequent evaluation/reporting.
+When piping commands to `tee`, enable `set -o pipefail` so a failed container still
+returns a nonzero exit status.
+If it cannot fit locally, use the same image and data on a larger GPU after deciding
+whether to incur that cost. Keep the same preparation and settings for comparisons.
+
+The task uses **meta-llama/Llama-3.2-1B base**, frozen FP16 weights, rank-4 LoRA on
+q_proj/v_proj, batch size 1, accumulation 8, sequence limit 256 and at most 3 epochs.
+Only answer tokens and EOS contribute to loss; the model performs the causal shift.
+FP16 training uses a persistent dynamic loss scaler. On gradient overflow, no
+optimizer update occurs; the whole accumulation group is retried at a lower scale
+(at most 32 reductions before failure). Epoch reports count successful optimizer
+steps and overflow retries separately. Non-finite losses still fail immediately.
+This follows [PyTorch's AMP overflow handling](https://docs.pytorch.org/docs/stable/notes/amp_examples.html)
+while replaying skipped batches to retain all training examples.
+Use the CLI `--help` for configurable settings. Checkpoint selection uses dev loss,
+never test metrics. BERT evaluation remains available through its original CLI.
+
+Exact raw dialogue matches are excluded with test → dev → train priority, without
+changing the manifest. The preparation artifact records all excluded IDs/reasons,
+counts, fixed character spans, tokenizers and the immutable model revision.
+Llama uses only its own token IDs. Greedy evaluation reuses those prompts and a
+fixed generation budget; exact match collapses whitespace but retains case and
+punctuation. ROUGE, BLEU and BERTScore keep the previous settings; empty outputs
+remain in accounting, and BERTScore runs on CPU after releasing Llama.
+
+Keep source, tests, Dockerfiles and dependency files in Git. Data, reports,
+checkpoints, weights, credentials and caches belong in ignored local paths.
+The full course checks remain `uv run ruff check .`, `uv run ruff format --check .`
+and `uv run pytest` with the unchanged 80% coverage threshold.

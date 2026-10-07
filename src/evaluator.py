@@ -483,7 +483,232 @@ def _versions():
     return versions
 
 
+def normalize_span(text):
+    """Collapse whitespace only: retain case, punctuation and unwanted prose."""
+    if not isinstance(text, str):
+        raise TypeError("Prediction must be a string")
+    return " ".join(text.split())
+
+
+def generate_answers(
+    examples, model, tokenizer, batch_size=1, max_new_tokens=32, device="cpu"
+):
+    """Left-padded prompt-only greedy decoding; no reference length is consulted."""
+    _integer("batch_size", batch_size, 1)
+    _integer("max_new_tokens", max_new_tokens, 1)
+    if not examples or tokenizer.pad_token_id is None:
+        raise ValueError("Need examples and a padding token")
+    model.eval()
+    answers = []
+    with torch.inference_mode():
+        for start in range(0, len(examples), batch_size):
+            rows = examples[start : start + batch_size]
+            width = max(len(r["prompt_ids"]) for r in rows)
+            ids = [
+                [tokenizer.pad_token_id] * (width - len(r["prompt_ids"]))
+                + r["prompt_ids"]
+                for r in rows
+            ]
+            masks = [
+                [0] * (width - len(r["prompt_ids"])) + [1] * len(r["prompt_ids"])
+                for r in rows
+            ]
+            inputs = torch.tensor(ids, device=device)
+            output = model.generate(
+                input_ids=inputs,
+                attention_mask=torch.tensor(masks, device=device),
+                max_new_tokens=max_new_tokens,
+                do_sample=False,
+                num_beams=1,
+                eos_token_id=tokenizer.eos_token_id,
+                pad_token_id=tokenizer.pad_token_id,
+                use_cache=True,
+            )
+            if (
+                output.ndim != 2
+                or output.shape[0] != len(rows)
+                or output.shape[1] < width
+            ):
+                raise ValueError("Malformed generation tensor")
+            if not torch.equal(output[:, :width], inputs):
+                raise ValueError("Generated sequences do not preserve the input prompt")
+            for row, generated in zip(
+                rows, output[:, width:].cpu().tolist(), strict=True
+            ):
+                terminated = tokenizer.eos_token_id in generated
+                # Remove only the protocol EOS and batch padding after it. Other
+                # generated special tokens stay visible and can hurt scores.
+                answer_ids = (
+                    generated[: generated.index(tokenizer.eos_token_id)]
+                    if terminated
+                    else generated
+                )
+                raw = tokenizer.decode(
+                    answer_ids,
+                    skip_special_tokens=False,
+                    clean_up_tokenization_spaces=False,
+                )
+                normalized = normalize_span(raw)
+                issues = []
+                if len(WORD.findall(normalized)) != 4:
+                    issues.append("not_four_lexical_words")
+                if any(token in tokenizer.all_special_ids for token in answer_ids):
+                    issues.append("generated_special_token")
+                answers.append(
+                    {
+                        "example_id": row["example_id"],
+                        "prompt": row["prompt"],
+                        "reference": row["reference"],
+                        "prediction": raw,
+                        "normalized_prediction": normalized,
+                        "normalized_reference": normalize_span(row["reference"]),
+                        "generated_ids": generated,
+                        "terminated_with_eos": terminated,
+                        "format_issues": issues,
+                        "status": "empty"
+                        if not normalized
+                        else "ok"
+                        if terminated
+                        else "length_limit",
+                        "exact": normalized == normalize_span(row["reference"]),
+                    }
+                )
+    return answers
+
+
+def generation_metrics(rows, metric_loader=None):
+    """Empty outputs count as failures; BERTScore/ROUGE assign them zero.
+
+    BLEU remains the same smoothed corpus bigram BLEU, including empty outputs.
+    No reference substitution or post-hoc four-word trimming is performed.
+    """
+    if not rows:
+        raise ValueError("No predictions to score")
+    if metric_loader is None:
+        from evaluate import load
+
+        metric_loader = load
+    predictions = [r["normalized_prediction"] for r in rows]
+    references = [r["normalized_reference"] for r in rows]
+    nonempty = [i for i, p in enumerate(predictions) if p]
+    result = {
+        "example_count": len(rows),
+        "exact_span_match": sum(r["exact"] for r in rows) / len(rows),
+        "empty_count": len(rows) - len(nonempty),
+        "rouge": {"rouge1": 0.0, "rougeL": 0.0},
+        "bertscore": {"precision": 0.0, "recall": 0.0, "f1": 0.0},
+        "bertscore_hash": None,
+    }
+    if nonempty:
+        scored = text_metrics(
+            [predictions[i] for i in nonempty],
+            [references[i] for i in nonempty],
+            device="cpu",
+            metric_loader=metric_loader,
+        )
+        fraction = len(nonempty) / len(rows)
+        for group in ("rouge", "bertscore"):
+            result[group] = {k: v * fraction for k, v in scored[group].items()}
+        result["bertscore_hash"] = scored["bertscore_hash"]
+        bleu = metric_loader("bleu").compute(
+            predictions=predictions,
+            references=[[r] for r in references],
+            max_order=2,
+            smooth=True,
+        )
+        if bleu is None:
+            raise RuntimeError("BLEU returned no result")
+        result["bleu"] = bleu
+    else:
+        # The corpus BLEU brevity penalty is undefined for zero predicted tokens.
+        result["bleu"] = {"bleu": 0.0}
+    return result
+
+
+def llama_main(argv):
+    """Separate opt-in CLI keeps all existing BERT command behavior intact."""
+    import gc
+
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    from src.trainer import load_prepared, versions, write_json
+
+    parser = argparse.ArgumentParser(
+        description="Evaluate base Llama or a selected LoRA adapter"
+    )
+    parser.add_argument(
+        "--prepared", type=Path, default=Path("data/assignment5/prepared")
+    )
+    parser.add_argument("--adapter", type=Path)
+    parser.add_argument("--split", choices=("dev", "test"), default="test")
+    parser.add_argument("--batch-size", type=int, default=1)
+    parser.add_argument("--device", default="cuda")
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args(argv)
+    _integer("batch_size", args.batch_size, 1)
+    if args.output.exists():
+        parser.error("Output already exists; use a new filename")
+    data = load_prepared(args.prepared)
+    run = None
+    if args.adapter:
+        run = json.loads((args.adapter / "run.json").read_text())
+        if any(run[k] != data[k] for k in ("signature", "model", "revision")):
+            raise ValueError("Adapter and prepared experiment do not match")
+    tokenizer = AutoTokenizer.from_pretrained(args.prepared / "tokenizer")
+    if _digest(tokenizer.backend_tokenizer.to_str()) != data["tokenizer_sha256"]:
+        raise ValueError("Prepared tokenizer changed")
+    model = AutoModelForCausalLM.from_pretrained(
+        data["model"],
+        revision=data["revision"],
+        torch_dtype=torch.float16,
+        attn_implementation="sdpa",
+    )
+    if args.adapter:
+        from peft import PeftModel
+
+        model = PeftModel.from_pretrained(model, args.adapter)
+    model.to(args.device)
+    rows = generate_answers(
+        data["examples"][args.split],
+        model,
+        tokenizer,
+        args.batch_size,
+        data["max_new_tokens"],
+        args.device,
+    )
+    # Save raw outputs first, so a scoring download failure doesn't lose inference.
+    metadata = {
+        "signature": data["signature"],
+        "model": data["model"],
+        "revision": data["revision"],
+        "adapter": str(args.adapter) if args.adapter else None,
+        "training_run": run,
+        "split": args.split,
+        "batch_size": args.batch_size,
+        "device": args.device,
+        "max_new_tokens": data["max_new_tokens"],
+        "generation": "greedy; num_beams=1",
+        "normalization": "collapse whitespace; retain case and punctuation",
+        "empty_treatment": "zero ROUGE/BERTScore; included in corpus BLEU; all-empty BLEU=0",
+        "versions": versions(),
+    }
+    report = {"metadata": metadata, "examples": rows, "status": "generated_unscored"}
+    write_json(args.output, report)
+    del model
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    report["metrics"] = generation_metrics(rows)
+    report["status"] = "complete"
+    write_json(args.output, report)
+    print(json.dumps(report["metrics"], indent=2))
+    return report
+
+
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] == "llama":
+        return llama_main(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("corpus", nargs="?", default="SW_EpisodeIV_VI.json")
     parser.add_argument(
