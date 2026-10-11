@@ -1,7 +1,9 @@
 """Generation protocol and text scoring for the opt-in Llama evaluator."""
 
 import json
-from types import SimpleNamespace
+import sys
+from types import ModuleType, SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 import torch
@@ -183,3 +185,106 @@ def test_llama_cli_real_generation_fake_hub(
     assert [(r["prompt"], r["reference"]) for r in final["examples"]] == [
         (r["prompt"], r["reference"]) for r in result["examples"]
     ]
+
+
+def test_generation_flags_special_tokens(examples, llama_tokenizer):
+    class SpecialGen(torch.nn.Module):
+        def generate(self, **kwargs):
+            answers = torch.tensor([[0, 2, 3, 1]])
+            return torch.cat([kwargs["input_ids"], answers], dim=1)
+
+    rows = ev.generate_answers(
+        examples[:1], SpecialGen(), llama_tokenizer, batch_size=1, max_new_tokens=4
+    )
+    assert "generated_special_token" in rows[0]["format_issues"]
+
+
+def test_generation_metrics_default_loader_and_bleu_none(monkeypatch):
+    rows = [
+        {
+            "normalized_prediction": "a b",
+            "normalized_reference": "a b",
+            "exact": True,
+        }
+    ]
+    bleu = Mock()
+    # text_metrics consumes the first BLEU call; generation_metrics the second.
+    bleu.compute.side_effect = [
+        {"bleu": 0.5, "precisions": [1.0, 1.0]},
+        None,
+    ]
+    rouge = Mock()
+    rouge.compute.return_value = {"rouge1": [1.0], "rougeL": [1.0]}
+    bert = Mock()
+    bert.compute.return_value = {
+        "precision": [1.0],
+        "recall": [1.0],
+        "f1": [1.0],
+        "hashcode": "h",
+    }
+    loaders = {"bleu": bleu, "rouge": rouge, "bertscore": bert}
+    evaluate_mod = ModuleType("evaluate")
+    evaluate_mod.load = lambda name: loaders[name]
+    monkeypatch.setitem(sys.modules, "evaluate", evaluate_mod)
+    with pytest.raises(RuntimeError, match="^BLEU returned no result$"):
+        ev.generation_metrics(rows)
+    bleu.compute.side_effect = None
+    bleu.compute.return_value = {"bleu": 0.5, "precisions": [1.0, 1.0]}
+    assert ev.generation_metrics(rows)["bleu"]["bleu"] == 0.5
+
+
+def test_llama_cli_tokenizer_mismatch_and_cuda_cache(
+    tmp_path, monkeypatch, examples, llama_tokenizer
+):
+    import transformers
+
+    prepared = tmp_path / "prepared"
+    llama_tokenizer.save_pretrained(prepared / "tokenizer")
+    data = {
+        "model": "tiny",
+        "revision": "immutable",
+        "max_new_tokens": 3,
+        "tokenizer_sha256": "not-the-real-digest",
+        "examples": {"test": examples[:1]},
+    }
+    data["signature"] = ev._digest(data)
+    tr.write_json(prepared / "prepared.json", data)
+    monkeypatch.setattr(
+        transformers.AutoModelForCausalLM,
+        "from_pretrained",
+        lambda *a, **kw: tiny_base(),
+    )
+    with pytest.raises(ValueError, match="Prepared tokenizer changed"):
+        ev.llama_main(
+            [
+                "--prepared",
+                str(prepared),
+                "--device",
+                "cpu",
+                "--output",
+                str(tmp_path / "out.json"),
+            ]
+        )
+
+    data["tokenizer_sha256"] = ev._digest(llama_tokenizer.backend_tokenizer.to_str())
+    data.pop("signature", None)
+    data["signature"] = ev._digest(data)
+    tr.write_json(prepared / "prepared.json", data)
+    cleared = []
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(torch.cuda, "empty_cache", lambda: cleared.append(True))
+    monkeypatch.setattr(
+        ev, "generation_metrics", lambda rows: {"example_count": len(rows)}
+    )
+    result = ev.llama_main(
+        [
+            "--prepared",
+            str(prepared),
+            "--device",
+            "cpu",
+            "--output",
+            str(tmp_path / "ok.json"),
+        ]
+    )
+    assert result["status"] == "complete"
+    assert cleared == [True]

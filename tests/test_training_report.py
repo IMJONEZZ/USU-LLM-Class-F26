@@ -1,6 +1,8 @@
 """Reports refuse mismatched runs and never fill missing experiments with numbers."""
 
 import json
+import runpy
+import sys
 from copy import deepcopy
 
 import pytest
@@ -133,3 +135,29 @@ def test_report_no_success_does_not_invent_examples(reports):
     reports[1]["metrics"]["exact_span_match"] = 0.0
     draft = report.render_report(*reports)
     assert "No successes" in draft and "stayed the same" in draft
+
+
+def test_script_entry_point(reports, tmp_path, monkeypatch):
+    paths = []
+    for i, data in enumerate(reports):
+        path = tmp_path / f"{i}.json"
+        path.write_text(json.dumps(data))
+        paths.append(str(path))
+    output = tmp_path / "report.md"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            report.__file__,
+            "--before",
+            paths[0],
+            "--after",
+            paths[1],
+            "--training",
+            paths[2],
+            "--output",
+            str(output),
+        ],
+    )
+    runpy.run_path(report.__file__, run_name="__main__")
+    assert output.is_file()

@@ -1,8 +1,11 @@
 """Real offline LoRA updates and task invariants; no model or corpus downloads."""
 
 import json
+import runpy
+import sys
 from copy import deepcopy
-from types import SimpleNamespace
+from pathlib import Path
+from types import ModuleType, SimpleNamespace
 
 import pytest
 import torch
@@ -572,3 +575,362 @@ def test_cpu_gpu_command_failure_and_redaction(tmp_path, monkeypatch):
 def test_bad_cli_options(args):
     with pytest.raises((ValueError, SystemExit)):
         tr.main(args)
+
+
+def test_fit_records_cuda_peaks(examples, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        tr,
+        "train_epoch",
+        lambda *a, **k: {
+            "loss": 1.0,
+            "optimizer_steps": 1,
+            "answer_tokens": 4,
+            "overflow_retries": 0,
+            "loss_scale": 1.0,
+        },
+    )
+    monkeypatch.setattr(tr, "development_loss", lambda *a, **k: 0.5)
+    monkeypatch.setattr(torch.cuda, "synchronize", lambda: None)
+    monkeypatch.setattr(torch.cuda, "empty_cache", lambda: None)
+    monkeypatch.setattr(torch.cuda, "reset_peak_memory_stats", lambda: None)
+    monkeypatch.setattr(torch.cuda, "max_memory_allocated", lambda: 111)
+    monkeypatch.setattr(torch.cuda, "max_memory_reserved", lambda: 222)
+    result = tr.fit(
+        tiny_adapter(),
+        examples[:1],
+        examples[:1],
+        tmp_path,
+        1,
+        epochs=1,
+        device="cuda",
+    )
+    assert result["peak_allocated_bytes"] == 111
+    assert result["peak_reserved_bytes"] == 222
+
+
+def test_prepare_rejects_missing_revision_and_empty_partition(
+    tmp_path, monkeypatch, span_tokenizer, llama_tokenizer
+):
+    import transformers
+
+    rows = [
+        {
+            "Character": str(i),
+            "Line": f"one two three four five six seven eight {suffix}",
+        }
+        for i, suffix in enumerate(["nine", "ten", "eleven"])
+    ]
+    corpus = tmp_path / "corpus.json"
+    corpus.write_text(json.dumps(rows))
+    splits = tmp_path / "splits.json"
+    ev.load_or_create_splits(ev.load_dialogues(corpus), splits)
+    monkeypatch.setattr(
+        transformers.AutoConfig,
+        "from_pretrained",
+        lambda *a, **kw: SimpleNamespace(_commit_hash=None),
+    )
+    monkeypatch.setattr(
+        transformers.AutoTokenizer,
+        "from_pretrained",
+        lambda name, **kw: span_tokenizer if name == ev.MODEL_ID else llama_tokenizer,
+    )
+    args = SimpleNamespace(
+        corpus=corpus,
+        splits=splits,
+        seed=0,
+        model="tiny",
+        revision="main",
+        span_revision="rev",
+        max_length=256,
+        max_new_tokens=32,
+        output=tmp_path / "prepared-a",
+    )
+    args.output.mkdir()
+    with pytest.raises(ValueError, match="immutable revision"):
+        tr.prepare(args)
+
+    monkeypatch.setattr(
+        transformers.AutoConfig,
+        "from_pretrained",
+        lambda *a, **kw: SimpleNamespace(_commit_hash="pinned"),
+    )
+    monkeypatch.setattr(
+        tr, "prepare_partition", lambda *a, **k: ([], {"eligible_examples": 0})
+    )
+    args.output = tmp_path / "prepared-b"
+    args.output.mkdir()
+    with pytest.raises(ValueError, match="eligible examples"):
+        tr.prepare(args)
+
+
+def test_gpu_environment_and_training_options(monkeypatch):
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(torch.cuda, "mem_get_info", lambda: (8, 16))
+    monkeypatch.setattr(torch.cuda, "get_device_capability", lambda: (6, 1))
+    with pytest.raises(RuntimeError, match="compute capability"):
+        tr.gpu_environment()
+    monkeypatch.setattr(torch.cuda, "get_device_capability", lambda: (8, 0))
+    monkeypatch.setattr(torch.cuda, "get_device_name", lambda: "FakeGPU")
+    monkeypatch.setattr(torch.cuda, "is_bf16_supported", lambda: True)
+    monkeypatch.setattr(torch.cuda, "get_arch_list", lambda: ["sm_80"])
+    env = tr.gpu_environment()
+    assert env["gpu"] == "FakeGPU"
+    assert env["capability"] == [8, 0]
+    args = SimpleNamespace(
+        batch_size=1,
+        accumulation=2,
+        learning_rate=1e-4,
+        rank=4,
+        alpha=8,
+        targets="q_proj,v_proj",
+    )
+    assert tr.training_options(args)["rank"] == 4
+
+
+class FakeParam:
+    """Minimal stand-in for nn.Parameter used by run_gpu guard checks."""
+
+    def __init__(self, data, device_type="cuda", dtype=torch.float16):
+        self._data = torch.as_tensor(data, dtype=dtype).clone()
+        self._device_type = device_type
+        self.dtype = self._data.dtype
+
+    @property
+    def device(self):
+        return SimpleNamespace(type=self._device_type)
+
+    def detach(self):
+        return self
+
+    def cpu(self):
+        return self._data
+
+    def clone(self):
+        return FakeParam(self._data, self._device_type, self.dtype)
+
+
+def make_guard_model(
+    *,
+    param_dev="cuda",
+    buf_dev="cuda",
+    dtype=torch.float16,
+    revision="immutable",
+    quant=False,
+):
+    base = FakeParam(torch.ones(2), param_dev, dtype)
+    lora = FakeParam(torch.ones(2), param_dev, torch.float32)
+    buf = FakeParam(torch.zeros(1), buf_dev, torch.float32)
+
+    class Model:
+        def __init__(self):
+            self.config = SimpleNamespace(_commit_hash=revision, use_cache=True)
+            self.is_loaded_in_4bit = quant
+            self.is_loaded_in_8bit = False
+            self._base = base
+            self._lora = lora
+            self._buf = buf
+
+        def named_parameters(self):
+            return [("base.weight", self._base), ("layer.lora_A.weight", self._lora)]
+
+        def parameters(self):
+            yield self._base
+            yield self._lora
+
+        def buffers(self):
+            yield self._buf
+
+        def save_pretrained(self, path):
+            Path(path).mkdir(parents=True, exist_ok=True)
+
+    return Model()
+
+
+@pytest.fixture
+def prepared_for_gpu(tmp_path, examples, llama_tokenizer):
+    prepared = tmp_path / "prepared"
+    llama_tokenizer.save_pretrained(prepared / "tokenizer")
+    data = {
+        "model": "tiny",
+        "revision": "immutable",
+        "seed": 0,
+        "max_length": 32,
+        "max_new_tokens": 3,
+        "pad_token_id": llama_tokenizer.pad_token_id,
+        "tokenizer_sha256": ev._digest("tok"),
+        "examples": {
+            "train": examples,
+            "dev": examples[:2],
+            "test": examples,
+        },
+    }
+    data["signature"] = ev._digest(data)
+    tr.write_json(prepared / "prepared.json", data)
+    return prepared, data
+
+
+def _install_unsloth(monkeypatch, shared):
+    class FastLanguageModel:
+        @staticmethod
+        def from_pretrained(**kwargs):
+            return shared["model"], None
+
+        @staticmethod
+        def get_peft_model(loaded, **kwargs):
+            return loaded
+
+    unsloth = ModuleType("unsloth")
+    unsloth.FastLanguageModel = FastLanguageModel
+    monkeypatch.setitem(sys.modules, "unsloth", unsloth)
+
+
+def _gpu_args(prepared, output, command="feasibility", feasibility=None):
+    return SimpleNamespace(
+        command=command,
+        prepared=prepared,
+        output=output,
+        feasibility=feasibility or output,
+        batch_size=1,
+        accumulation=1,
+        learning_rate=2e-4,
+        rank=4,
+        alpha=8,
+        targets="q_proj,v_proj",
+        epochs=1,
+        steps=1,
+    )
+
+
+def test_run_gpu_feasibility_and_train(tmp_path, monkeypatch, prepared_for_gpu):
+    import transformers
+
+    prepared, data = prepared_for_gpu
+    monkeypatch.setattr(tr, "gpu_environment", lambda: {"gpu": "FakeGPU"})
+    shared = {"model": make_guard_model()}
+    _install_unsloth(monkeypatch, shared)
+    monkeypatch.setattr(
+        transformers.AutoTokenizer,
+        "from_pretrained",
+        lambda *a, **k: SimpleNamespace(
+            backend_tokenizer=SimpleNamespace(to_str=lambda: "tok"),
+            save_pretrained=lambda path: Path(path).mkdir(parents=True, exist_ok=True),
+        ),
+    )
+    monkeypatch.setattr(transformers, "set_seed", lambda seed: None)
+
+    def mutate_and_fit(model, train, dev, output, *args, **kwargs):
+        model._lora = FakeParam(model._lora._data + 1, "cuda", torch.float32)
+        Path(output).mkdir(parents=True, exist_ok=True)
+        (Path(output) / "best").mkdir(exist_ok=True)
+        return {"best_epoch": 1, "history": []}
+
+    monkeypatch.setattr(tr, "fit", mutate_and_fit)
+
+    feasibility_out = tmp_path / "feasibility"
+    feasibility_out.mkdir()
+    assert tr.run_gpu(_gpu_args(prepared, feasibility_out))["best_epoch"] == 1
+    assert (feasibility_out / "success.json").is_file()
+
+    train_out = tmp_path / "train"
+    train_out.mkdir()
+    options = tr.training_options(_gpu_args(prepared, train_out))
+    tr.write_json(
+        feasibility_out / "success.json",
+        {
+            "signature": data["signature"],
+            "options": options,
+            "command": "feasibility",
+        },
+    )
+    shared["model"] = make_guard_model()
+    assert (
+        tr.run_gpu(
+            _gpu_args(prepared, train_out, command="train", feasibility=feasibility_out)
+        )["best_epoch"]
+        == 1
+    )
+
+
+def test_run_gpu_error_branches(tmp_path, monkeypatch, prepared_for_gpu):
+    import transformers
+
+    prepared, data = prepared_for_gpu
+    monkeypatch.setattr(tr, "gpu_environment", lambda: {"gpu": "x"})
+    shared = {"model": make_guard_model()}
+    _install_unsloth(monkeypatch, shared)
+    monkeypatch.setattr(
+        transformers.AutoTokenizer,
+        "from_pretrained",
+        lambda *a, **k: SimpleNamespace(
+            backend_tokenizer=SimpleNamespace(to_str=lambda: "tok"),
+            save_pretrained=lambda path: Path(path).mkdir(parents=True, exist_ok=True),
+        ),
+    )
+    monkeypatch.setattr(transformers, "set_seed", lambda seed: None)
+
+    bad = json.loads((prepared / "prepared.json").read_text())
+    bad["tokenizer_sha256"] = "nope"
+    bad.pop("signature", None)
+    bad["signature"] = ev._digest(bad)
+    tr.write_json(prepared / "prepared.json", bad)
+    out = tmp_path / "tok"
+    out.mkdir()
+    with pytest.raises(ValueError, match="Prepared tokenizer changed"):
+        tr.run_gpu(_gpu_args(prepared, out))
+
+    tr.write_json(prepared / "prepared.json", data)
+
+    feas = tmp_path / "feas"
+    feas.mkdir()
+    tr.write_json(
+        feas / "success.json",
+        {
+            "signature": "other",
+            "options": tr.training_options(_gpu_args(prepared, feas)),
+        },
+    )
+    out = tmp_path / "train-miss"
+    out.mkdir()
+    with pytest.raises(ValueError, match="feasibility"):
+        tr.run_gpu(_gpu_args(prepared, out, command="train", feasibility=feas))
+
+    cases = [
+        (make_guard_model(revision="wrong"), "revision differs"),
+        (make_guard_model(quant=True), "Quantization"),
+        (make_guard_model(param_dev="cpu"), "GPU"),
+        (make_guard_model(buf_dev="cpu"), "buffers"),
+        (make_guard_model(dtype=torch.float32), "FP16"),
+    ]
+    for index, (model, message) in enumerate(cases):
+        shared["model"] = model
+        out = tmp_path / f"case_{index}"
+        out.mkdir()
+        with pytest.raises(ValueError, match=message):
+            tr.run_gpu(_gpu_args(prepared, out))
+
+    shared["model"] = make_guard_model()
+    monkeypatch.setattr(tr, "fit", lambda *a, **k: {"best_epoch": 1, "history": []})
+    out = tmp_path / "nochg"
+    out.mkdir()
+    with pytest.raises(ValueError, match="did not change"):
+        tr.run_gpu(_gpu_args(prepared, out))
+
+
+def test_trainer_main_module(monkeypatch, tmp_path):
+    exits = []
+    monkeypatch.setattr(sys, "exit", lambda code: exits.append(code))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            tr.__file__,
+            "prepare",
+            "--splits",
+            str(tmp_path / "missing.json"),
+            "--output",
+            str(tmp_path / "failed"),
+        ],
+    )
+    runpy.run_path(tr.__file__, run_name="__main__")
+    assert exits == [1]
+    assert (tmp_path / "failed" / "failure.json").is_file()
