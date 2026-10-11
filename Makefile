@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
 .ONESHELL:
-.DEFAULT_GOAL := help
+.DEFAULT_GOAL := all
 
 DOCKER ?= sudo --preserve-env=HF_TOKEN docker
 RUN ?= docker-run
@@ -14,10 +14,17 @@ A5_CORPUS ?= $(CURDIR)/SW_EpisodeIV_VI.json
 A5_SPLITS_DIR ?= $(CURDIR)/data/evaluation
 export A5_IMAGE A5_OUTPUT_DIR A5_CACHE_DIR A5_CORPUS A5_SPLITS_DIR TRAIN EPOCHS
 
-.PHONY: help a5-build a5-test a5-gpu a5-prepare a5-feasibility a5-baseline a5-train a5-evaluate a5-report a5-run
+.PHONY: all help a5-build a5-test a5-gpu a5-prepare a5-feasibility a5-baseline a5-train a5-evaluate a5-report a5-run
+
+all:
+	uv run ruff check
+	uv run ruff format --check .
+	uv run pytest
 
 help:
 	@printf '%s\n' \
+	  'Default: make (or make all) runs ruff check, ruff format --check, then pytest' \
+	  '' \
 	  'Assignment 5 Docker workflow (run from the repository root):' \
 	  '  make a5-build        Build the pinned training image' \
 	  '  make a5-test         Run container CPU tests; no GPU required' \
