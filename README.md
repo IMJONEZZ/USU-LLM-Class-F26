@@ -49,3 +49,12 @@ uv run pytest
 ### AI assistance
 
 The course supports Claude Code and Codex. Both assistants follow the same student-learning and academic-integrity expectations in [AGENTS.md](AGENTS.md).
+
+## Decisions
+
+- M0: config tests live in `tests/test_data.py` (layout has no `test_config.py`).
+- M0: `LEARNING_RATE = 2e-4`, the value the old repo actually trained with (its plan said 1e-5; the code and log used 2e-4).
+- M0: `EPOCHS = 3`, `TEACHER_MODEL`, `JUDGE_MODEL` and `CATEGORIES` are placeholders, confirmed before M2.
+- M0: round 0 is valid for `adapter_path`; negatives raise `ValueError`, non-ints (including `bool`) raise `TypeError`.
+- M0: API key env var is `GOOGLE_API_KEY`.
+- M0: deleted `src/main.py` and `tests/test_main.py` (not in the layout).
