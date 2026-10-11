@@ -26,7 +26,6 @@ CATEGORIES = [
     "misconception",
     "pun_ambiguity",
     "lateral_thinking",
-    "character_counting",
     "time_sensitive",
 ]
 REFERENCE_YEAR = 2026

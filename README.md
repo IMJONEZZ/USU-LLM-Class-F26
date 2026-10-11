@@ -58,3 +58,7 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - M0: round 0 is valid for `adapter_path`; negatives raise `ValueError`, non-ints (including `bool`) raise `TypeError`.
 - M0: API key env var is `GOOGLE_API_KEY`.
 - M0: deleted `src/main.py` and `tests/test_main.py` (not in the layout).
+- M2: dropped `character_counting` from `CATEGORIES` (no public source has such questions and training data is not augmented); test-set rows must not use it.
+- M2: BrainTeaser is converted once, by hand, to JSONL (the source is an encrypted zip of pickles, and unpickling untrusted data runs code). The JSONL lives in `assets/brainteaser.jsonl`, a file outside the 20-file layout, so a fresh clone can rebuild without the pickle.
+- M2: `stratified_sample(rows, n, seed)` takes `n` per category; categories smaller than `n` return all their rows.
+- M2: row schema is `id, question, answer, accepted_alternatives, category, source` plus optional `chain`.

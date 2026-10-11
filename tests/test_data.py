@@ -435,3 +435,237 @@ def test_normalize_unicode_minus_equals_hyphen_minus():
 )
 def test_normalize_hyphen_cases(raw, expected):
     assert data.normalize(raw) == expected
+
+
+# ---- M2a: read_jsonl / write_jsonl ----
+def test_read_jsonl_basic(tmp_path):
+    p = tmp_path / "a.jsonl"
+    p.write_text('{"a": 1}\n{"a": 2}\n', encoding="utf-8")
+    assert data.read_jsonl(p) == [{"a": 1}, {"a": 2}]
+
+
+def test_read_jsonl_no_trailing_newline(tmp_path):
+    p = tmp_path / "a.jsonl"
+    p.write_text('{"a": 1}', encoding="utf-8")
+    assert data.read_jsonl(p) == [{"a": 1}]
+
+
+def test_read_jsonl_skips_blank_lines(tmp_path):
+    p = tmp_path / "a.jsonl"
+    p.write_text('\n{"a": 1}\n\n   \n{"a": 2}\n\n', encoding="utf-8")
+    assert data.read_jsonl(p) == [{"a": 1}, {"a": 2}]
+
+
+def test_read_jsonl_handles_bom(tmp_path):
+    p = tmp_path / "a.jsonl"
+    p.write_bytes(b'\xef\xbb\xbf{"a": 1}\n')
+    assert data.read_jsonl(p) == [{"a": 1}]
+
+
+def test_read_jsonl_empty_file(tmp_path):
+    p = tmp_path / "a.jsonl"
+    p.write_text("", encoding="utf-8")
+    assert data.read_jsonl(p) == []
+
+
+def test_read_jsonl_malformed_line_names_physical_line_number(tmp_path):
+    p = tmp_path / "a.jsonl"
+    p.write_text('{"a": 1}\n\n{oops}\n', encoding="utf-8")
+    with pytest.raises(ValueError, match="line 3"):
+        data.read_jsonl(p)
+
+
+def test_read_jsonl_non_object_line_names_line_number(tmp_path):
+    p = tmp_path / "a.jsonl"
+    p.write_text("[1, 2]\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="line 1"):
+        data.read_jsonl(p)
+
+
+def test_read_jsonl_missing_file_raises(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        data.read_jsonl(tmp_path / "nope.jsonl")
+
+
+def test_write_jsonl_round_trip_keeps_unicode_and_newlines(tmp_path):
+    rows = [{"q": "Café 日本語 “quotes”", "alts": ["a", "b"]}, {"q": "line\nbreak"}]
+    p = tmp_path / "out.jsonl"
+    data.write_jsonl(p, rows)
+    assert data.read_jsonl(p) == rows
+
+
+def test_write_jsonl_one_line_per_row_and_trailing_newline(tmp_path):
+    p = tmp_path / "out.jsonl"
+    data.write_jsonl(p, [{"q": "line\nbreak"}, {"q": "x"}])
+    text = p.read_text(encoding="utf-8")
+    assert text.endswith("\n")
+    assert len(text.splitlines()) == 2
+
+
+def test_write_jsonl_does_not_escape_unicode(tmp_path):
+    p = tmp_path / "out.jsonl"
+    data.write_jsonl(p, [{"q": "Café"}])
+    assert "Café" in p.read_text(encoding="utf-8")
+
+
+def test_write_jsonl_empty_rows_makes_empty_file(tmp_path):
+    p = tmp_path / "out.jsonl"
+    data.write_jsonl(p, [])
+    assert p.read_text(encoding="utf-8") == ""
+    assert data.read_jsonl(p) == []
+
+
+def test_write_jsonl_creates_parent_directory(tmp_path):
+    p = tmp_path / "sub" / "deeper" / "out.jsonl"
+    data.write_jsonl(p, [{"a": 1}])
+    assert data.read_jsonl(p) == [{"a": 1}]
+
+
+def test_write_jsonl_overwrites_existing_file(tmp_path):
+    p = tmp_path / "out.jsonl"
+    data.write_jsonl(p, [{"a": 1}, {"a": 2}])
+    data.write_jsonl(p, [{"a": 3}])
+    assert data.read_jsonl(p) == [{"a": 3}]
+
+
+def test_write_jsonl_failure_keeps_old_file_and_leaves_no_temp(tmp_path):
+    p = tmp_path / "out.jsonl"
+    data.write_jsonl(p, [{"a": 1}])
+    old = p.read_text(encoding="utf-8")
+    with pytest.raises(TypeError):
+        data.write_jsonl(p, [{"a": 2}, {"a": object()}])
+    assert p.read_text(encoding="utf-8") == old
+    assert list(tmp_path.iterdir()) == [p]
+
+
+# ---- M2a: check_schema ----
+GOOD_ROW = {
+    "id": "tqa-001",
+    "question": "What happens if you eat watermelon seeds?",
+    "answer": "Nothing happens",
+    "accepted_alternatives": ["They pass through you"],
+    "category": "misconception",
+    "source": "truthfulqa",
+}
+
+
+def test_check_schema_accepts_good_row():
+    assert data.check_schema(GOOD_ROW) is None
+
+
+def test_check_schema_chain_is_optional_but_checked_when_present():
+    assert data.check_schema({**GOOD_ROW, "chain": GOOD_CHAIN}) is None
+    with pytest.raises(ValueError, match="chain"):
+        data.check_schema({**GOOD_ROW, "chain": 5})
+
+
+@pytest.mark.parametrize("key", list(GOOD_ROW))
+def test_check_schema_rejects_missing_key(key):
+    row = {k: v for k, v in GOOD_ROW.items() if k != key}
+    with pytest.raises(ValueError, match=key):
+        data.check_schema(row)
+
+
+@pytest.mark.parametrize("key", ["id", "question", "answer", "source"])
+@pytest.mark.parametrize("bad", ["", "   ", None, 5])
+def test_check_schema_rejects_empty_or_non_string_text(key, bad):
+    with pytest.raises(ValueError, match=key):
+        data.check_schema({**GOOD_ROW, key: bad})
+
+
+def test_check_schema_rejects_unknown_category():
+    with pytest.raises(ValueError, match="category"):
+        data.check_schema({**GOOD_ROW, "category": "character_counting"})
+
+
+@pytest.mark.parametrize("bad", ["nine", ("nine",), None, {"a": 1}])
+def test_check_schema_alternatives_must_be_a_list(bad):
+    with pytest.raises(ValueError, match="accepted_alternatives"):
+        data.check_schema({**GOOD_ROW, "accepted_alternatives": bad})
+
+
+@pytest.mark.parametrize("bad", [[""], ["  "], [None], [5], ["ok", ""]])
+def test_check_schema_alternatives_items_must_be_non_empty_strings(bad):
+    with pytest.raises(ValueError, match="accepted_alternatives"):
+        data.check_schema({**GOOD_ROW, "accepted_alternatives": bad})
+
+
+# ---- M2a: stratified_sample (n is PER CATEGORY) ----
+def _rows(counts):
+    return [
+        {"id": f"{cat}-{i}", "category": cat}
+        for cat, size in counts.items()
+        for i in range(size)
+    ]
+
+
+def _count(rows, cat):
+    return sum(r["category"] == cat for r in rows)
+
+
+def test_stratified_sample_takes_n_per_category():
+    out = data.stratified_sample(_rows({"a": 10, "b": 10}), 3, seed=0)
+    assert _count(out, "a") == 3
+    assert _count(out, "b") == 3
+
+
+def test_stratified_sample_small_category_returns_all_without_error():
+    out = data.stratified_sample(_rows({"a": 10, "b": 2}), 5, seed=0)
+    assert _count(out, "a") == 5
+    assert sorted(r["id"] for r in out if r["category"] == "b") == ["b-0", "b-1"]
+
+
+def test_stratified_sample_single_row_category_is_kept():
+    out = data.stratified_sample(_rows({"a": 10, "solo": 1}), 3, seed=0)
+    assert _count(out, "solo") == 1
+
+
+def test_stratified_sample_n_larger_than_everything_returns_all():
+    rows = _rows({"a": 3, "b": 2})
+    out = data.stratified_sample(rows, 100, seed=0)
+    assert sorted(r["id"] for r in out) == sorted(r["id"] for r in rows)
+
+
+def test_stratified_sample_has_no_duplicates():
+    out = data.stratified_sample(_rows({"a": 10, "b": 10}), 7, seed=3)
+    ids = [r["id"] for r in out]
+    assert len(ids) == len(set(ids))
+
+
+def test_stratified_sample_empty_input():
+    assert data.stratified_sample([], 3, seed=0) == []
+
+
+def test_stratified_sample_n_zero_is_empty():
+    assert data.stratified_sample(_rows({"a": 5}), 0, seed=0) == []
+
+
+def test_stratified_sample_negative_n_raises():
+    with pytest.raises(ValueError):
+        data.stratified_sample(_rows({"a": 5}), -1, seed=0)
+
+
+def test_stratified_sample_same_seed_same_result():
+    rows = _rows({"a": 20, "b": 20})
+    assert data.stratified_sample(rows, 4, seed=7) == data.stratified_sample(
+        rows, 4, seed=7
+    )
+
+
+def test_stratified_sample_different_seed_changes_result():
+    rows = _rows({"a": 20, "b": 20})
+    assert data.stratified_sample(rows, 4, seed=1) != data.stratified_sample(
+        rows, 4, seed=2
+    )
+
+
+def test_stratified_sample_does_not_mutate_input():
+    rows = _rows({"a": 6, "b": 6})
+    before = [dict(r) for r in rows]
+    data.stratified_sample(rows, 2, seed=0)
+    assert rows == before
+
+
+def test_stratified_sample_row_without_category_raises():
+    with pytest.raises(ValueError, match="category"):
+        data.stratified_sample([{"id": "x"}], 1, seed=0)

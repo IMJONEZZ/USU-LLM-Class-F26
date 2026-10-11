@@ -1,5 +1,10 @@
+import json
+import os
+import random
 import re
+import tempfile
 import unicodedata
+from pathlib import Path
 
 from src import config
 
@@ -118,3 +123,71 @@ def is_correct(predicted, key, alternatives=()):
         raise ValueError("answer key is empty")
     predicted_norm = normalize(predicted)
     return predicted_norm != "" and predicted_norm in accepted
+
+
+def read_jsonl(path):
+    rows = []
+    with open(path, encoding="utf-8-sig") as f:
+        for line_no, line in enumerate(f, start=1):
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError as e:
+                raise ValueError(
+                    f"{path}: line {line_no}: invalid JSON ({e.msg})"
+                ) from e
+            if not isinstance(row, dict):
+                raise ValueError(  # noqa: TRY004 - bad data, one exception type
+                    f"{path}: line {line_no}: expected a JSON object"
+                )
+            rows.append(row)
+    return rows
+
+
+def write_jsonl(path, rows):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            for row in rows:
+                f.write(json.dumps(row, ensure_ascii=False) + "\n")
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
+
+
+def check_schema(row):
+    for key in ("id", "question", "answer", "source"):
+        value = row.get(key)
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"{key} must be a non-empty string, got {value!r}")
+    if row.get("category") not in config.CATEGORIES:
+        raise ValueError(f"category {row.get('category')!r} is not in CATEGORIES")
+    alternatives = row.get("accepted_alternatives")
+    if not isinstance(alternatives, list):
+        raise ValueError(  # noqa: TRY004 - bad data, one exception type
+            "accepted_alternatives must be a list"
+        )
+    if any(not isinstance(a, str) or not a.strip() for a in alternatives):
+        raise ValueError("accepted_alternatives must contain only non-empty strings")
+    if "chain" in row and not isinstance(row["chain"], str):
+        raise ValueError("chain must be a string when present")
+
+
+def stratified_sample(rows, n, seed):
+    if n < 0:
+        raise ValueError(f"n must be >= 0, got {n}")
+    groups = {}
+    for row in rows:
+        if "category" not in row:
+            raise ValueError(f"row has no 'category': {row!r}")
+        groups.setdefault(row["category"], []).append(row)
+    rng = random.Random(seed)
+    sampled = []
+    for group in groups.values():
+        picked = rng.sample(range(len(group)), min(n, len(group)))
+        sampled.extend(group[i] for i in sorted(picked))
+    return sampled
