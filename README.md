@@ -62,3 +62,11 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - M2: BrainTeaser is converted once, by hand, to JSONL (the source is an encrypted zip of pickles, and unpickling untrusted data runs code). The JSONL lives in `assets/brainteaser.jsonl`, a file outside the 20-file layout, so a fresh clone can rebuild without the pickle.
 - M2: `stratified_sample(rows, n, seed)` takes `n` per category; categories smaller than `n` return all their rows.
 - M2: row schema is `id, question, answer, accepted_alternatives, category, source` plus optional `chain`.
+- M2: Misguided Attention removed entirely (no answer key); `misguided_answers.jsonl` leaves the layout and `lateral_thinking` comes from BrainTeaser sentence puzzles only.
+- M2: loaders live in `src/sources.py` (user-approved; outside the 20-file layout because `data.py` would pass 300 lines). Dependency order: config -> data -> sources.
+- M2: loaders keep the original long-form answers; the teacher rewrites keys to short form in M3 (original kept as an alternative) and the user spot-checks a sample.
+- M2: category mapping: misconception = TruthfulQA Misconceptions, Misconceptions: Topical, Superstitions, Myths and Fairytales, Mandela Effect; time_sensitive = TruthfulQA Indexical Error: Time + FreshQA fast/slow-changing non-false-premise; false_premise = FalseQA label 1 + FreshQA false_premise TRUE; pun_ambiguity = BrainTeaser word puzzles; lateral_thinking = BrainTeaser sentence puzzles. Everything else is dropped.
+- M2: FreshQA rows other than never-changing are kept only when `effective_year == REFERENCE_YEAR`.
+- M2: BrainTeaser `_SR`/`_CR` variants are dropped; rows whose answer is not `choice_list[label]`, with duplicate choices, or whose answer is "None of above." are dropped with a warning.
+- M2: duplicate questions (normalized) are dropped across sources, first source wins (order: TruthfulQA, FalseQA, BrainTeaser, FreshQA).
+- M2: blank questions or answers raise instead of being skipped.
