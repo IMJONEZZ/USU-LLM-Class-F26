@@ -46,7 +46,7 @@ def run_training(max_steps: int = 60):
 
     import torch
 
-    from src.trainer import (
+    from src.lm_trainer import (
         attach_lora,
         build_splits,
         finetune,

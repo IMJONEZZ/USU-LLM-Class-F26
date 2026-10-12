@@ -17,7 +17,7 @@ import types
 import pytest
 import torch
 
-from src.trainer import (
+from src.lm_trainer import (
     BASE_MODEL,
     LORA_RANK,
     attach_lora,
@@ -233,7 +233,7 @@ def test_importing_the_trainer_does_not_pull_in_unsloth():
 
     for name in ("unsloth", "trl"):
         sys.modules.pop(name, None)
-    importlib.reload(importlib.import_module("src.trainer"))
+    importlib.reload(importlib.import_module("src.lm_trainer"))
     assert "unsloth" not in sys.modules
     assert "trl" not in sys.modules
 
