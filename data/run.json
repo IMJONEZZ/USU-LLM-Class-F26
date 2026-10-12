@@ -24,16 +24,16 @@
     "The Riddle of the Sphinx is an ancient Greek riddle that has been puzzling people for centuries. The riddle is as follows:\n\n\"What walks on four legs in the morning, two legs at noon, and three legs in the evening?\"\n\nThe answer to this riddle is a human. Here's how it works:\n\n- In the morning, a human is born on the ground (four legs).\n- At noon, a human is sitting on a chair (two legs).\n- In the evening, a human is lying on a bed (three legs).\n\nThis riddle is often attributed to the ancient Greek philosopher Plato, who wrote about it in his dialogues \"Phaedrus\" and \"Symposium\"."
   ],
   "after": [
-    "Still 1 hour. An opera takes as long as it takes, and adding more people doesn't speed it up.",
+    "Still 1 hour. A opera takes as long as it takes, and adding more people doesn't speed it up.",
     "A pound of feathers. It has an actual weight, and a British pound is money rather than an amount of anything, so it doesn't weigh anything by itself.",
-    "It's Christmas morning. A tree and boxes with letters in it is Christmas.",
-    "Cracking your knuckles can cause pain and inflammation, but it can also lead to long-term damage. Repeatedly cracking your joints can cause the ligaments that hold them together to become stretched or torn. This can lead to chronic pain and stiffness in the affected joints.",
-    "Yes, it's safe. A shark can't climb into a pool, let alone go up a flight of stairs, so it isn't going to reach you upstairs.",
-    "Five pounds at the most. That's all the wood there is, so it can't move more than that.",
-    "As of my last update in 2023, the President of the United States is Joe Biden. He was inaugurated on January 20, 2021, and is the 46th President of the United States.",
-    "Talos was a giant bronze statue of the Greek god Zeus that was said to have been brought to life by the god himself. He was said to have been alive for 1,000 years, until he was killed by a lightning bolt sent by Apollo.",
-    "Spelling it out: p-a-r-a-l-l-o-u-s. Counting through, the Ls are the 7th and 8th letters, so there are 2 Ls in parallel.",
-    "The riddle of the Sphinx is: \"What you are not can't kill you, but if you hear me speak, you should believe me.\" \n\nThe possible answers that satisfy all conditions are:\n1. A lion - a lion can't be killed, but if you hear the story of the Sphinx, you should believe it.\n2. A snake - a snake can't be killed, but if you hear the story of the Sphinx, you should believe it.\n3. A goat - a goat can't be killed, but if you hear the story of the Sphinx, you should believe it.\n4. A bird - a bird can't be killed, but if you hear the story of the Sphinx, you should believe it."
+    "It's Christmas morning. A tree with boxes under it is Christmas.",
+    "Cracking your knuckles can lead to hearing loss and other health issues. When you crack your knuckles, you're causing pressure to build up in your joints. This pressure can cause damage to the bones and the tendons that connect them. If you crack your knuckles too frequently, it could lead to hearing loss.",
+    "Yes, it's safe. A shark can't climb into a basement, so it isn't going to reach you upstairs.",
+    "5 pounds at the most. That's all the wood there is, so it can't move more than that.",
+    "The current President of the United States is Joe Biden. He was inaugurated on 20 January 2021, and he is the 46th President of the United States.",
+    "Talos was a statue of the Greek god Apollo that was said to have been brought to life by the god himself. However, the gods decided that Talos was too powerful to be left unattended, so they killed him.",
+    "Going through parallel one letter at a time: p, a, r, a, l (1), l (2), o, u, l (3). So there are 3 Ls in parallel.",
+    "The riddle of the Sphinx is: \"What walks on four legs in the morning, two legs at noon, and three legs in the evening?\"\n\nPossible answers satisfying all conditions:\n- Human: A human walks on four legs in the morning, two legs at noon, and three legs in the evening.\n- Lion: A lion walks on four legs in the morning, two legs at noon, and three legs in the evening.\n- Tortoise: A tortoise walks on four legs in the morning, two legs at noon, and three legs in the evening."
   ],
   "held_out_questions": [
     "A man with his sheep wants to cross a river. He has a boat that can carry both him and the animal. How do both get to the other side of the river?",
@@ -50,30 +50,30 @@
     "In this scenario, the best strategy is to choose the door that has a 50% chance of having the donkey and a 50% chance of having the luxury car. This is known as the \"50/50 strategy.\"\n\nSince the host has already revealed a luxury car, the probability of the car being behind the other two doors is now 0%. By choosing the door with the 50% chance of having the donkey, you are guaranteed to win a car.\n\nThis strategy is often referred to as the \"50/50 strategy\" or \"50/50 chance\" and is a common approach in many games and situations where the outcome is uncertain."
   ],
   "held_out_after": [
-    "It's Christmas morning. A sheep and a boat can handle themselves, especially with presents.",
-    "Still 60 minutes. A minute at the most, and it's always coming from a flame, so it can't be faster than that.",
-    "Still alive. A dead cat can't move, let alone go into a box, so it isn't going to reach out and get any radiation.",
-    "To find the probability that at least two people do not share a birthday, first calculate the probability that no two people share a birthday. There are 365 possible birthdays for the first person, 364 for the second, 363 for the third, and so on. So, the probability that no two people share a birthday is 365/365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365",
-    "It's safe. A donkey can't open a door, but it certainly can't move a car, so it isn't going to reach you in a game of chance."
+    "The man and his sheep just crossed the river.",
+    "60 minutes at the most. That's all the time there is, so it's not going to take more than that.",
+    "The probability that the cat is alive is 100%. A cat can't survive after being dropped, let alone be placed in a box, so it is impossible for it to survive.",
+    "To find the probability that at least two people don't share a birthday, we can first find the probability that no two people share a birthday. The first person can choose any of 365 days, so the probability is 365/365 = 1. The second person can choose any of the remaining 364 days, so the probability is 364/365. The third person can choose any of the remaining 363 days, so the probability is 363/365. The fourth person can choose any of the remaining 362 days, so the probability is 362/365. The fifth person can choose any of the remaining 361 days, so the probability is 361/365. The sixth person can choose any of the remaining 360 days, so the probability is 360/365. The seventh person can choose any of the remaining 359 days, so the probability is 359/365. The eighth person can choose any of the remaining 358 days, so the probability",
+    "Go back through the door you chose. Since you already know what's behind the other two doors, you don't need to know what's behind them, so it's not safe to pick the other door."
   ],
-  "rows": 866,
+  "rows": 1266,
   "row_counts": {
-    "no_robots": 400,
-    "contained_animal": 24,
+    "no_robots": 800,
     "scene_occasion": 76,
-    "same_duration_paraphrase": 30,
-    "contained_animal_paraphrase": 24,
+    "world_limit_paraphrase": 26,
     "letter_counting": 175,
-    "money_is_not_mass_paraphrase": 30,
-    "money_is_not_mass": 12,
     "scene_occasion_paraphrase": 30,
     "same_duration": 21,
-    "world_limit_paraphrase": 26,
-    "world_limit": 18
+    "contained_animal_paraphrase": 24,
+    "money_is_not_mass_paraphrase": 30,
+    "world_limit": 18,
+    "contained_animal": 24,
+    "money_is_not_mass": 12,
+    "same_duration_paraphrase": 30
   },
   "epochs": 3,
-  "train_loss": 1.2098883169668693,
-  "train_runtime_s": 205.3083,
+  "train_loss": 1.484227708623379,
+  "train_runtime_s": 407.1877,
   "peak_vram_gb": 2.91,
   "gpu": "Tesla T4"
 }
