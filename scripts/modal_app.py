@@ -214,6 +214,24 @@ def train_on_gpu(train_rows, eval_rows, round_n, probe, overrides):
     print("first example, what is trained on:")
     print(repr(training.expected_trained_text(tokenizer, train_rows[0])[:200]))
 
+    # and then we look at the real collated batch: is padding-free packing on, and are its labels right?
+    padding_free = getattr(trainer.args, "padding_free", None)
+    packing = getattr(trainer.args, "packing", None)
+    batch = next(iter(trainer.get_train_dataloader()))
+    shapes = {
+        key: list(value.shape)
+        for key, value in batch.items()
+        if hasattr(value, "shape")
+    }
+    print(
+        f"padding_free={padding_free} packing={packing}; first collated batch shapes: {shapes}"
+    )
+    in_batch = len(unmasked_runs_of(batch))
+    training.check_batch_masking(tokenizer, train_rows, batch)
+    print(
+        f"masking verified on the collated batch: {in_batch} trained response(s), each exactly a chain plus end token"
+    )
+
     # and then we train with the timer and GPU monitor on
     with evaluation.Timer() as timer, evaluation.GpuMonitor() as gpu_monitor:
         trainer.train()
@@ -241,7 +259,26 @@ def train_on_gpu(train_rows, eval_rows, round_n, probe, overrides):
         hyperparams=training.hyperparameters(**training.clean_overrides(overrides)),
     )
     print(f"train seconds: {timer.seconds:.1f}; peak torch memory (MiB): {peak}")
-    return {"record": record, "masking_checked": checked}
+    return {
+        "record": record,
+        "masking_checked": checked,
+        "padding_free": padding_free,
+        "packing": packing,
+        "batch_shapes": shapes,
+    }
+
+
+def unmasked_runs_of(batch):
+    from src import train as training
+
+    runs = []
+    for ids, labels in zip(
+        training._as_lists(batch["input_ids"]),
+        training._as_lists(batch["labels"]),
+        strict=True,
+    ):
+        runs.extend(training.unmasked_runs(ids, labels))
+    return runs
 
 
 def _sentinel(value):
@@ -317,6 +354,10 @@ def train_round(
     remote = train_on_gpu.remote(train_rows, eval_rows, round_n, probe, overrides)
     record = remote["record"]
     print(f"masking verified on {remote['masking_checked']} real examples")
+    print(
+        f"padding_free={remote['padding_free']} packing={remote['packing']}; "
+        f"collated batch shapes {remote['batch_shapes']}"
+    )
     for epoch in record["epoch_results"]:
         print(
             f"  epoch {epoch['epoch']}: train loss {epoch['train_loss']}, eval loss "

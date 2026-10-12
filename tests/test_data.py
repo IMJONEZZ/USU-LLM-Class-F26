@@ -5115,3 +5115,159 @@ def test_generate_fn_restores_a_left_padding_side_too():
         ["p"]
     )
     assert tok.padding_side == "left"
+
+
+# ---- M8: masking on the collated batch (padding-free packs examples into one row) ----
+def _example_ids_and_labels(tok, row, shift=0):
+    example = _masked_example(tok, row, shift=shift)
+    return example["input_ids"], example["labels"]
+
+
+def _packed_batch(tok, rows, shifts=None):
+    shifts = shifts or [0] * len(rows)
+    ids, labels = [], []
+    for row, shift in zip(rows, shifts, strict=True):
+        row_ids, row_labels = _example_ids_and_labels(tok, row, shift)
+        ids += row_ids
+        labels += row_labels
+    return {"input_ids": [ids], "labels": [labels]}
+
+
+def _padded_batch(tok, rows):
+    pairs = [_example_ids_and_labels(tok, row) for row in rows]
+    width = max(len(ids) for ids, _ in pairs)
+    return {
+        "input_ids": [ids + [0] * (width - len(ids)) for ids, _ in pairs],
+        "labels": [labels + [-100] * (width - len(labels)) for _, labels in pairs],
+    }
+
+
+def _two_rows():
+    return [
+        _trow(1, question="a b", chain=_teacher_chain("9")),
+        _trow(2, question="c d e f", chain=_teacher_chain("9", "extra words here")),
+    ]
+
+
+def test_unmasked_runs_splits_contiguous_trained_stretches():
+    assert train.unmasked_runs([1, 2, 3, 4, 5, 6], [-100, 2, 3, -100, 5, 6]) == [
+        [2, 3],
+        [5, 6],
+    ]
+    assert train.unmasked_runs([1, 2], [-100, -100]) == []
+    assert train.unmasked_runs([1, 2], [1, 2]) == [[1, 2]]
+
+
+def test_check_batch_masking_accepts_a_packed_padding_free_batch():
+    tok = _tiny_tokenizer()
+    rows = _two_rows()
+    assert (
+        train.check_batch_masking(tok, rows, _packed_batch(tok, rows), expected_count=2)
+        is None
+    )
+
+
+def test_check_batch_masking_accepts_a_padded_batch():
+    tok = _tiny_tokenizer()
+    rows = _two_rows()
+    assert (
+        train.check_batch_masking(tok, rows, _padded_batch(tok, rows), expected_count=2)
+        is None
+    )
+
+
+def test_check_batch_masking_accepts_tensor_like_batches():
+    tok = _tiny_tokenizer()
+    rows = _two_rows()
+    batch = {key: np.array(value) for key, value in _padded_batch(tok, rows).items()}
+    assert train.check_batch_masking(tok, rows, batch) is None
+
+
+def test_check_batch_masking_accepts_the_examples_in_either_order():
+    tok = _tiny_tokenizer()
+    rows = _two_rows()
+    assert train.check_batch_masking(tok, rows, _packed_batch(tok, rows[::-1])) is None
+
+
+def test_check_batch_masking_catches_a_boundary_that_merges_two_examples():
+    tok = _tiny_tokenizer()
+    rows = _two_rows()
+    batch = _packed_batch(tok, rows)
+    first_len = len(_example_ids_and_labels(tok, rows[0])[0])
+    start = train.response_start_index(tok, rows[1]["question"])
+    for i in range(
+        first_len, first_len + start
+    ):  # the second example's prompt left unmasked
+        batch["labels"][0][i] = batch["input_ids"][0][i]
+    with pytest.raises(ValueError, match="does not match"):
+        train.check_batch_masking(tok, rows, batch)
+
+
+@pytest.mark.parametrize("shift", [-1, 1])
+def test_check_batch_masking_catches_an_off_by_one_in_a_packed_batch(shift):
+    tok = _tiny_tokenizer()
+    rows = _two_rows()
+    with pytest.raises(ValueError, match="does not match"):
+        train.check_batch_masking(
+            tok, rows, _packed_batch(tok, rows, shifts=[0, shift])
+        )
+
+
+def test_check_batch_masking_catches_a_masked_end_token():
+    tok = _tiny_tokenizer()
+    rows = _two_rows()
+    batch = _packed_batch(tok, rows)
+    batch["labels"][0][-1] = -100
+    with pytest.raises(ValueError, match="does not match"):
+        train.check_batch_masking(tok, rows, batch)
+
+
+def test_check_batch_masking_with_nothing_trained_raises():
+    tok = _tiny_tokenizer()
+    rows = _two_rows()
+    batch = _packed_batch(tok, rows)
+    batch["labels"] = [[-100] * len(batch["labels"][0])]
+    with pytest.raises(ValueError, match="no trained tokens"):
+        train.check_batch_masking(tok, rows, batch)
+
+
+def test_check_batch_masking_checks_the_number_of_examples_when_it_is_known():
+    tok = _tiny_tokenizer()
+    rows = _two_rows()
+    with pytest.raises(ValueError, match="1 trained"):
+        train.check_batch_masking(
+            tok, rows, _packed_batch(tok, rows[:1]), expected_count=2
+        )
+
+
+def test_check_batch_masking_works_with_a_transformers_style_tokenizer():
+    inner = _tiny_tokenizer()
+    rows = _two_rows()
+    assert (
+        train.check_batch_masking(
+            _HFStyleTokenizer(inner), rows, _packed_batch(inner, rows)
+        )
+        is None
+    )
+
+
+@pytest.mark.slow
+def test_real_tokenizer_packed_batch_masking_keeps_exactly_the_responses():
+    tok = data.load_tokenizer(config.MODEL_NAME)
+    rows = [
+        _trow(1, question=LONG_Q, chain=_teacher_chain("9")),
+        _trow(
+            2,
+            question="How do planes stay in the air?",
+            chain=_teacher_chain("9", "wings"),
+        ),
+        _trow(
+            3,
+            question="What makes bread rise in the oven?",
+            chain=_teacher_chain("9", "yeast"),
+        ),
+    ]
+    assert (
+        train.check_batch_masking(tok, rows, _packed_batch(tok, rows), expected_count=3)
+        is None
+    )

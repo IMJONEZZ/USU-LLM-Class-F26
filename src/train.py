@@ -388,3 +388,41 @@ def check_masking(tokenizer, rows, examples):
                 f"row {row['id']!r}: the unmasked text {got!r} is not the "
                 f"response and end token {expected!r}"
             )
+
+
+def _as_lists(values):
+    return values.tolist() if hasattr(values, "tolist") else [list(r) for r in values]
+
+
+def unmasked_runs(ids, labels):
+    runs, current = [], []
+    for token, label in zip(ids, labels, strict=True):
+        if label != -100:
+            current.append(token)
+        elif current:
+            runs.append(current)
+            current = []
+    if current:
+        runs.append(current)
+    return runs
+
+
+def check_batch_masking(tokenizer, rows, batch, expected_count=None):
+    expected = {expected_trained_text(tokenizer, row) for row in rows}
+    runs = []
+    for ids, labels in zip(
+        _as_lists(batch["input_ids"]), _as_lists(batch["labels"]), strict=True
+    ):
+        runs.extend(unmasked_runs(ids, labels))
+    if not runs:
+        raise ValueError("no trained tokens in the batch")
+    if expected_count is not None and len(runs) != expected_count:
+        raise ValueError(
+            f"{len(runs)} trained runs but {expected_count} examples in the batch"
+        )
+    for run in runs:
+        text = tokenizer.decode(run, skip_special_tokens=False)
+        if text not in expected:
+            raise ValueError(
+                f"a trained run does not match any response and end token: {text!r}"
+            )
