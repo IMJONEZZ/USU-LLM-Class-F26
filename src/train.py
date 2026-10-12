@@ -360,12 +360,12 @@ def record_round(path, record):
 
 def response_start_index(tokenizer, question):
     prompt = data.format_prompt(question)
-    return len(tokenizer.encode(prompt, add_special_tokens=True).ids)
+    return len(data.encode_ids(tokenizer, prompt))
 
 
 def expected_trained_text(tokenizer, row):
     example = data.format_example(row["question"], row["chain"], config.EOS_TOKEN)
-    ids = tokenizer.encode(example, add_special_tokens=True).ids
+    ids = data.encode_ids(tokenizer, example)
     start = response_start_index(tokenizer, row["question"])
     return tokenizer.decode(ids[start:], skip_special_tokens=False)
 

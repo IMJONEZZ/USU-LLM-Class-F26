@@ -3611,8 +3611,10 @@ class _FakeTokenizer:
         self.pad_token_id = 0
         self.padding_side = "right"
         self.decoded = []
+        self.sides = []
 
     def __call__(self, prompts, return_tensors=None, padding=True):
+        self.sides.append(self.padding_side)
         ids = [[ord(c) % 200 + 1 for c in prompt] for prompt in prompts]
         width = max(len(row) for row in ids)
         pad = lambda row: (
@@ -3679,7 +3681,7 @@ def test_generate_fn_pads_on_the_left_so_different_lengths_share_a_batch():
     model = _FakeModel()
     generate = evaluation.make_generate_fn(model, tok, max_new_tokens=5, batch_size=8)
     generate(["short", "a much longer prompt"])
-    assert tok.padding_side == "left"
+    assert tok.sides == ["left"]
     mask = model.calls[0]["attention_mask"]
     assert mask[0][0] == 0 and mask[0][-1] == 1  # the short prompt is padded first
     assert mask[1][0] == 1
@@ -5028,3 +5030,88 @@ def test_real_tokenizer_masked_labels_keep_exactly_the_response_and_end_token():
     ]
     examples = [_masked_example(tok, r) for r in rows]
     assert train.check_masking(tok, rows, examples) is None
+
+
+# ---- both tokenizer APIs: `tokenizers` (encode gives .ids) and transformers (encode gives a list) ----
+class _HFStyleTokenizer:
+    """Behaves like the Hugging Face tokenizer Unsloth returns inside the container."""
+
+    def __init__(self, inner):
+        self._inner = inner
+
+    def encode(self, text, add_special_tokens=True):
+        return self._inner.encode(text, add_special_tokens=add_special_tokens).ids
+
+    def decode(self, ids, skip_special_tokens=True):
+        return self._inner.decode(ids, skip_special_tokens=skip_special_tokens)
+
+
+def test_encode_ids_gives_the_same_list_for_both_tokenizer_styles():
+    inner = _tiny_tokenizer()
+    assert data.encode_ids(inner, "a b c") == data.encode_ids(
+        _HFStyleTokenizer(inner), "a b c"
+    )
+    assert isinstance(data.encode_ids(_HFStyleTokenizer(inner), "a b c"), list)
+
+
+def test_token_lengths_work_with_a_transformers_style_tokenizer():
+    inner = _tiny_tokenizer()
+    rows = [_trow(1, question="a b"), _trow(2, question="c d e f")]
+    assert data.token_lengths(rows, _HFStyleTokenizer(inner)) == data.token_lengths(
+        rows, inner
+    )
+
+
+def test_masking_helpers_work_with_a_transformers_style_tokenizer():
+    inner = _tiny_tokenizer()
+    hf = _HFStyleTokenizer(inner)
+    row = _trow(1, question="a b")
+    assert train.response_start_index(hf, "a b") == train.response_start_index(
+        inner, "a b"
+    )
+    assert train.expected_trained_text(hf, row) == train.expected_trained_text(
+        inner, row
+    )
+    example = _masked_example(inner, row)
+    assert train.check_masking(hf, [row], [example]) is None
+    shifted = _masked_example(inner, row, shift=-1)
+    with pytest.raises(ValueError, match="t-1"):
+        train.check_masking(hf, [row], [shifted])
+
+
+def test_check_prompt_length_works_with_a_transformers_style_tokenizer():
+    hf = _HFStyleTokenizer(_tiny_tokenizer())
+    assert evaluation.check_prompt_length(["a b c"], hf, 99) is None
+    with pytest.raises(ValueError, match="1 prompt"):
+        evaluation.check_prompt_length(["a b c d e f g h"], hf, 3)
+
+
+def test_generate_fn_puts_the_padding_side_back_so_training_is_not_affected():
+    tok = _FakeTokenizer(["x"])
+    tok.padding_side = "right"
+    evaluation.make_generate_fn(_FakeModel(), tok, max_new_tokens=5, batch_size=8)(
+        ["p"]
+    )
+    assert tok.padding_side == "right"
+
+
+def test_generate_fn_puts_the_padding_side_back_even_if_generation_throws():
+    class _Boom(_FakeModel):
+        def generate(self, **kwargs):
+            raise RuntimeError("generation failed")
+
+    tok = _FakeTokenizer(["x"])
+    tok.padding_side = "right"
+    generate = evaluation.make_generate_fn(_Boom(), tok, max_new_tokens=5, batch_size=8)
+    with pytest.raises(RuntimeError, match="generation failed"):
+        generate(["p"])
+    assert tok.padding_side == "right"
+
+
+def test_generate_fn_restores_a_left_padding_side_too():
+    tok = _FakeTokenizer(["x"])
+    tok.padding_side = "left"
+    evaluation.make_generate_fn(_FakeModel(), tok, max_new_tokens=5, batch_size=8)(
+        ["p"]
+    )
+    assert tok.padding_side == "left"

@@ -436,23 +436,26 @@ def load_tokenizer(name_or_path):
     return Tokenizer.from_pretrained(name_or_path)
 
 
+def encode_ids(tokenizer, text):
+    encoded = tokenizer.encode(text, add_special_tokens=True)
+    return list(encoded.ids) if hasattr(encoded, "ids") else list(encoded)
+
+
 def token_lengths(rows, tokenizer, eos_token=None):
     eos_token = config.EOS_TOKEN if eos_token is None else eos_token
     lengths = []
     for row in rows:
         if not row.get("chain"):
             raise ValueError(f"row {row.get('id')!r} has no chain to measure")
-        prompt = tokenizer.encode(
-            format_prompt(row["question"]), add_special_tokens=True
-        )
+        prompt = encode_ids(tokenizer, format_prompt(row["question"]))
         example = format_example(row["question"], row["chain"], eos_token)
-        total = tokenizer.encode(example, add_special_tokens=True)
+        total = encode_ids(tokenizer, example)
         lengths.append(
             {
                 "id": row["id"],
-                "prompt": len(prompt.ids),
-                "response": len(total.ids) - len(prompt.ids),
-                "total": len(total.ids),
+                "prompt": len(prompt),
+                "response": len(total) - len(prompt),
+                "total": len(total),
             }
         )
     return lengths

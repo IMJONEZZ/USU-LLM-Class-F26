@@ -50,23 +50,27 @@ def make_generate_fn(model, tokenizer, max_new_tokens=None, batch_size=None):
             return []
         if getattr(tokenizer, "pad_token", None) is None:
             tokenizer.pad_token = tokenizer.eos_token
+        original_side = getattr(tokenizer, "padding_side", "right")
         tokenizer.padding_side = "left"
         outputs = []
-        for batch in _batched(list(prompts), batch_size):
-            inputs = tokenizer(batch, return_tensors="pt", padding=True)
-            if hasattr(inputs, "to"):
-                inputs = inputs.to(model.device)
-            prompt_width = inputs["input_ids"].shape[1]
-            generated = model.generate(
-                **inputs,
-                max_new_tokens=max_new_tokens,
-                do_sample=False,
-                pad_token_id=tokenizer.pad_token_id,
-            )
-            texts = tokenizer.batch_decode(
-                generated[:, prompt_width:], skip_special_tokens=True
-            )
-            outputs.extend(cut_at_final_answer(text) for text in texts)
+        try:
+            for batch in _batched(list(prompts), batch_size):
+                inputs = tokenizer(batch, return_tensors="pt", padding=True)
+                if hasattr(inputs, "to"):
+                    inputs = inputs.to(model.device)
+                prompt_width = inputs["input_ids"].shape[1]
+                generated = model.generate(
+                    **inputs,
+                    max_new_tokens=max_new_tokens,
+                    do_sample=False,
+                    pad_token_id=tokenizer.pad_token_id,
+                )
+                texts = tokenizer.batch_decode(
+                    generated[:, prompt_width:], skip_special_tokens=True
+                )
+                outputs.extend(cut_at_final_answer(text) for text in texts)
+        finally:
+            tokenizer.padding_side = original_side
         return outputs
 
     return generate
@@ -148,9 +152,7 @@ def finetuned_prompt(row):
 
 
 def check_prompt_length(prompts, tokenizer, limit):
-    lengths = [
-        len(tokenizer.encode(prompt, add_special_tokens=True).ids) for prompt in prompts
-    ]
+    lengths = [len(data.encode_ids(tokenizer, prompt)) for prompt in prompts]
     over = [n for n in lengths if n > limit]
     if over:
         plural = "prompt" if len(over) == 1 else "prompts"
