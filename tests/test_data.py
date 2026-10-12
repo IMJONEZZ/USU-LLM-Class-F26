@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import httpx
+import numpy as np
 import pytest
 import truststore
 from google import genai
@@ -13,6 +14,7 @@ from google.genai import errors, types
 from tokenizers import Tokenizer, models, pre_tokenizers, processors
 
 from src import config, data, sources, teacher, train
+from src import eval as evaluation
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -3577,3 +3579,750 @@ def test_pipeline_validate_tokens_when_no_gpu_fits_says_so_and_still_writes_the_
     assert "no GPU" in result.stdout
     audit = json.loads((tmp_path / "audit.json").read_text(encoding="utf-8"))
     assert audit["cheapest_gpu"] is None
+
+
+# ---- M7: cut_at_final_answer ----
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        (_teacher_chain("9") + "\n\nQuestion: What next?\nRestate: more", _teacher_chain("9")),
+        ("Restate: x\nFINAL ANSWER: 9\nand then rambling", "Restate: x\nFINAL ANSWER: 9"),
+        ("Restate: x\nFinal   answer : 9\n### Instruction:\nfoo", "Restate: x\nFinal   answer : 9"),
+        ("Final answer: 9", "Final answer: 9"),
+        ("Final answer: 9\nFinal answer: 10", "Final answer: 9"),
+        ("Final answer: 9   \nmore", "Final answer: 9"),
+        ("Restate: the Final answer: is tricky\nSolve: s\nFinal answer: 9\nextra", "Restate: the Final answer: is tricky\nSolve: s\nFinal answer: 9"),
+        ("Restate: no label here   \n", "Restate: no label here"),
+        ("", ""),
+    ],
+)  # fmt: skip
+def test_cut_at_final_answer(text, expected):
+    assert evaluation.cut_at_final_answer(text) == expected
+
+
+# ---- M7: make_generate_fn (a numpy fake stands in for the model and tokenizer) ----
+class _FakeTokenizer:
+    def __init__(self, scripted):
+        self.scripted = list(scripted)
+        self.pad_token = None
+        self.eos_token = "<eos>"
+        self.pad_token_id = 0
+        self.padding_side = "right"
+        self.decoded = []
+
+    def __call__(self, prompts, return_tensors=None, padding=True):
+        ids = [[ord(c) % 200 + 1 for c in prompt] for prompt in prompts]
+        width = max(len(row) for row in ids)
+        pad = lambda row: (
+            ([0] * (width - len(row)) + row)
+            if self.padding_side == "left"
+            else (row + [0] * (width - len(row)))
+        )
+        input_ids = np.array([pad(row) for row in ids])
+        return {"input_ids": input_ids, "attention_mask": (input_ids != 0).astype(int)}
+
+    def batch_decode(self, token_ids, skip_special_tokens=True):
+        self.decoded.append(np.array(token_ids))
+        return [self.scripted.pop(0) for _ in range(len(token_ids))]
+
+
+class _FakeModel:
+    device = "cpu"
+
+    def __init__(self, new_tokens=4):
+        self.new_tokens = new_tokens
+        self.calls = []
+
+    def generate(self, **kwargs):
+        self.calls.append(kwargs)
+        input_ids = kwargs["input_ids"]
+        new = np.full((input_ids.shape[0], self.new_tokens), 7)
+        return np.concatenate([input_ids, new], axis=1)
+
+
+def test_generate_fn_returns_one_output_per_prompt_in_order():
+    tok = _FakeTokenizer(["A", "B", "C"])
+    generate = evaluation.make_generate_fn(
+        _FakeModel(), tok, max_new_tokens=5, batch_size=8
+    )
+    assert generate(["one", "three", "five!"]) == ["A", "B", "C"]
+
+
+def test_generate_fn_splits_into_batches_and_keeps_the_order():
+    tok = _FakeTokenizer(list("abcde"))
+    model = _FakeModel()
+    generate = evaluation.make_generate_fn(model, tok, max_new_tokens=5, batch_size=2)
+    assert generate(["p1", "p2", "p3", "p4", "p5"]) == list("abcde")
+    assert [call["input_ids"].shape[0] for call in model.calls] == [2, 2, 1]
+
+
+def test_generate_fn_with_a_batch_larger_than_the_data_makes_one_call():
+    tok = _FakeTokenizer(["x", "y"])
+    model = _FakeModel()
+    generate = evaluation.make_generate_fn(model, tok, max_new_tokens=5, batch_size=64)
+    generate(["a", "b"])
+    assert len(model.calls) == 1
+
+
+def test_generate_fn_with_no_prompts_makes_no_calls():
+    tok = _FakeTokenizer([])
+    model = _FakeModel()
+    generate = evaluation.make_generate_fn(model, tok, max_new_tokens=5, batch_size=2)
+    assert generate([]) == []
+    assert model.calls == []
+
+
+def test_generate_fn_pads_on_the_left_so_different_lengths_share_a_batch():
+    tok = _FakeTokenizer(["x", "y"])
+    model = _FakeModel()
+    generate = evaluation.make_generate_fn(model, tok, max_new_tokens=5, batch_size=8)
+    generate(["short", "a much longer prompt"])
+    assert tok.padding_side == "left"
+    mask = model.calls[0]["attention_mask"]
+    assert mask[0][0] == 0 and mask[0][-1] == 1  # the short prompt is padded first
+    assert mask[1][0] == 1
+
+
+def test_generate_fn_decodes_only_the_new_tokens_never_the_prompt():
+    tok = _FakeTokenizer(["x"])
+    generate = evaluation.make_generate_fn(
+        _FakeModel(new_tokens=4), tok, max_new_tokens=5, batch_size=8
+    )
+    generate(["a prompt of some length"])
+    assert tok.decoded[0].shape == (1, 4)
+    assert (tok.decoded[0] == 7).all()
+
+
+def test_generate_fn_is_greedy_and_passes_the_token_cap():
+    tok = _FakeTokenizer(["x"])
+    model = _FakeModel()
+    evaluation.make_generate_fn(model, tok, max_new_tokens=123, batch_size=8)(["p"])
+    call = model.calls[0]
+    assert call["max_new_tokens"] == 123
+    assert call["do_sample"] is False
+
+
+def test_generate_fn_uses_the_configured_defaults():
+    tok = _FakeTokenizer(["x"])
+    model = _FakeModel()
+    evaluation.make_generate_fn(model, tok)(["p"])
+    assert model.calls[0]["max_new_tokens"] == config.EVAL_MAX_NEW_TOKENS
+
+
+def test_generate_fn_gives_a_pad_token_when_the_tokenizer_has_none():
+    tok = _FakeTokenizer(["x"])
+    evaluation.make_generate_fn(_FakeModel(), tok, max_new_tokens=5, batch_size=8)(
+        ["p"]
+    )
+    assert tok.pad_token == tok.eos_token
+
+
+def test_generate_fn_cuts_each_output_at_its_final_answer_line():
+    tok = _FakeTokenizer([_teacher_chain("9") + "\n\nQuestion: next one?"])
+    generate = evaluation.make_generate_fn(
+        _FakeModel(), tok, max_new_tokens=5, batch_size=8
+    )
+    assert generate(["p"]) == [_teacher_chain("9")]
+
+
+def test_generate_fn_gives_identical_outputs_on_a_repeated_greedy_run():
+    first = evaluation.make_generate_fn(
+        _FakeModel(), _FakeTokenizer(["same", "same"]), max_new_tokens=5, batch_size=8
+    )
+    second = evaluation.make_generate_fn(
+        _FakeModel(), _FakeTokenizer(["same", "same"]), max_new_tokens=5, batch_size=8
+    )
+    assert first(["p", "q"]) == second(["p", "q"])
+
+
+# ---- M7: grade ----
+def _grade_row(**overrides):
+    return _trow(1, answer="9", accepted_alternatives=["nine"], **overrides)
+
+
+def test_grade_a_correct_well_formed_answer():
+    graded = evaluation.grade(_grade_row(), _teacher_chain("9"))
+    assert (graded["correct"], graded["format_ok"], graded["final_answer"]) == (
+        True,
+        True,
+        "9",
+    )
+    assert graded["id"] == "t-1"
+    assert graded["category"] == "lateral_thinking"
+
+
+def test_grade_a_wrong_but_well_formed_answer():
+    graded = evaluation.grade(_grade_row(), _teacher_chain("12"))
+    assert (graded["correct"], graded["format_ok"]) == (False, True)
+
+
+def test_grade_accepts_an_alternative_answer():
+    assert evaluation.grade(_grade_row(), _teacher_chain("nine"))["correct"] is True
+
+
+def test_grade_output_cut_off_before_the_final_answer_is_wrong_and_a_format_failure():
+    truncated = "\n".join(_teacher_chain("9").split("\n")[:3])
+    graded = evaluation.grade(_grade_row(), truncated)
+    assert graded["final_answer"] is None
+    assert (graded["correct"], graded["format_ok"]) == (False, False)
+
+
+def test_grade_right_answer_with_a_broken_format_counts_as_correct_but_not_compliant():
+    broken = "Final answer: 9"
+    graded = evaluation.grade(_grade_row(), broken)
+    assert (graded["correct"], graded["format_ok"]) == (True, False)
+
+
+@pytest.mark.parametrize("output", ["", "   ", "no label anywhere", "Final answer:"])
+def test_grade_unparsable_output_is_wrong_and_not_compliant(output):
+    graded = evaluation.grade(_grade_row(), output)
+    assert (graded["correct"], graded["format_ok"]) == (False, False)
+
+
+def test_grade_records_the_response_length():
+    output = _teacher_chain("9")
+    assert evaluation.grade(_grade_row(), output)["length"] == len(output)
+
+
+def test_grade_keeps_the_source_id_of_an_eval_variant():
+    variant = _grade_row(id="t-1-v0", source_id="t-1")
+    assert evaluation.grade(variant, _teacher_chain("9"))["source_id"] == "t-1"
+
+
+# ---- M7: score ----
+def _rows_by_category(counts):
+    rows = []
+    for category, n in counts.items():
+        for i in range(n):
+            rows.append(_grade_row(id=f"{category}-{i}", category=category))
+    return rows
+
+
+def test_score_of_no_rows_is_undefined_everywhere_not_zero():
+    metrics = evaluation.score([], [])
+    assert metrics["n"] == 0
+    assert metrics["accuracy"] == "undefined"
+    assert metrics["format_compliance"] == "undefined"
+    assert metrics["avg_response_chars"] == "undefined"
+    assert all(v["accuracy"] == "undefined" for v in metrics["per_category"].values())
+
+
+def test_score_a_category_with_no_rows_reports_undefined_not_zero():
+    rows = _rows_by_category({"false_premise": 2})
+    metrics = evaluation.score(rows, [_teacher_chain("9"), _teacher_chain("12")])
+    assert metrics["per_category"]["false_premise"] == {
+        "n": 2,
+        "correct": 1,
+        "accuracy": 0.5,
+    }
+    assert metrics["per_category"]["time_sensitive"]["accuracy"] == "undefined"
+    assert metrics["per_category"]["time_sensitive"]["n"] == 0
+
+
+def test_score_overall_numbers_and_category_order():
+    rows = _rows_by_category({"false_premise": 2, "misconception": 2})
+    outputs = [
+        _teacher_chain("9"),
+        _teacher_chain("9"),
+        _teacher_chain("12"),
+        "garbage",
+    ]
+    metrics = evaluation.score(rows, outputs)
+    assert metrics["n"] == 4
+    assert metrics["accuracy"] == 0.5
+    assert metrics["format_compliance"] == 0.75
+    assert metrics["avg_response_chars"] == pytest.approx(
+        sum(len(o) for o in outputs) / 4
+    )
+    assert list(metrics["per_category"]) == config.CATEGORIES
+
+
+def test_score_counts_unparsable_outputs_as_wrong():
+    rows = _rows_by_category({"misconception": 2})
+    metrics = evaluation.score(rows, ["", "nothing"])
+    assert metrics["accuracy"] == 0.0
+    assert metrics["per_category"]["misconception"]["correct"] == 0
+
+
+def test_score_mismatched_lengths_raise():
+    with pytest.raises(ValueError, match="2 rows but 1 outputs"):
+        evaluation.score(_rows_by_category({"misconception": 2}), [_teacher_chain("9")])
+
+
+def test_score_a_category_outside_the_known_list_raises():
+    rows = [_grade_row(category="character_counting")]
+    with pytest.raises(ValueError, match="character_counting"):
+        evaluation.score(rows, [_teacher_chain("9")])
+
+
+# ---- M7: evaluate ----
+def test_evaluate_builds_one_prompt_per_row_and_scores_the_outputs():
+    rows = _rows_by_category({"false_premise": 1, "misconception": 1})
+    seen = []
+
+    def generate(prompts):
+        seen.extend(prompts)
+        return [_teacher_chain("9"), _teacher_chain("12")]
+
+    results, metrics = evaluation.evaluate(
+        rows, generate, lambda row: f"PROMPT {row['id']}"
+    )
+    assert seen == ["PROMPT false_premise-0", "PROMPT misconception-0"]
+    assert [r["correct"] for r in results] == [True, False]
+    assert metrics["accuracy"] == 0.5
+
+
+def test_evaluate_with_no_rows_makes_no_generation_call():
+    calls = []
+    results, metrics = evaluation.evaluate(
+        [], lambda prompts: calls.append(prompts) or [], lambda row: "p"
+    )
+    assert (results, calls) == ([], [])
+    assert metrics["accuracy"] == "undefined"
+
+
+def test_evaluate_a_generator_that_returns_the_wrong_number_of_outputs_raises():
+    rows = _rows_by_category({"misconception": 2})
+    with pytest.raises(ValueError, match="2 rows but 1 outputs"):
+        evaluation.evaluate(rows, lambda prompts: ["only one"], lambda row: "p")
+
+
+# ---- M7: few-shot examples and prompts (training data only) ----
+
+
+def test_finetuned_prompt_is_the_plain_training_prompt():
+    row = _grade_row(question="Just the question please?")
+    assert evaluation.finetuned_prompt(row) == data.format_prompt(
+        "Just the question please?"
+    )
+
+
+def test_check_prompt_length_accepts_prompts_at_the_limit():
+    tok = _tiny_tokenizer()
+    prompt = "a b c"
+    limit = len(tok.encode(prompt, add_special_tokens=True).ids)
+    assert evaluation.check_prompt_length([prompt], tok, limit) is None
+
+
+def test_check_prompt_length_names_the_longest_prompt_over_the_limit():
+    tok = _tiny_tokenizer()
+    with pytest.raises(ValueError, match="2 prompts") as caught:
+        evaluation.check_prompt_length(
+            ["a b", "a b c d e f g", "a b c d e f g h"], tok, 6
+        )
+    assert "longest" in str(caught.value)
+
+
+# ---- M7: weak categories ----
+def _acc(**values):
+    return values
+
+
+COUNTS = {c: 5 for c in config.CATEGORIES}
+
+
+def test_weak_categories_all_equal_flags_nothing():
+    accuracy = {c: 0.8 for c in config.CATEGORIES}
+    assert evaluation.find_weak_categories(accuracy, COUNTS, gap=0.1) == []
+
+
+def test_weak_categories_one_eligible_category_has_nothing_to_compare_against():
+    assert (
+        evaluation.find_weak_categories(
+            {"misconception": 0.1}, {"misconception": 5}, gap=0.1
+        )
+        == []
+    )
+
+
+def test_weak_categories_flags_a_category_that_lags_the_average():
+    accuracy = {"false_premise": 0.9, "misconception": 0.9, "pun_ambiguity": 0.5}
+    assert evaluation.find_weak_categories(accuracy, COUNTS, gap=0.2) == [
+        "pun_ambiguity"
+    ]
+
+
+def test_weak_categories_a_gap_exactly_at_the_threshold_is_flagged():
+    accuracy = {"false_premise": 1.0, "misconception": 0.5}
+    assert evaluation.find_weak_categories(accuracy, COUNTS, gap=0.25) == [
+        "misconception"
+    ]
+
+
+def test_weak_categories_a_gap_just_under_the_threshold_is_not_flagged():
+    accuracy = {"false_premise": 1.0, "misconception": 0.5}
+    assert evaluation.find_weak_categories(accuracy, COUNTS, gap=0.26) == []
+
+
+def test_weak_categories_ties_are_ordered_by_accuracy_then_name():
+    accuracy = {
+        "false_premise": 1.0,
+        "misconception": 0.4,
+        "pun_ambiguity": 0.4,
+        "lateral_thinking": 0.2,
+        "time_sensitive": 1.0,
+    }
+    assert evaluation.find_weak_categories(accuracy, COUNTS, gap=0.2) == [
+        "lateral_thinking",
+        "misconception",
+        "pun_ambiguity",
+    ]
+
+
+def test_weak_categories_below_the_minimum_source_count_are_not_flagged_or_averaged():
+    accuracy = {"false_premise": 0.9, "misconception": 0.9, "pun_ambiguity": 0.0}
+    counts = {"false_premise": 5, "misconception": 5, "pun_ambiguity": 2}
+    assert evaluation.find_weak_categories(accuracy, counts, gap=0.1) == []
+
+
+def test_weak_categories_ignore_nan_and_undefined_accuracies():
+    accuracy = {
+        "false_premise": 0.9,
+        "misconception": float("nan"),
+        "pun_ambiguity": "undefined",
+        "lateral_thinking": 0.3,
+    }
+    assert evaluation.find_weak_categories(accuracy, COUNTS, gap=0.2) == [
+        "lateral_thinking"
+    ]
+
+
+def test_weak_categories_a_category_missing_from_the_counts_is_not_eligible():
+    accuracy = {"false_premise": 0.9, "misconception": 0.1}
+    assert (
+        evaluation.find_weak_categories(accuracy, {"false_premise": 5}, gap=0.1) == []
+    )
+
+
+@pytest.mark.parametrize("gap", [0, -0.1])
+def test_weak_categories_needs_a_positive_gap(gap):
+    with pytest.raises(ValueError, match="gap"):
+        evaluation.find_weak_categories({"misconception": 0.5}, COUNTS, gap=gap)
+
+
+# ---- M7: timer, versions, GPU summary, result record ----
+def test_timer_records_the_elapsed_time(monkeypatch):
+    ticks = iter([10.0, 12.5])
+    monkeypatch.setattr(evaluation, "_now", lambda: next(ticks))
+    with evaluation.Timer() as timer:
+        pass
+    assert timer.seconds == 2.5
+
+
+def test_timer_records_the_time_even_if_the_block_raises(monkeypatch):
+    ticks = iter([1.0, 4.0])
+    monkeypatch.setattr(evaluation, "_now", lambda: next(ticks))
+    timer = evaluation.Timer()
+    with pytest.raises(RuntimeError, match="boom"), timer:
+        raise RuntimeError("boom")
+    assert timer.seconds == 3.0
+
+
+def test_package_versions_reports_installed_missing_and_python():
+    versions = evaluation.package_versions(["numpy", "definitely-not-a-package-xyz"])
+    assert versions["numpy"] == np.__version__
+    assert versions["definitely-not-a-package-xyz"] is None
+    assert versions["python"].count(".") >= 1
+
+
+def test_gpu_summary_has_none_fields_when_there_is_no_gpu():
+    def no_smi():
+        raise FileNotFoundError("nvidia-smi")
+
+    with evaluation.GpuMonitor(run_smi=no_smi, torch_peak_mib=lambda: None) as monitor:
+        pass
+    assert monitor.summary() == {
+        "gpu_name": None,
+        "peak_memory_mib": None,
+        "mean_utilization_percent": None,
+        "peak_torch_memory_allocated_mib": None,
+    }
+
+
+def test_gpu_summary_takes_the_peak_memory_and_mean_utilization_over_the_samples():
+    readings = iter(
+        ["NVIDIA L4, 1000, 40\n", "NVIDIA L4, 2000, 80\n", "NVIDIA L4, 1500, 60\n"]
+    )
+    monitor = evaluation.GpuMonitor(
+        run_smi=lambda: next(readings), torch_peak_mib=lambda: 1234.5
+    )
+    for _ in range(3):
+        monitor.sample_once()
+    assert monitor.summary() == {
+        "gpu_name": "NVIDIA L4",
+        "peak_memory_mib": 2000,
+        "mean_utilization_percent": 60.0,
+        "peak_torch_memory_allocated_mib": 1234.5,
+    }
+
+
+def test_gpu_monitor_ignores_unreadable_smi_output():
+    outputs = iter(["garbage", "", "NVIDIA L4, 500, 10"])
+    monitor = evaluation.GpuMonitor(
+        run_smi=lambda: next(outputs), torch_peak_mib=lambda: None
+    )
+    for _ in range(3):
+        monitor.sample_once()
+    assert monitor.summary()["peak_memory_mib"] == 500
+
+
+def test_gpu_monitor_samples_on_entry_and_exit():
+    count = []
+
+    def smi():
+        count.append(1)
+        return "NVIDIA L4, 100, 5"
+
+    with evaluation.GpuMonitor(run_smi=smi, torch_peak_mib=lambda: None, interval=10):
+        pass
+    assert len(count) >= 2
+
+
+def _result(**overrides):
+    base = {
+        "split": "eval",
+        "metrics": evaluation.score([], []),
+        "rows": [_grade_row()],
+        "batch_size": 8,
+        "max_seq_length": 2048,
+        "versions": {"python": "3.14"},
+        "eval_seconds": 12.0,
+        "gpu_summary": {"gpu_name": None},
+        "prompt_style": "zero_shot",
+        "max_new_tokens": 384,
+    }
+    return evaluation.build_result(**{**base, **overrides})
+
+
+def test_build_result_has_every_required_field_and_is_json_serializable():
+    result = _result()
+    assert all(field in result for field in evaluation.REQUIRED_RESULT_FIELDS)
+    assert result["model_name"] == config.MODEL_NAME
+    assert result["test_size"] == 1
+    assert json.loads(json.dumps(result)) == result
+
+
+def test_build_result_records_the_split_prompt_style_and_generation_settings():
+    result = _result()
+    assert (result["split"], result["prompt_style"]) == ("eval", "zero_shot")
+    assert result["max_new_tokens"] == 384
+    assert result["gpu_type"] == config.GPU_TYPE
+    assert "fewshot_ids" not in result
+
+
+def test_save_result_writes_json_atomically(tmp_path):
+    path = tmp_path / "results" / "baseline.json"
+    evaluation.save_result(path, _result())
+    assert json.loads(path.read_text(encoding="utf-8"))["split"] == "eval"
+    assert list(path.parent.iterdir()) == [path]
+
+
+# ---- M7: the final test is run once ----
+def test_the_test_split_is_refused_a_second_time_without_force(tmp_path):
+    path = tmp_path / "final_test.json"
+    path.write_text("{}", encoding="utf-8")
+    with pytest.raises(FileExistsError, match="--force"):
+        evaluation.ensure_split_allowed("test", path, force=False)
+
+
+def test_the_test_split_is_allowed_the_first_time_and_with_force(tmp_path):
+    path = tmp_path / "final_test.json"
+    assert evaluation.ensure_split_allowed("test", path, force=False) is None
+    path.write_text("{}", encoding="utf-8")
+    assert evaluation.ensure_split_allowed("test", path, force=True) is None
+
+
+def test_the_eval_split_may_be_rerun(tmp_path):
+    path = tmp_path / "baseline.json"
+    path.write_text("{}", encoding="utf-8")
+    assert evaluation.ensure_split_allowed("eval", path, force=False) is None
+
+
+def test_an_unknown_split_is_rejected(tmp_path):
+    with pytest.raises(ValueError, match="split"):
+        evaluation.ensure_split_allowed("train", tmp_path / "x.json", force=False)
+
+
+# ---- M7: the baseline prompt is zero-shot (a written instruction, no examples) ----
+def test_baseline_prompt_has_the_instruction_the_question_and_the_response_marker():
+    prompt = evaluation.baseline_prompt(
+        _grade_row(question="A brand new question here?")
+    )
+    assert prompt.startswith(config.INSTRUCTION_MARKER)
+    assert prompt.endswith(config.RESPONSE_MARKER)
+    assert "A brand new question here?" in prompt
+    assert all(label in prompt for label in config.SECTION_LABELS)
+
+
+def test_baseline_prompt_contains_no_examples():
+    prompt = evaluation.baseline_prompt(
+        _grade_row(question="A brand new question here?")
+    )
+    assert prompt.count(config.RESPONSE_MARKER) == 1
+    assert prompt.count(config.INSTRUCTION_MARKER) == 1
+
+
+def test_baseline_prompt_is_the_same_for_the_same_question_and_differs_from_the_trained_prompt():
+    row = _grade_row(question="Same question each time?")
+    assert evaluation.baseline_prompt(row) == evaluation.baseline_prompt(dict(row))
+    assert evaluation.baseline_prompt(row) != evaluation.finetuned_prompt(row)
+
+
+def test_baseline_prompt_refuses_a_question_containing_a_template_marker():
+    with pytest.raises(ValueError):
+        evaluation.baseline_prompt(
+            _grade_row(question=f"What is {config.RESPONSE_MARKER} this?")
+        )
+
+
+def test_the_teacher_and_the_baseline_share_one_instruction_text():
+    assert config.CHAIN_INSTRUCTIONS in teacher.chain_prompt("Q?", "a")
+    assert config.CHAIN_INSTRUCTIONS in evaluation.baseline_prompt(_grade_row())
+
+
+# ---- M7: where a run writes and which rows each split reads ----
+def test_default_output_path_for_the_baseline_on_the_eval_split():
+    assert evaluation.default_output_path("eval", "baseline") == config.BASELINE_PATH
+
+
+def test_default_output_path_for_the_final_test_with_the_trained_model():
+    assert evaluation.default_output_path("test", "finetuned") == config.FINAL_TEST_PATH
+
+
+def test_an_explicit_output_always_wins(tmp_path):
+    chosen = tmp_path / "mine.json"
+    assert evaluation.default_output_path("test", "baseline", str(chosen)) == chosen
+
+
+@pytest.mark.parametrize(
+    ("split", "style"), [("eval", "finetuned"), ("test", "baseline")]
+)
+def test_other_combinations_must_name_their_output(split, style):
+    with pytest.raises(ValueError, match="--output"):
+        evaluation.default_output_path(split, style)
+
+
+def test_load_split_rows_reads_the_eval_file(monkeypatch, tmp_path):
+    path = tmp_path / "eval.jsonl"
+    data.write_jsonl(path, [_trow(1), _trow(2)])
+    monkeypatch.setattr(config, "EVAL_PATH", path)
+    assert [r["id"] for r in evaluation.load_split_rows("eval")] == ["t-1", "t-2"]
+
+
+def test_load_split_rows_reads_the_validated_test_set(monkeypatch, tmp_path):
+    path = _write_test_set(tmp_path, [_trow(1)])
+    monkeypatch.setattr(config, "TEST_SET_PATH", path)
+    monkeypatch.setattr(config, "EXCLUDED_TEST_IDS", frozenset())
+    assert [r["id"] for r in evaluation.load_split_rows("test")] == ["t-1"]
+
+
+def test_load_split_rows_refuses_an_invalid_test_set(monkeypatch, tmp_path):
+    path = _write_test_set(tmp_path, [_trow(1, chain=_teacher_chain("12"))])
+    monkeypatch.setattr(config, "TEST_SET_PATH", path)
+    with pytest.raises(ValueError, match="t-1"):
+        evaluation.load_split_rows("test")
+
+
+def test_load_split_rows_with_an_empty_eval_file_raises(monkeypatch, tmp_path):
+    path = tmp_path / "eval.jsonl"
+    data.write_jsonl(path, [])
+    monkeypatch.setattr(config, "EVAL_PATH", path)
+    with pytest.raises(ValueError, match="no rows"):
+        evaluation.load_split_rows("eval")
+
+
+def test_load_split_rows_rejects_an_unknown_split():
+    with pytest.raises(ValueError, match="split"):
+        evaluation.load_split_rows("train")
+
+
+# ---- the Modal container runs Python 3.11; the files it imports must parse there ----
+_UNPARENTHESIZED_EXCEPT = r"^\s*except\s+[^(:\n]+,[^:\n]+:\s*$"
+
+
+@pytest.mark.parametrize("name", ["config.py", "data.py", "eval.py"])
+def test_container_imported_files_avoid_syntax_newer_than_python_3_11(name):
+    import re
+
+    source = (ROOT / "src" / name).read_text(encoding="utf-8")
+    offenders = [
+        line for line in source.splitlines() if re.match(_UNPARENTHESIZED_EXCEPT, line)
+    ]
+    assert offenders == []
+
+
+# ---- build_training_data without generating: use only the chains already stored ----
+def test_no_generate_writes_only_stored_rows_and_makes_no_calls(tmp_path, monkeypatch):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(4), out, store)
+    seen = _fake_generate_chain(monkeypatch)
+    summary = teacher.build_training_data(_train_rows(6), out, store, generate=False)
+    assert seen == []
+    assert _ids(out) == ["r-0", "r-1", "r-2", "r-3"]
+    assert (summary["written"], summary["pending"], summary["generated"]) == (4, 2, 0)
+    assert summary["timing"] == {}
+
+
+def test_no_generate_never_touches_the_store(tmp_path, monkeypatch):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(2), out, store)
+    before = store.read_text(encoding="utf-8")
+    teacher.build_training_data(_train_rows(5), out, store, generate=False)
+    assert store.read_text(encoding="utf-8") == before
+
+
+def test_no_generate_with_nothing_stored_raises_and_writes_nothing(
+    tmp_path, monkeypatch
+):
+    out, store = _paths(tmp_path)
+    seen = _fake_generate_chain(monkeypatch)
+    with pytest.raises(ValueError, match="no stored chains"):
+        teacher.build_training_data(_train_rows(3), out, store, generate=False)
+    assert seen == []
+    assert not out.exists()
+    assert not store.exists()
+
+
+def test_no_generate_still_stops_for_a_changed_row(tmp_path, monkeypatch):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(2), out, store)
+    changed = _train_rows(3)
+    changed[0] = {**changed[0], "question": "A different question entirely?"}
+    with pytest.raises(ValueError, match="r-0"):
+        teacher.build_training_data(changed, out, store, generate=False)
+
+
+def test_no_generate_reports_failed_rows_and_skips_them(tmp_path, monkeypatch):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch, fail_ids={"r-1"})
+    teacher.build_training_data(_train_rows(3), out, store)
+    summary = teacher.build_training_data(_train_rows(3), out, store, generate=False)
+    assert summary["failed"] == [{"id": "r-1", "reason": "no_valid_chain"}]
+    assert _ids(out) == ["r-0", "r-2"]
+
+
+def test_a_normal_run_has_nothing_pending(tmp_path, monkeypatch):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    assert teacher.build_training_data(_train_rows(3), out, store)["pending"] == 0
+
+
+def test_no_generate_progress_still_ticks_once_per_row(tmp_path, monkeypatch):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(2), out, store)
+    ticks = []
+    teacher.build_training_data(
+        _train_rows(5), out, store, generate=False, progress=lambda: ticks.append(1)
+    )
+    assert len(ticks) == 5
+
+
+def test_max_seq_length_is_just_above_the_longest_audited_example():
+    # 296 tokens is the longest of the 383 audited chains; if later chains are
+    # longer this fails on purpose: re-run `validate --tokens` and update both
+    assert config.MAX_SEQ_LENGTH % 64 == 0
+    assert 296 <= config.MAX_SEQ_LENGTH < 296 + 64

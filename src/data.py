@@ -76,6 +76,15 @@ def format_fewshot(examples, target_question, max_chars=None):
     return out
 
 
+def cut_after_final_answer_line(text):
+    match = _FINAL_LABEL_RE.search(text)
+    if match is None:
+        return text.rstrip()
+    newline = text.find("\n", match.end())
+    end = len(text) if newline == -1 else newline
+    return text[:end].rstrip()
+
+
 def extract_final_answer(text):
     cut = len(text)
     for marker in _MARKERS:

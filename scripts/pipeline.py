@@ -32,7 +32,7 @@ def train_data(args):
 
         try:
             summary = teacher.build_training_data(
-                sampled, out, args.store, progress=tick
+                sampled, out, args.store, progress=tick, generate=not args.no_generate
             )
         except teacher.TeacherAPIError as e:
             sys.exit(
@@ -48,6 +48,7 @@ def train_data(args):
     print(
         f"wrote {summary['written']} rows to {out}: {summary['generated']} newly "
         f"generated, {summary['reused']} reused from {args.store}, "
+        f"{summary['pending']} still pending (no chain yet), "
         f"{len(summary['failed'])} failed (never retried); summary in {summary_path}"
     )
     for model, stats in summary["timing"].items():
@@ -223,6 +224,11 @@ def main():
     train.add_argument("--summary", default=str(config.TRAIN_SUMMARY_PATH))
     train.add_argument("--test-set", default=str(config.TEST_SET_PATH))
     train.add_argument("--store", default=str(config.CHAIN_STORE_PATH))
+    train.add_argument(
+        "--no-generate",
+        action="store_true",
+        help="write train.jsonl from the chains already stored; make no API calls",
+    )
     train.set_defaults(run=train_data)
 
     review = commands.add_parser("sample", help="sample train rows to read by hand")

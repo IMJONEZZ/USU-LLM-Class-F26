@@ -2,7 +2,9 @@ from pathlib import Path
 
 # ---- model ----
 MODEL_NAME = "unsloth/Llama-3.2-1B"
-MAX_SEQ_LENGTH = 2048  # placeholder; recomputed in M6
+MAX_SEQ_LENGTH = (
+    320  # next multiple of 64 above the longest audited example (296 tokens)
+)
 
 # ---- LoRA / training ----
 LORA_R = 16
@@ -58,10 +60,19 @@ RESPONSE_MARKER = "### Response:\n"
 SECTION_LABELS = ["Restate:", "Check:", "Solve:", "Verify:", "Final answer:"]
 FINAL_ANSWER_LABEL = "Final answer:"
 EOS_TOKEN = "<|end_of_text|>"
+CHAIN_INSTRUCTIONS = (
+    "Answer the question with exactly five plain-text sections, each starting at "
+    "the beginning of a line, in this order: "
+    + ", ".join(SECTION_LABELS)
+    + " The Check section says whether this is a familiar puzzle with a twist, a "
+    "false premise, a pun, a wording trap, or a plain question. Do not use "
+    "markdown or code fences. The final answer must be short and appear only on "
+    f"the last line, after '{FINAL_ANSWER_LABEL}'."
+)
 
 # ---- hardware (Modal prices per second from modal.com/pricing, 2026-10-11;
-# memory sizes are the cards' NVIDIA specs; the Modal request strings are not
-# verified yet and are confirmed when scripts/modal_app.py is written) ----
+# memory sizes are the cards' NVIDIA specs; the Modal request string "L4" ran in
+# the earlier project, the other request strings are unverified) ----
 GPU_OPTIONS = {
     "T4": {"vram_gib": 16, "usd_per_second": 0.000164},
     "L4": {"vram_gib": 24, "usd_per_second": 0.000222},
@@ -73,6 +84,12 @@ GPU_OPTIONS = {
 }
 GPU_USABLE_FRACTION = 0.85
 GPU_TYPE = "L4"
+
+# ---- evaluation ----
+EVAL_BATCH_SIZE = 8
+EVAL_MAX_NEW_TOKENS = 384
+EVAL_MAX_SEQ_LENGTH = 2048
+WEAK_MIN_SOURCES = 3
 
 # ---- paths ----
 ROOT = Path(__file__).resolve().parents[1]

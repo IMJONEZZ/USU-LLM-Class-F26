@@ -15,15 +15,6 @@ from src import config, data
 _TRANSIENT_KINDS = {"rate_limit", "timeout", "server"}
 _SKIPPABLE_KINDS = {"empty", "blocked", "truncated"}
 _FENCE = re.compile(r"^```[A-Za-z]*\n(.*?)\n?```$", re.DOTALL)
-_INSTRUCTIONS = (
-    "Answer the question with exactly five plain-text sections, each starting at "
-    "the beginning of a line, in this order: "
-    + ", ".join(config.SECTION_LABELS)
-    + " The Check section says whether this is a familiar puzzle with a twist, a "
-    "false premise, a pun, a wording trap, or a plain question. Do not use "
-    "markdown or code fences. The final answer must be short and appear only on "
-    f"the last line, after '{config.FINAL_ANSWER_LABEL}'."
-)
 
 
 class TeacherAPIError(RuntimeError):
@@ -169,7 +160,7 @@ def chain_prompt(question, key):
             "of the correct answer (a few words)."
         )
     return (
-        f"{_INSTRUCTIONS}\n\nQuestion: {question}\n"
+        f"{config.CHAIN_INSTRUCTIONS}\n\nQuestion: {question}\n"
         f"The correct answer is: {key}\n"
         f"Write the reasoning so that it arrives at this answer. {ending}"
     )
@@ -219,7 +210,7 @@ def _read_store(store_path, key):
     return {record[key]: record for record in data.read_jsonl(store_path)}
 
 
-def build_training_data(rows, out_path, store_path, progress=None):
+def build_training_data(rows, out_path, store_path, progress=None, generate=True):
     if not rows:
         raise ValueError("no rows to build training data from")
     ids = [row["id"] for row in rows]
@@ -238,10 +229,12 @@ def build_training_data(rows, out_path, store_path, progress=None):
             )
     reset_call_log()
     row_seconds = []
-    generated = reused = 0
+    generated = reused = pending = 0
     for row in rows:
         if row["id"] in store:
             reused += 1
+        elif not generate:
+            pending += 1
         else:
             started = _now()
             result = generate_chain(row)
@@ -261,15 +254,20 @@ def build_training_data(rows, out_path, store_path, progress=None):
             row_seconds.append(_now() - started)
         if progress is not None:
             progress()
-    final = [store[i] for i in ids if not store[i].get("failed")]
+    final = [store[i] for i in ids if i in store and not store[i].get("failed")]
     failed = [
-        {"id": i, "reason": store[i]["reason"]} for i in ids if store[i].get("failed")
+        {"id": i, "reason": store[i]["reason"]}
+        for i in ids
+        if i in store and store[i].get("failed")
     ]
+    if not generate and not final:
+        raise ValueError("no stored chains for the requested rows; nothing to write")
     data.write_jsonl(out_path, final)
     return {
         "written": len(final),
         "generated": generated,
         "reused": reused,
+        "pending": pending,
         "failed": failed,
         "timing": timing_summary(call_log()),
         "row_seconds": {
