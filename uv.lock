@@ -977,6 +977,7 @@ dependencies = [
     { name = "datasets" },
     { name = "numpy" },
     { name = "pyzipper" },
+    { name = "truststore" },
 ]
 
 [package.dev-dependencies]
@@ -991,6 +992,7 @@ requires-dist = [
     { name = "datasets", specifier = ">=5.1.0" },
     { name = "numpy", specifier = ">=2.5.4" },
     { name = "pyzipper", specifier = ">=0.4.0" },
+    { name = "truststore", specifier = ">=0.10.4" },
 ]
 
 [package.metadata.requires-dev]

@@ -8,6 +8,7 @@ dependencies = [
     "datasets>=5.1.0",
     "numpy>=2.5.4",
     "pyzipper>=0.4.0",
+    "truststore>=0.10.4",
 ]
 
 [dependency-groups]

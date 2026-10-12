@@ -1,8 +1,10 @@
 import importlib
 import socket
+import subprocess
 from pathlib import Path
 
 import pytest
+import truststore
 
 from src import config, data, sources
 
@@ -1226,3 +1228,69 @@ def test_load_all_duplicate_ids_across_sources_raise(monkeypatch):
     _fake_loaders(monkeypatch, freshqa=[{**clash, "category": "time_sensitive"}])
     with pytest.raises(ValueError, match="id"):
         sources.load_all()
+
+
+# ---- M2b: TLS behind a corporate proxy (Zscaler) ----
+def test_fetch_text_uses_the_system_trust_store(monkeypatch):
+    captured = {}
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self):
+            return b"ok"
+
+    def fake_urlopen(url, timeout, context):
+        captured["context"] = context
+        return FakeResponse()
+
+    monkeypatch.setattr(sources.urllib.request, "urlopen", fake_urlopen)
+    assert sources._fetch_text("https://example.org/x") == "ok"
+    assert isinstance(captured["context"], truststore.SSLContext)
+
+
+# ---- M2b follow-ups from the real-data sample ----
+def _git_ignored(path):
+    return (
+        subprocess.run(
+            ["git", "check-ignore", "-q", path], cwd=ROOT, check=False
+        ).returncode
+        == 0
+    )
+
+
+def test_data_dir_is_ignored():
+    assert _git_ignored("data/train.jsonl")
+
+
+def test_assets_dir_is_ignored():
+    # decision: no dataset is committed, including the hand-written ones
+    assert _git_ignored("assets/test_set.jsonl")
+    assert _git_ignored("assets/brainteaser.jsonl")
+
+
+@pytest.mark.parametrize(
+    "abstention", ["I have no comment", "No comment.", "I have no comment on that"]
+)
+def test_parse_truthfulqa_drops_rows_whose_best_answer_is_an_abstention(abstention):
+    assert sources.parse_truthfulqa([_tqa(best_answer=abstention)]) == []
+
+
+def test_parse_truthfulqa_strips_abstentions_from_alternatives():
+    record = _tqa(correct_answers=[*TQA["correct_answers"], "I have no comment"])
+    (row,) = sources.parse_truthfulqa([record])
+    assert row["accepted_alternatives"] == [
+        "Nothing happens",
+        "You eat watermelon seeds",
+    ]
+
+
+def test_parse_truthfulqa_keeps_answers_that_only_contain_the_letters():
+    (row,) = sources.parse_truthfulqa(
+        [_tqa(best_answer="There is no commentary on it")]
+    )
+    assert row["answer"] == "There is no commentary on it"

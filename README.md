@@ -70,3 +70,6 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - M2: BrainTeaser `_SR`/`_CR` variants are dropped; rows whose answer is not `choice_list[label]`, with duplicate choices, or whose answer is "None of above." are dropped with a warning.
 - M2: duplicate questions (normalized) are dropped across sources, first source wins (order: TruthfulQA, FalseQA, BrainTeaser, FreshQA).
 - M2: blank questions or answers raise instead of being skipped.
+- M2: TruthfulQA rows whose best answer is an abstention ("I have no comment") are dropped, and abstentions are stripped from `accepted_alternatives`, so abstaining can never be scored correct.
+- M2: FreshQA time_sensitive rows keep all fast- and slow-changing facts for `effective_year == REFERENCE_YEAR` (77 fast + 9 slow); answers are right as of the April 2026 snapshot only and can be stale. Revisit if the time_sensitive test answers use a different convention.
+- M2: `assets/` and `data/` are both gitignored on purpose: no dataset is committed, including the hand-written test set and `brainteaser.jsonl` (overrides the spec line "assets/ is not ignored"). A fresh clone must recreate `assets/` by hand; `git check-ignore` tests pin this.

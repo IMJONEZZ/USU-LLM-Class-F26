@@ -1,8 +1,12 @@
 import ast
 import csv
 import io
+import re
+import ssl
 import urllib.request
 import warnings
+
+import truststore
 
 from src import config, data
 
@@ -38,7 +42,8 @@ _FRESH_COLUMNS = ("id", "question", "effective_year", "false_premise", "fact_typ
 
 
 def _fetch_text(url):
-    with urllib.request.urlopen(url, timeout=60) as response:
+    context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    with urllib.request.urlopen(url, timeout=60, context=context) as response:
         return response.read().decode("utf-8-sig")
 
 
@@ -60,12 +65,16 @@ def _clean(value, field, where):
     return value.strip()
 
 
+def _is_abstention(text):
+    return re.search(r"\bno comment\b", data.normalize(text)) is not None
+
+
 def _alternatives(answer, candidates, exclude=()):
     seen = {data.normalize(answer)}
     kept = []
     for candidate in candidates:
         key = data.normalize(candidate)
-        if not key or key in seen or key in exclude:
+        if not key or key in seen or key in exclude or _is_abstention(key):
             continue
         seen.add(key)
         kept.append(candidate.strip())
@@ -82,6 +91,8 @@ def parse_truthfulqa(records):
             continue
         question = _clean(record["question"], "question", where)
         answer = _clean(record["best_answer"], "best_answer", where)
+        if _is_abstention(answer):
+            continue
         if not isinstance(record["correct_answers"], list):
             raise ValueError(  # noqa: TRY004 - bad data, one exception type
                 f"{where}: correct_answers must be a list"
