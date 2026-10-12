@@ -161,3 +161,174 @@ def eval_split(
     )
     for category, cell in metrics["per_category"].items():
         print(f"  {category}: {cell['correct']}/{cell['n']} ({cell['accuracy']})")
+
+
+@app.function(
+    gpu=config.GPU_TYPE,
+    image=image,
+    volumes={"/hf_cache": hf_cache, "/checkpoints": checkpoints},
+    timeout=7200,
+)
+def train_on_gpu(train_rows, eval_rows, round_n, probe, overrides):
+    import unsloth  # isort: skip  # noqa: F401  (unsloth must be imported first)
+
+    from src import eval as evaluation
+    from src import train as training
+
+    # and then we record the exact package versions this run used
+    versions = evaluation.package_versions(
+        ["torch", "unsloth", "transformers", "trl", "datasets", "peft"]
+    )
+    print("versions:", versions)
+
+    # and then we load the 4-bit model with LoRA adapters, the same way the baseline did
+    model, tokenizer = training.load_model_for_training()
+    if tokenizer.eos_token != config.EOS_TOKEN:
+        raise ValueError(
+            f"tokenizer end token {tokenizer.eos_token!r} is not {config.EOS_TOKEN!r}"
+        )
+    train_dataset = training.build_text_dataset(train_rows, tokenizer.eos_token)
+    eval_dataset = training.build_text_dataset(eval_rows, tokenizer.eos_token)
+
+    # and then we hook the per-epoch evaluation (generation on the eval set) into training
+    generate_fn = evaluation.make_generate_fn(model, tokenizer)
+    evaluator = training.EpochEvaluator(eval_rows, generate_fn)
+    adapter_dir = config.adapter_path(round_n, root="/checkpoints")
+    trainer = training.build_trainer(
+        model,
+        tokenizer,
+        train_dataset,
+        eval_dataset,
+        str(adapter_dir),
+        extra_callbacks=[training.make_epoch_eval_callback(evaluator)],
+        **training.clean_overrides(overrides),
+    )
+
+    # and then we check, on the real trainer, that only the chain and the end token are trained
+    checked = min(4, len(train_rows))
+    examples = [trainer.train_dataset[i] for i in range(checked)]
+    training.check_masking(tokenizer, train_rows[:checked], examples)
+    print(
+        f"masking checked on {checked} real examples: only the chain and end token are trained"
+    )
+    print("first example, what is trained on:")
+    print(repr(training.expected_trained_text(tokenizer, train_rows[0])[:200]))
+
+    # and then we train with the timer and GPU monitor on
+    with evaluation.Timer() as timer, evaluation.GpuMonitor() as gpu_monitor:
+        trainer.train()
+    state = trainer.state
+    print(f"epochs run: {state.epoch} | steps run: {state.global_step}")
+    print("best checkpoint:", state.best_model_checkpoint)
+
+    # and then we keep the best adapter for the next round and the final evaluation
+    if not probe:
+        training.save_adapter(trainer, tokenizer, str(adapter_dir))
+        checkpoints.commit()
+    hf_cache.commit()
+    peak = evaluation._torch_peak_mib()
+    record = training.build_training_record(
+        round_n=round_n,
+        trainer_state=state,
+        train_rows=train_rows,
+        eval_rows=eval_rows,
+        requested_epochs=trainer.args.num_train_epochs,
+        epoch_results=evaluator.epochs,
+        versions=versions,
+        train_seconds=timer.seconds,
+        gpu_summary=gpu_monitor.summary(),
+        peak_torch_memory_allocated_mib=peak,
+        hyperparams=training.hyperparameters(**training.clean_overrides(overrides)),
+    )
+    print(f"train seconds: {timer.seconds:.1f}; peak torch memory (MiB): {peak}")
+    return {"record": record, "masking_checked": checked}
+
+
+def _sentinel(value):
+    return None if value < 0 else value
+
+
+@app.local_entrypoint()
+def train_round(
+    probe: bool = False,
+    round_n: int = 0,
+    epochs: int = -1,
+    batch_size: int = -1,
+    grad_accum: int = -1,
+    seed: int = -1,
+):
+    import json
+
+    from src import data
+    from src import train as training
+
+    if round_n != 0:
+        raise ValueError(
+            "only round 0 (the first training run) exists so far; later rounds come in M9"
+        )
+    train_rows = data.read_jsonl(config.TRAIN_PATH)
+    eval_rows = data.read_jsonl(config.EVAL_PATH)
+    if probe:
+        train_rows, eval_rows = train_rows[:8], eval_rows[:4]
+        epochs = 2 if epochs < 0 else epochs
+    rounds = training.read_rounds(config.ROUNDS_PATH)
+    if not probe and round_n in [r["round"] for r in rounds]:
+        raise ValueError(f"round {round_n} is already recorded in {config.ROUNDS_PATH}")
+    if not probe and round_n != len(rounds):
+        raise ValueError(
+            f"gap in the round numbers: the next round must be {len(rounds)}"
+        )
+    overrides = {
+        "epochs": _sentinel(epochs),
+        "per_device_train_batch_size": _sentinel(batch_size),
+        "gradient_accumulation_steps": _sentinel(grad_accum),
+        "seed": _sentinel(seed),
+    }
+
+    # and then, before any GPU time, we print the longest example, the memory estimate and the plan
+    tokenizer = data.load_tokenizer(config.MODEL_NAME)
+    lengths = data.token_lengths(train_rows + eval_rows, tokenizer)
+    data.check_token_limit(lengths, config.MAX_SEQ_LENGTH)
+    longest = max(item["total"] for item in lengths)
+    settings = training.hyperparameters(**training.clean_overrides(overrides))
+    estimate = training.estimate_training_memory_gib(
+        longest, settings["per_device_train_batch_size"]
+    )["total"]
+    steps = training.total_steps(
+        len(train_rows),
+        settings["per_device_train_batch_size"],
+        settings["gradient_accumulation_steps"],
+        settings["epochs"],
+    )
+    print(
+        f"{'PROBE' if probe else 'TRAINING'}: {len(train_rows)} train rows, "
+        f"{len(eval_rows)} eval rows; longest example {longest} tokens "
+        f"(limit {config.MAX_SEQ_LENGTH}); estimated memory {estimate:.1f} GiB on "
+        f"{config.GPU_TYPE}; about {steps} optimizer steps over {settings['epochs']} epochs"
+    )
+    summary_path = config.TRAIN_SUMMARY_PATH
+    if summary_path.exists():
+        pending = json.loads(summary_path.read_text(encoding="utf-8")).get("pending", 0)
+        if pending:
+            print(
+                f"WARNING: train.jsonl is incomplete, {pending} rows still pending; treat the results as provisional"
+            )
+
+    remote = train_on_gpu.remote(train_rows, eval_rows, round_n, probe, overrides)
+    record = remote["record"]
+    print(f"masking verified on {remote['masking_checked']} real examples")
+    for epoch in record["epoch_results"]:
+        print(
+            f"  epoch {epoch['epoch']}: train loss {epoch['train_loss']}, eval loss "
+            f"{epoch['eval_loss']}, accuracy {epoch['accuracy']}, format "
+            f"{epoch['format_compliance']}"
+        )
+    if probe:
+        print(
+            "probe finished: nothing was saved to rounds.json and no adapter was kept"
+        )
+        return
+    training.record_round(config.ROUNDS_PATH, record)
+    print(
+        f"round {round_n} recorded in {config.ROUNDS_PATH}; adapter on the Modal volume"
+    )

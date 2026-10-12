@@ -20,6 +20,11 @@ LORA_TARGET_MODULES = [
 ]
 LEARNING_RATE = 2e-4
 EPOCHS = 3
+PER_DEVICE_TRAIN_BATCH_SIZE = 4
+PER_DEVICE_EVAL_BATCH_SIZE = 4
+GRADIENT_ACCUMULATION_STEPS = 4
+EARLY_STOPPING = True
+EARLY_STOPPING_PATIENCE = 1
 MAX_ROUNDS = 3
 
 # ---- data ----
@@ -115,9 +120,9 @@ REVIEW_SAMPLE_PATH = DATA_DIR / "review_sample.json"
 SEED = 0
 
 
-def adapter_path(round_n):
+def adapter_path(round_n, root=None):
     if isinstance(round_n, bool) or not isinstance(round_n, int):
         raise TypeError(f"round_n must be int, got {type(round_n).__name__}")
     if round_n < 0:
         raise ValueError(f"round_n must be >= 0, got {round_n}")
-    return ADAPTER_DIR / f"round_{round_n}"
+    return (ADAPTER_DIR if root is None else Path(root)) / f"round_{round_n}"
