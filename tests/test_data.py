@@ -1,12 +1,17 @@
 import importlib
+import json
 import socket
 import subprocess
+import sys
 from pathlib import Path
 
+import httpx
 import pytest
 import truststore
+from google import genai
+from google.genai import errors, types
 
-from src import config, data, sources
+from src import config, data, sources, teacher
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -1294,3 +1299,724 @@ def test_parse_truthfulqa_keeps_answers_that_only_contain_the_letters():
         [_tqa(best_answer="There is no commentary on it")]
     )
     assert row["answer"] == "There is no commentary on it"
+
+
+# ---- M3: teacher (every API call is faked) ----
+_PER_DAY_QUOTA = [
+    {
+        "@type": "type.googleapis.com/google.rpc.QuotaFailure",
+        "violations": [
+            {"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}
+        ],
+    }
+]
+
+
+def _api_error(cls, code, status, details=None):
+    body = {"error": {"message": "x", "status": status}}
+    if details:
+        body["error"]["details"] = details
+    return cls(code, body)
+
+
+def _response(text="ok", finish=types.FinishReason.STOP):
+    part = types.Part(text=text)
+    candidate = types.Candidate(
+        content=types.Content(parts=[part]), finish_reason=finish
+    )
+    return types.GenerateContentResponse(candidates=[candidate])
+
+
+class _FakeClient:
+    def __init__(self, outcome):
+        self.calls = []
+        self.models = self
+        self._outcome = outcome
+
+    def generate_content(self, model, contents, config):
+        self.calls.append({"model": model, "contents": contents, "config": config})
+        if isinstance(self._outcome, Exception):
+            raise self._outcome
+        return self._outcome
+
+
+def _use_client(monkeypatch, outcome):
+    client = _FakeClient(outcome)
+    monkeypatch.setattr(teacher, "get_client", lambda: client)
+    return client
+
+
+def test_get_client_with_key_builds_a_client_without_network(monkeypatch):
+    monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
+
+    def boom(*a, **k):
+        raise AssertionError("network touched while building the client")
+
+    monkeypatch.setattr(socket.socket, "connect", boom)
+    assert isinstance(teacher.get_client(), genai.Client)
+
+
+# ---- _call_model: SDK responses and errors become text or TeacherAPIError ----
+def test_call_model_returns_text_and_passes_settings(monkeypatch):
+    client = _use_client(monkeypatch, _response("hello"))
+    assert teacher._call_model("m-1", "the prompt", 0.5) == "hello"
+    call = client.calls[0]
+    assert call["model"] == "m-1"
+    assert call["contents"] == "the prompt"
+    assert call["config"].temperature == 0.5
+    assert call["config"].max_output_tokens == config.TEACHER_MAX_OUTPUT_TOKENS
+
+
+@pytest.mark.parametrize(
+    ("error", "kind"),
+    [
+        (_api_error(errors.ClientError, 401, "UNAUTHENTICATED"), "auth"),
+        (_api_error(errors.ClientError, 403, "PERMISSION_DENIED"), "auth"),
+        (_api_error(errors.ClientError, 429, "RESOURCE_EXHAUSTED"), "rate_limit"),
+        (
+            _api_error(errors.ClientError, 429, "RESOURCE_EXHAUSTED", _PER_DAY_QUOTA),
+            "quota",
+        ),
+        (_api_error(errors.ClientError, 400, "INVALID_ARGUMENT"), "bad_request"),
+        (_api_error(errors.ServerError, 503, "UNAVAILABLE"), "server"),
+        (httpx.ReadTimeout("slow"), "timeout"),
+    ],
+)
+def test_call_model_maps_errors_to_kinds(monkeypatch, error, kind):
+    _use_client(monkeypatch, error)
+    with pytest.raises(teacher.TeacherAPIError) as caught:
+        teacher._call_model("m", "p", 0.0)
+    assert caught.value.kind == kind
+
+
+@pytest.mark.parametrize(
+    ("response", "kind"),
+    [
+        (_response(""), "empty"),
+        (types.GenerateContentResponse(candidates=[]), "empty"),
+        (_response("cut off", types.FinishReason.MAX_TOKENS), "truncated"),
+        (_response("nope", types.FinishReason.SAFETY), "blocked"),
+        (
+            types.GenerateContentResponse(
+                prompt_feedback=types.GenerateContentResponsePromptFeedback(
+                    block_reason=types.BlockedReason.SAFETY
+                )
+            ),
+            "blocked",
+        ),
+    ],
+)
+def test_call_model_rejects_unusable_responses(monkeypatch, response, kind):
+    _use_client(monkeypatch, response)
+    with pytest.raises(teacher.TeacherAPIError) as caught:
+        teacher._call_model("m", "p", 0.0)
+    assert caught.value.kind == kind
+
+
+def test_call_model_missing_key_message_is_clear(monkeypatch):
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    with pytest.raises(RuntimeError, match="GOOGLE_API_KEY"):
+        teacher._call_model("m", "p", 0.0)
+
+
+# ---- _generate: retry only the transient failures ----
+def _script_call_model(monkeypatch, outcomes):
+    calls, sleeps = [], []
+    queue = list(outcomes)
+
+    def fake(model, prompt, temperature):
+        calls.append(prompt)
+        outcome = queue.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+    monkeypatch.setattr(teacher, "_call_model", fake)
+    monkeypatch.setattr(teacher.time, "sleep", sleeps.append)
+    return calls, sleeps
+
+
+def test_generate_retries_transient_errors_then_succeeds(monkeypatch):
+    calls, sleeps = _script_call_model(
+        monkeypatch,
+        [
+            teacher.TeacherAPIError("rate_limit"),
+            teacher.TeacherAPIError("timeout"),
+            "fine",
+        ],
+    )
+    assert teacher._generate("p", "m", 0.0) == "fine"
+    assert len(calls) == 3
+    assert sleeps == [config.TEACHER_RETRY_SECONDS] * 2
+
+
+@pytest.mark.parametrize("kind", ["rate_limit", "timeout", "server"])
+def test_generate_gives_up_after_max_retries(monkeypatch, kind):
+    attempts = 1 + config.TEACHER_MAX_RETRIES
+    calls, _ = _script_call_model(
+        monkeypatch, [teacher.TeacherAPIError(kind)] * attempts
+    )
+    with pytest.raises(teacher.TeacherAPIError) as caught:
+        teacher._generate("p", "m", 0.0)
+    assert caught.value.kind == kind
+    assert len(calls) == attempts
+
+
+@pytest.mark.parametrize(
+    "kind", ["auth", "quota", "bad_request", "empty", "blocked", "truncated"]
+)
+def test_generate_does_not_retry_permanent_errors(monkeypatch, kind):
+    calls, sleeps = _script_call_model(
+        monkeypatch, [teacher.TeacherAPIError(kind), "never reached"]
+    )
+    with pytest.raises(teacher.TeacherAPIError) as caught:
+        teacher._generate("p", "m", 0.0)
+    assert caught.value.kind == kind
+    assert len(calls) == 1
+    assert sleeps == []
+
+
+# ---- chain_prompt ----
+def test_chain_prompt_has_question_key_and_all_section_labels():
+    prompt = teacher.chain_prompt("How many sheep are left?", "zebra-77")
+    assert "How many sheep are left?" in prompt
+    assert "zebra-77" in prompt
+    assert all(label in prompt for label in config.SECTION_LABELS)
+
+
+def test_chain_prompt_short_key_must_be_the_final_answer_verbatim():
+    prompt = teacher.chain_prompt("Q?", "zebra-77")
+    assert f"{config.FINAL_ANSWER_LABEL} zebra-77" in prompt
+
+
+def test_chain_prompt_long_key_asks_for_a_short_final_answer():
+    key = "A long rebuttal sentence. " * 5
+    assert len(key) > config.LONG_KEY_CHARS
+    prompt = teacher.chain_prompt("Q?", key)
+    assert key in prompt
+    assert f"{config.FINAL_ANSWER_LABEL} {key}" not in prompt
+    assert "short" in prompt
+
+
+# ---- generate_chain ----
+ROW = {
+    "id": "x-1",
+    "question": "How many sheep are left?",
+    "answer": "9",
+    "accepted_alternatives": ["nine"],
+    "category": "lateral_thinking",
+    "source": "brainteaser",
+}
+
+
+def _teacher_chain(final="9", filler=""):
+    return (
+        "Restate: A farmer has 17 sheep; all but 9 run away.\n"
+        "Check: This is a wording trap, not subtraction.\n"
+        f"Solve: All but 9 means 9 remain. {filler}\n"
+        "Verify: 17 - 8 = 9, so 9 stay.\n"
+        f"Final answer: {final}"
+    )
+
+
+def _script_generate(monkeypatch, outcomes):
+    prompts, models = [], []
+    queue = list(outcomes)
+
+    def fake(prompt, model, temperature):
+        prompts.append(prompt)
+        models.append(model)
+        outcome = queue.pop(0) if queue else teacher.TeacherAPIError("empty")
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+    monkeypatch.setattr(teacher, "_generate", fake)
+    return prompts, models
+
+
+def test_generate_chain_adds_only_a_chain_to_the_row(monkeypatch):
+    chain = _teacher_chain("9")
+    prompts, models = _script_generate(monkeypatch, [chain])
+    assert teacher.generate_chain(ROW) == {**ROW, "chain": chain}
+    assert len(prompts) == 1
+    assert models == [config.TEACHER_MODEL]
+
+
+def test_generate_chain_prompt_has_question_and_the_correct_answer(monkeypatch):
+    row = {**ROW, "answer": "zebra-77"}
+    prompts, _ = _script_generate(monkeypatch, [_teacher_chain("zebra-77")])
+    teacher.generate_chain(row)
+    assert "How many sheep are left?" in prompts[0]
+    assert "zebra-77" in prompts[0]
+
+
+def test_generate_chain_retries_until_a_chain_is_valid(monkeypatch):
+    good = _teacher_chain("9")
+    prompts, _ = _script_generate(monkeypatch, [_teacher_chain("12"), good])
+    assert teacher.generate_chain(ROW)["chain"] == good
+    assert len(prompts) == 2
+
+
+def test_generate_chain_returns_none_after_all_attempts_fail(monkeypatch):
+    prompts, _ = _script_generate(monkeypatch, [_teacher_chain("12")] * 20)
+    assert teacher.generate_chain(ROW) is None
+    assert len(prompts) == config.TEACHER_ATTEMPTS
+
+
+@pytest.mark.parametrize("kind", ["empty", "blocked", "truncated"])
+def test_generate_chain_skips_content_level_failures(monkeypatch, kind):
+    good = _teacher_chain("9")
+    _script_generate(monkeypatch, [teacher.TeacherAPIError(kind), good])
+    assert teacher.generate_chain(ROW)["chain"] == good
+
+
+@pytest.mark.parametrize(
+    "kind", ["auth", "quota", "rate_limit", "timeout", "server", "bad_request"]
+)
+def test_generate_chain_stops_on_errors_that_survive_the_retries(monkeypatch, kind):
+    prompts, _ = _script_generate(
+        monkeypatch, [teacher.TeacherAPIError(kind, "why"), _teacher_chain("9")]
+    )
+    with pytest.raises(teacher.TeacherAPIError) as caught:
+        teacher.generate_chain(ROW)
+    assert caught.value.kind == kind
+    assert len(prompts) == 1
+
+
+def test_generate_chain_accepts_alternative_answers(monkeypatch):
+    _script_generate(monkeypatch, [_teacher_chain("nine")])
+    assert teacher.generate_chain(ROW) is not None
+
+
+@pytest.mark.parametrize(
+    "wrapper", ["```\n{c}\n```", "```text\n{c}\n```", "  \n{c}\n\n"]
+)
+def test_generate_chain_unwraps_code_fences_and_whitespace(monkeypatch, wrapper):
+    chain = _teacher_chain("9")
+    _script_generate(monkeypatch, [wrapper.format(c=chain)])
+    assert teacher.generate_chain(ROW)["chain"] == chain
+
+
+def _without_line(chain, label):
+    return "\n".join(l for l in chain.split("\n") if not l.startswith(label))
+
+
+def _swap_lines(chain, i, j):
+    lines = chain.split("\n")
+    lines[i], lines[j] = lines[j], lines[i]
+    return "\n".join(lines)
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        "The answer is 9.",
+        _without_line(_teacher_chain("9"), "Final answer:") + "\nAnswer: 9",
+        _swap_lines(_teacher_chain("9"), 1, 2),
+        "Restate: a\nCheck: b\nSolve: c\nVerify: d\nFinal answer: 9",
+        _teacher_chain("9", "x" * 2000),
+        _teacher_chain("9", "### Response:"),
+    ],
+    ids=[
+        "no-labels",
+        "no-final-label",
+        "wrong-order",
+        "too-short",
+        "too-long",
+        "marker",
+    ],
+)
+def test_generate_chain_rejects_malformed_chains(monkeypatch, bad):
+    _script_generate(monkeypatch, [bad] * 20)
+    assert teacher.generate_chain(ROW) is None
+
+
+@pytest.mark.parametrize(
+    ("key", "final", "accepted"),
+    [
+        ("this is impossible", "This is impossible.", True),
+        ("5 km", "5 km", True),
+        ("5 km", "5", False),
+        ("5", "5 km", False),
+        ("yes", "Yes, because it is", False),
+    ],
+)
+def test_generate_chain_short_keys_must_match_the_final_answer(
+    monkeypatch, key, final, accepted
+):
+    _script_generate(monkeypatch, [_teacher_chain(final)] * 20)
+    row = {**ROW, "answer": key, "accepted_alternatives": []}
+    assert (teacher.generate_chain(row) is not None) is accepted
+
+
+def test_generate_chain_long_keys_accept_any_valid_chain(monkeypatch):
+    key = "A long rebuttal that no model would repeat word for word. " * 2
+    assert len(key) > config.LONG_KEY_CHARS
+    chain = _teacher_chain("A short version")
+    _script_generate(monkeypatch, [chain])
+    row = {**ROW, "answer": key, "accepted_alternatives": []}
+    assert teacher.generate_chain(row)["chain"] == chain
+
+
+def test_generate_chain_does_not_mutate_the_row_and_result_is_valid(monkeypatch):
+    before = dict(ROW)
+    _script_generate(monkeypatch, [_teacher_chain("9")])
+    result = teacher.generate_chain(ROW)
+    assert ROW == before
+    data.check_schema(result)
+
+
+# ---- build_training_data (generate_chain is faked) ----
+def _train_rows(n=4):
+    return [
+        {
+            "id": f"r-{i}",
+            "question": f"Question number {i}?",
+            "answer": "9",
+            "accepted_alternatives": ["nine"],
+            "category": config.CATEGORIES[i % len(config.CATEGORIES)],
+            "source": "brainteaser",
+        }
+        for i in range(n)
+    ]
+
+
+def _fake_generate_chain(monkeypatch, fail_ids=(), crash_on=None, crash_with=None):
+    seen = []
+
+    def fake(row):
+        seen.append(row)
+        if row["id"] == crash_on:
+            raise crash_with or RuntimeError("boom")
+        if row["id"] in fail_ids:
+            return None
+        return {**row, "chain": "CHAIN-" + row["id"]}
+
+    monkeypatch.setattr(teacher, "generate_chain", fake)
+    return seen
+
+
+def _paths(tmp_path):
+    return tmp_path / "train.jsonl", tmp_path / "train.partial.jsonl"
+
+
+def test_build_training_data_writes_rows_in_input_order(tmp_path, monkeypatch):
+    _fake_generate_chain(monkeypatch)
+    out, partial = _paths(tmp_path)
+    summary = teacher.build_training_data(_train_rows(4), out, partial)
+    written = data.read_jsonl(out)
+    assert [r["id"] for r in written] == ["r-0", "r-1", "r-2", "r-3"]
+    assert all("chain" in r for r in written)
+    assert summary["written"] == 4
+    assert not partial.exists()
+
+
+def test_build_training_data_refuses_existing_output_without_force(
+    tmp_path, monkeypatch
+):
+    seen = _fake_generate_chain(monkeypatch)
+    out, partial = _paths(tmp_path)
+    out.write_text("old\n", encoding="utf-8")
+    with pytest.raises(FileExistsError, match="--force"):
+        teacher.build_training_data(_train_rows(2), out, partial)
+    assert seen == []
+    assert out.read_text(encoding="utf-8") == "old\n"
+
+
+def test_build_training_data_force_overwrites(tmp_path, monkeypatch):
+    _fake_generate_chain(monkeypatch)
+    out, partial = _paths(tmp_path)
+    out.write_text("old\n", encoding="utf-8")
+    teacher.build_training_data(_train_rows(2), out, partial, force=True)
+    assert [r["id"] for r in data.read_jsonl(out)] == ["r-0", "r-1"]
+
+
+def test_build_training_data_resumes_after_a_crash(tmp_path, monkeypatch):
+    out, partial = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch, crash_on="r-2")
+    with pytest.raises(RuntimeError, match="boom"):
+        teacher.build_training_data(_train_rows(4), out, partial)
+    assert [r["id"] for r in data.read_jsonl(partial)] == ["r-0", "r-1"]
+    assert not out.exists()
+
+    seen = _fake_generate_chain(monkeypatch)
+    summary = teacher.build_training_data(_train_rows(4), out, partial)
+    assert [r["id"] for r in seen] == ["r-2", "r-3"]
+    assert [r["id"] for r in data.read_jsonl(out)] == ["r-0", "r-1", "r-2", "r-3"]
+    assert summary["resumed"] == 2
+    assert not partial.exists()
+
+
+def test_build_training_data_ignores_stale_partial_rows(tmp_path, monkeypatch):
+    out, partial = _paths(tmp_path)
+    keep = {**_train_rows(1)[0], "chain": "CHAIN-r-0"}
+    stale = {**keep, "id": "stale-9"}
+    data.write_jsonl(partial, [keep, stale])
+    seen = _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(2), out, partial)
+    assert [r["id"] for r in seen] == ["r-1"]
+    assert [r["id"] for r in data.read_jsonl(out)] == ["r-0", "r-1"]
+
+
+def test_build_training_data_skips_rows_without_a_valid_chain(tmp_path, monkeypatch):
+    _fake_generate_chain(monkeypatch, fail_ids={"r-1"})
+    out, partial = _paths(tmp_path)
+    summary = teacher.build_training_data(_train_rows(4), out, partial)
+    assert [r["id"] for r in data.read_jsonl(out)] == ["r-0", "r-2", "r-3"]
+    assert summary["skipped"] == [{"id": "r-1", "reason": "no_valid_chain"}]
+
+
+@pytest.mark.parametrize("kind", ["auth", "quota", "rate_limit"])
+def test_build_training_data_api_error_stops_and_keeps_earlier_rows(
+    tmp_path, monkeypatch, kind
+):
+    out, partial = _paths(tmp_path)
+    _fake_generate_chain(
+        monkeypatch, crash_on="r-2", crash_with=teacher.TeacherAPIError(kind, "why")
+    )
+    with pytest.raises(teacher.TeacherAPIError, match="why"):
+        teacher.build_training_data(_train_rows(4), out, partial)
+    assert [r["id"] for r in data.read_jsonl(partial)] == ["r-0", "r-1"]
+    assert not out.exists()
+
+
+def test_build_training_data_empty_input_raises_and_writes_nothing(
+    tmp_path, monkeypatch
+):
+    _fake_generate_chain(monkeypatch)
+    out, partial = _paths(tmp_path)
+    with pytest.raises(ValueError, match="no rows"):
+        teacher.build_training_data([], out, partial)
+    assert not out.exists()
+    assert not partial.exists()
+
+
+def test_build_training_data_duplicate_ids_raise(tmp_path, monkeypatch):
+    _fake_generate_chain(monkeypatch)
+    out, partial = _paths(tmp_path)
+    rows = _train_rows(2)
+    rows[1] = {**rows[1], "id": rows[0]["id"]}
+    with pytest.raises(ValueError, match="id"):
+        teacher.build_training_data(rows, out, partial)
+
+
+def test_build_training_data_progress_is_called_once_per_input_row(
+    tmp_path, monkeypatch
+):
+    _fake_generate_chain(monkeypatch, fail_ids={"r-1"})
+    out, partial = _paths(tmp_path)
+    ticks = []
+    teacher.build_training_data(
+        _train_rows(4), out, partial, progress=lambda: ticks.append(1)
+    )
+    assert len(ticks) == 4
+
+
+def test_build_training_data_summary_counts(tmp_path, monkeypatch):
+    _fake_generate_chain(monkeypatch, fail_ids={"r-3"})
+    out, partial = _paths(tmp_path)
+    summary = teacher.build_training_data(_train_rows(4), out, partial)
+    assert summary["written"] == 3
+    assert summary["resumed"] == 0
+    assert summary["skipped"] == [{"id": "r-3", "reason": "no_valid_chain"}]
+
+
+# ---- timing of API calls ----
+def _fake_clock(monkeypatch, step):
+    state = {"t": -step}
+
+    def now():
+        state["t"] += step
+        return state["t"]
+
+    monkeypatch.setattr(teacher, "_now", now)
+
+
+def test_generate_logs_one_record_per_attempt_with_outcome_and_seconds(monkeypatch):
+    teacher.reset_call_log()
+    _script_call_model(monkeypatch, [teacher.TeacherAPIError("rate_limit"), "fine"])
+    _fake_clock(monkeypatch, 2.5)
+    assert teacher._generate("p", "m-1", 0.0) == "fine"
+    assert teacher.call_log() == [
+        {"model": "m-1", "seconds": 2.5, "outcome": "rate_limit"},
+        {"model": "m-1", "seconds": 2.5, "outcome": "ok"},
+    ]
+
+
+def test_generate_logs_unexpected_exceptions_and_still_raises(monkeypatch):
+    teacher.reset_call_log()
+    _script_call_model(monkeypatch, [RuntimeError("weird")])
+    _fake_clock(monkeypatch, 1.0)
+    with pytest.raises(RuntimeError, match="weird"):
+        teacher._generate("p", "m-1", 0.0)
+    assert teacher.call_log() == [
+        {"model": "m-1", "seconds": 1.0, "outcome": "RuntimeError"}
+    ]
+
+
+def test_call_log_returns_a_copy_and_reset_clears_it(monkeypatch):
+    teacher.reset_call_log()
+    _script_call_model(monkeypatch, ["fine"])
+    teacher._generate("p", "m", 0.0)
+    teacher.call_log().clear()
+    assert len(teacher.call_log()) == 1
+    teacher.reset_call_log()
+    assert teacher.call_log() == []
+
+
+def test_timing_summary_groups_by_model():
+    records = [
+        {"model": "pro", "seconds": 10.0, "outcome": "ok"},
+        {"model": "pro", "seconds": 30.0, "outcome": "timeout"},
+        {"model": "flash", "seconds": 1.0, "outcome": "ok"},
+    ]
+    assert teacher.timing_summary(records) == {
+        "pro": {
+            "calls": 2,
+            "total_seconds": 40.0,
+            "mean_seconds": 20.0,
+            "max_seconds": 30.0,
+            "outcomes": {"ok": 1, "timeout": 1},
+        },
+        "flash": {
+            "calls": 1,
+            "total_seconds": 1.0,
+            "mean_seconds": 1.0,
+            "max_seconds": 1.0,
+            "outcomes": {"ok": 1},
+        },
+    }
+
+
+def test_timing_summary_of_nothing_is_empty():
+    assert teacher.timing_summary([]) == {}
+
+
+def test_build_training_data_summary_has_row_seconds(tmp_path, monkeypatch):
+    _fake_generate_chain(monkeypatch)
+    _fake_clock(monkeypatch, 1.0)
+    out, partial = _paths(tmp_path)
+    summary = teacher.build_training_data(_train_rows(4), out, partial)
+    assert summary["row_seconds"] == {"n": 4, "mean": 1.0, "max": 1.0}
+
+
+def test_build_training_data_row_seconds_skip_resumed_rows(tmp_path, monkeypatch):
+    out, partial = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch, crash_on="r-2")
+    with pytest.raises(RuntimeError):
+        teacher.build_training_data(_train_rows(4), out, partial)
+    _fake_generate_chain(monkeypatch)
+    _fake_clock(monkeypatch, 1.0)
+    summary = teacher.build_training_data(_train_rows(4), out, partial)
+    assert summary["row_seconds"]["n"] == 2
+
+
+def test_build_training_data_row_seconds_when_nothing_was_generated(
+    tmp_path, monkeypatch
+):
+    out, partial = _paths(tmp_path)
+    rows = _train_rows(2)
+    data.write_jsonl(partial, [{**r, "chain": "c"} for r in rows])
+    _fake_generate_chain(monkeypatch)
+    summary = teacher.build_training_data(rows, out, partial)
+    assert summary["row_seconds"] == {"n": 0, "mean": None, "max": None}
+
+
+def test_build_training_data_timing_covers_only_this_run(tmp_path, monkeypatch):
+    _script_call_model(monkeypatch, ["old call"])
+    teacher._generate("p", "m", 0.0)
+    _fake_generate_chain(monkeypatch)
+    out, partial = _paths(tmp_path)
+    summary = teacher.build_training_data(_train_rows(2), out, partial)
+    assert summary["timing"] == {}
+
+
+def test_build_training_data_timing_reports_the_api_calls_it_made(
+    tmp_path, monkeypatch
+):
+    _script_call_model(monkeypatch, ["fine", "fine"])
+
+    def fake_generate_chain(row):
+        teacher._generate("p", "m-1", 0.0)
+        return {**row, "chain": "c"}
+
+    monkeypatch.setattr(teacher, "generate_chain", fake_generate_chain)
+    out, partial = _paths(tmp_path)
+    summary = teacher.build_training_data(_train_rows(2), out, partial)
+    assert summary["timing"]["m-1"]["calls"] == 2
+    assert summary["timing"]["m-1"]["outcomes"] == {"ok": 2}
+
+
+# ---- scripts/pipeline.py (no network: these paths exit before any API call) ----
+PIPELINE = str(ROOT / "scripts" / "pipeline.py")
+
+
+def _run_pipeline(*args):
+    return subprocess.run(
+        [sys.executable, PIPELINE, *args], capture_output=True, text=True, check=False
+    )
+
+
+def test_pipeline_train_data_requires_per_category(tmp_path):
+    result = _run_pipeline("train-data", "--out", str(tmp_path / "t.jsonl"))
+    assert result.returncode != 0
+    assert "per-category" in result.stderr
+
+
+def test_pipeline_train_data_refuses_existing_output_before_any_network(tmp_path):
+    out = tmp_path / "t.jsonl"
+    out.write_text("old\n", encoding="utf-8")
+    result = _run_pipeline("train-data", "--per-category", "1", "--out", str(out))
+    assert result.returncode != 0
+    assert "--force" in result.stderr
+    assert out.read_text(encoding="utf-8") == "old\n"
+
+
+def _chain_rows():
+    rows = []
+    for category in config.CATEGORIES:
+        for i in range(3):
+            rows.append(
+                {**ROW, "id": f"{category}-{i}", "category": category, "chain": "c"}
+            )
+    return rows
+
+
+def test_pipeline_sample_takes_per_category_rows_and_is_seeded(tmp_path):
+    train = tmp_path / "train.jsonl"
+    data.write_jsonl(train, _chain_rows())
+    outs = []
+    for name in ("a.json", "b.json"):
+        out = tmp_path / name
+        result = _run_pipeline(
+            "sample",
+            "--train",
+            str(train),
+            "--per-category",
+            "2",
+            "--seed",
+            "0",
+            "--out",
+            str(out),
+        )
+        assert result.returncode == 0, result.stderr
+        outs.append(out.read_text(encoding="utf-8"))
+    picked = json.loads(outs[0])
+    assert len(picked) == 2 * len(config.CATEGORIES)
+    assert {r["category"] for r in picked} == set(config.CATEGORIES)
+    assert outs[0] == outs[1]
+
+
+def test_pipeline_sample_missing_train_file_fails_with_a_clear_message(tmp_path):
+    result = _run_pipeline(
+        "sample",
+        "--train",
+        str(tmp_path / "nope.jsonl"),
+        "--per-category",
+        "2",
+        "--out",
+        str(tmp_path / "o.json"),
+    )
+    assert result.returncode != 0
+    assert "train-data" in result.stderr

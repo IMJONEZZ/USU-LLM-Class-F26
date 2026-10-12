@@ -31,9 +31,18 @@ CATEGORIES = [
 REFERENCE_YEAR = 2026
 
 # ---- teacher / judge ----
-TEACHER_MODEL = "gemini-2.5-pro"
-JUDGE_MODEL = "gemini-2.5-flash"
-TEACHER_SAMPLES = 8
+TEACHER_MODEL = "gemini-3.5-flash-lite"
+JUDGE_MODEL = "gemini-3.8-flash"
+TEACHER_TEMPERATURE = 1.0
+TEACHER_MAX_OUTPUT_TOKENS = 2048
+TEACHER_MAX_RETRIES = 2
+TEACHER_RETRY_SECONDS = 2.0
+TEACHER_ATTEMPTS = 3
+TEACHER_TIMEOUT_MS = 60_000
+JUDGE_TEMPERATURE = 0.0
+MIN_CHAIN_CHARS = 120
+MAX_CHAIN_CHARS = 1500
+LONG_KEY_CHARS = 60
 API_KEY_ENV = "GOOGLE_API_KEY"
 
 # ---- templates ----
@@ -55,6 +64,9 @@ EVAL_PATH = DATA_DIR / "eval.jsonl"
 BASELINE_PATH = RESULTS_DIR / "baseline.json"
 ROUNDS_PATH = RESULTS_DIR / "rounds.json"
 FINAL_TEST_PATH = RESULTS_DIR / "final_test.json"
+TRAIN_SUMMARY_PATH = DATA_DIR / "train_summary.json"
+REVIEW_SAMPLE_PATH = DATA_DIR / "review_sample.json"
+SEED = 0
 
 
 def adapter_path(round_n):

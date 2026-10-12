@@ -31,7 +31,7 @@ def format_prompt(question):
     return f"{config.INSTRUCTION_MARKER}{question}\n\n{config.RESPONSE_MARKER}"
 
 
-def _check_chain(chain):
+def check_chain(chain):
     _reject_markers(chain, "chain")
     lines = chain.split("\n")
     positions = []
@@ -51,7 +51,7 @@ def format_example(question, chain, eos_token):
     chain = chain.strip()
     if chain.endswith(eos_token):
         chain = chain[: -len(eos_token)].strip()
-    _check_chain(chain)
+    check_chain(chain)
     return format_prompt(question) + chain + eos_token
 
 
@@ -62,7 +62,7 @@ def format_fewshot(examples, target_question, max_chars=None):
         if normalize(example["question"]) == target_norm:
             raise ValueError("a few-shot example is identical to the target question")
         chain = example["chain"].strip()
-        _check_chain(chain)
+        check_chain(chain)
         pieces.append(format_prompt(example["question"]) + chain)
     pieces.append(format_prompt(target_question))
     out = "\n\n".join(pieces)
