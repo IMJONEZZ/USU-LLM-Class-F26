@@ -15,10 +15,6 @@ from src import config, data, sources, teacher
 def train_data(args):
     out = Path(args.out)
     try:
-        teacher.ensure_output_free(out, args.force)
-    except FileExistsError as e:
-        sys.exit(str(e))
-    try:
         test_rows = data.load_test_set(args.test_set)
     except (ValueError, FileNotFoundError) as e:
         sys.exit(f"{e}\nThe test set must be valid before building train data.")
@@ -36,17 +32,24 @@ def train_data(args):
 
         try:
             summary = teacher.build_training_data(
-                sampled, out, force=args.force, progress=tick
+                sampled, out, args.store, progress=tick
             )
         except teacher.TeacherAPIError as e:
             sys.exit(
-                f"\nStopped by an API error ({e.kind}). Finished rows are saved; "
-                f"rerun the same command to resume.\n{str(e)[:400]}"
+                f"\nStopped by an API error ({e.kind}). Every finished chain is "
+                f"saved in {args.store}; rerun the same command to continue.\n"
+                f"{str(e)[:400]}"
             )
+        except ValueError as e:
+            sys.exit(str(e))
     summary_path = Path(args.summary)
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.write_text(json.dumps(summary, indent=1), encoding="utf-8")
-    print(f"wrote {summary['written']} rows to {out}; summary in {summary_path}")
+    print(
+        f"wrote {summary['written']} rows to {out}: {summary['generated']} newly "
+        f"generated, {summary['reused']} reused from {args.store}, "
+        f"{len(summary['failed'])} failed (never retried); summary in {summary_path}"
+    )
     for model, stats in summary["timing"].items():
         print(
             f"{model}: {stats['calls']} calls, mean {stats['mean_seconds']:.1f}s, "
@@ -102,6 +105,47 @@ def validate(args):
     )
 
 
+def eval_data(args):
+    out = Path(args.out)
+    try:
+        test_rows = data.load_test_set(args.test_set)
+    except (ValueError, FileNotFoundError) as e:
+        sys.exit(str(e))
+    try:
+        with tqdm(desc="judge calls") as bar:
+            summary = teacher.build_eval_data(
+                test_rows,
+                out,
+                args.review,
+                args.store,
+                per_question=args.per_question,
+                progress=bar.update,
+            )
+    except teacher.TeacherAPIError as e:
+        sys.exit(
+            f"\nStopped by an API error ({e.kind}). Everything already generated "
+            f"or judged is saved in {args.store}; rerun once it is fixed.\n"
+            f"{str(e)[:400]}"
+        )
+    except (RuntimeError, ValueError) as e:
+        sys.exit(str(e))
+    summary_path = Path(args.summary)
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(json.dumps(summary, indent=1), encoding="utf-8")
+    print(
+        f"eval variants: {summary['kept']} kept, {summary['rejected']} rejected "
+        f"{summary['rejected_by_reason']}; spent {summary['paraphrase_calls']} "
+        f"paraphrase and {summary['judge_calls']} judge calls (the rest came from "
+        f"{args.store}); summary in {summary_path}"
+    )
+    question_of = {row["id"]: row["question"] for row in test_rows}
+    records = data.read_jsonl(out) + data.read_jsonl(args.review)
+    for record in data.pick_random(records, args.show, args.seed):
+        print(f"[{record['verdict']['reason']}] {record['source_id']}")
+        print(f"    was: {question_of[record['source_id']]}")
+        print(f"    now: {record['question']}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Training-data pipeline")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -112,7 +156,7 @@ def main():
     train.add_argument("--out", default=str(config.TRAIN_PATH))
     train.add_argument("--summary", default=str(config.TRAIN_SUMMARY_PATH))
     train.add_argument("--test-set", default=str(config.TEST_SET_PATH))
-    train.add_argument("--force", action="store_true")
+    train.add_argument("--store", default=str(config.CHAIN_STORE_PATH))
     train.set_defaults(run=train_data)
 
     review = commands.add_parser("sample", help="sample train rows to read by hand")
@@ -137,6 +181,21 @@ def main():
     check_all.add_argument("--eval", default=str(config.EVAL_PATH))
     check_all.add_argument("--hash", default=str(config.TEST_SET_HASH_PATH))
     check_all.set_defaults(run=validate)
+
+    variants = commands.add_parser(
+        "eval-data", help="build data/eval.jsonl from reworded test questions"
+    )
+    variants.add_argument("--test-set", default=str(config.TEST_SET_PATH))
+    variants.add_argument("--out", default=str(config.EVAL_PATH))
+    variants.add_argument("--review", default=str(config.EVAL_REVIEW_PATH))
+    variants.add_argument("--summary", default=str(config.EVAL_SUMMARY_PATH))
+    variants.add_argument(
+        "--per-question", type=int, default=config.EVAL_VARIANTS_PER_QUESTION
+    )
+    variants.add_argument("--seed", type=int, default=config.SEED)
+    variants.add_argument("--show", type=int, default=20)
+    variants.add_argument("--store", default=str(config.EVAL_STORE_PATH))
+    variants.set_defaults(run=eval_data)
 
     args = parser.parse_args()
     args.run(args)

@@ -1667,7 +1667,7 @@ def test_generate_chain_does_not_mutate_the_row_and_result_is_valid(monkeypatch)
     data.check_schema(result)
 
 
-# ---- build_training_data (generate_chain is faked) ----
+# ---- build_training_data: one permanent chain store, nothing is ever redone ----
 def _train_rows(n=4):
     return [
         {
@@ -1698,128 +1698,179 @@ def _fake_generate_chain(monkeypatch, fail_ids=(), crash_on=None, crash_with=Non
 
 
 def _paths(tmp_path):
-    return tmp_path / "train.jsonl", tmp_path / "train.partial.jsonl"
+    return tmp_path / "train.jsonl", tmp_path / "chains.jsonl"
 
 
-def test_build_training_data_writes_rows_in_input_order(tmp_path, monkeypatch):
-    _fake_generate_chain(monkeypatch)
-    out, partial = _paths(tmp_path)
-    summary = teacher.build_training_data(_train_rows(4), out, partial)
-    written = data.read_jsonl(out)
-    assert [r["id"] for r in written] == ["r-0", "r-1", "r-2", "r-3"]
-    assert all("chain" in r for r in written)
-    assert summary["written"] == 4
-    assert not partial.exists()
+def _ids(path):
+    return [r["id"] for r in data.read_jsonl(path)]
 
 
-def test_build_training_data_refuses_existing_output_without_force(
+def test_build_training_data_writes_rows_in_input_order_and_fills_the_store(
     tmp_path, monkeypatch
 ):
-    seen = _fake_generate_chain(monkeypatch)
-    out, partial = _paths(tmp_path)
-    out.write_text("old\n", encoding="utf-8")
-    with pytest.raises(FileExistsError, match="--force"):
-        teacher.build_training_data(_train_rows(2), out, partial)
-    assert seen == []
-    assert out.read_text(encoding="utf-8") == "old\n"
-
-
-def test_build_training_data_force_overwrites(tmp_path, monkeypatch):
     _fake_generate_chain(monkeypatch)
-    out, partial = _paths(tmp_path)
-    out.write_text("old\n", encoding="utf-8")
-    teacher.build_training_data(_train_rows(2), out, partial, force=True)
-    assert [r["id"] for r in data.read_jsonl(out)] == ["r-0", "r-1"]
+    out, store = _paths(tmp_path)
+    summary = teacher.build_training_data(_train_rows(4), out, store)
+    assert _ids(out) == ["r-0", "r-1", "r-2", "r-3"]
+    assert _ids(store) == ["r-0", "r-1", "r-2", "r-3"]
+    assert all("chain" in r for r in data.read_jsonl(store))
+    assert (summary["written"], summary["generated"], summary["reused"]) == (4, 4, 0)
 
 
-def test_build_training_data_resumes_after_a_crash(tmp_path, monkeypatch):
-    out, partial = _paths(tmp_path)
+def test_a_second_run_makes_no_calls_and_gives_the_same_file(tmp_path, monkeypatch):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(4), out, store)
+    first = out.read_text(encoding="utf-8")
+    seen = _fake_generate_chain(monkeypatch)
+    summary = teacher.build_training_data(_train_rows(4), out, store)
+    assert seen == []
+    assert out.read_text(encoding="utf-8") == first
+    assert (summary["generated"], summary["reused"]) == (0, 4)
+    assert summary["timing"] == {}
+
+
+def test_extending_with_more_rows_generates_only_the_new_ones(tmp_path, monkeypatch):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(4), out, store)
+    seen = _fake_generate_chain(monkeypatch)
+    summary = teacher.build_training_data(_train_rows(6), out, store)
+    assert [r["id"] for r in seen] == ["r-4", "r-5"]
+    assert _ids(out) == [f"r-{i}" for i in range(6)]
+    assert (summary["generated"], summary["reused"]) == (2, 4)
+
+
+def test_a_crash_keeps_finished_rows_and_the_rerun_only_does_the_rest(
+    tmp_path, monkeypatch
+):
+    out, store = _paths(tmp_path)
     _fake_generate_chain(monkeypatch, crash_on="r-2")
     with pytest.raises(RuntimeError, match="boom"):
-        teacher.build_training_data(_train_rows(4), out, partial)
-    assert [r["id"] for r in data.read_jsonl(partial)] == ["r-0", "r-1"]
+        teacher.build_training_data(_train_rows(4), out, store)
+    assert _ids(store) == ["r-0", "r-1"]
     assert not out.exists()
-
     seen = _fake_generate_chain(monkeypatch)
-    summary = teacher.build_training_data(_train_rows(4), out, partial)
+    teacher.build_training_data(_train_rows(4), out, store)
     assert [r["id"] for r in seen] == ["r-2", "r-3"]
-    assert [r["id"] for r in data.read_jsonl(out)] == ["r-0", "r-1", "r-2", "r-3"]
-    assert summary["resumed"] == 2
-    assert not partial.exists()
-
-
-def test_build_training_data_ignores_stale_partial_rows(tmp_path, monkeypatch):
-    out, partial = _paths(tmp_path)
-    keep = {**_train_rows(1)[0], "chain": "CHAIN-r-0"}
-    stale = {**keep, "id": "stale-9"}
-    data.write_jsonl(partial, [keep, stale])
-    seen = _fake_generate_chain(monkeypatch)
-    teacher.build_training_data(_train_rows(2), out, partial)
-    assert [r["id"] for r in seen] == ["r-1"]
-    assert [r["id"] for r in data.read_jsonl(out)] == ["r-0", "r-1"]
-
-
-def test_build_training_data_skips_rows_without_a_valid_chain(tmp_path, monkeypatch):
-    _fake_generate_chain(monkeypatch, fail_ids={"r-1"})
-    out, partial = _paths(tmp_path)
-    summary = teacher.build_training_data(_train_rows(4), out, partial)
-    assert [r["id"] for r in data.read_jsonl(out)] == ["r-0", "r-2", "r-3"]
-    assert summary["skipped"] == [{"id": "r-1", "reason": "no_valid_chain"}]
+    assert _ids(out) == ["r-0", "r-1", "r-2", "r-3"]
 
 
 @pytest.mark.parametrize("kind", ["auth", "quota", "rate_limit"])
 def test_build_training_data_api_error_stops_and_keeps_earlier_rows(
     tmp_path, monkeypatch, kind
 ):
-    out, partial = _paths(tmp_path)
+    out, store = _paths(tmp_path)
     _fake_generate_chain(
         monkeypatch, crash_on="r-2", crash_with=teacher.TeacherAPIError(kind, "why")
     )
     with pytest.raises(teacher.TeacherAPIError, match="why"):
-        teacher.build_training_data(_train_rows(4), out, partial)
-    assert [r["id"] for r in data.read_jsonl(partial)] == ["r-0", "r-1"]
+        teacher.build_training_data(_train_rows(4), out, store)
+    assert _ids(store) == ["r-0", "r-1"]
     assert not out.exists()
+
+
+def test_a_row_that_failed_is_recorded_and_never_retried(tmp_path, monkeypatch):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch, fail_ids={"r-1"})
+    first = teacher.build_training_data(_train_rows(4), out, store)
+    assert _ids(out) == ["r-0", "r-2", "r-3"]
+    failure = next(r for r in data.read_jsonl(store) if r["id"] == "r-1")
+    assert failure["failed"] is True
+    assert "chain" not in failure
+    assert first["failed"] == [{"id": "r-1", "reason": "no_valid_chain"}]
+
+    seen = _fake_generate_chain(monkeypatch)
+    second = teacher.build_training_data(_train_rows(4), out, store)
+    assert seen == []
+    assert second["generated"] == 0
+    assert second["failed"] == [{"id": "r-1", "reason": "no_valid_chain"}]
+    assert _ids(out) == ["r-0", "r-2", "r-3"]
+
+
+@pytest.mark.parametrize("field", ["question", "answer"])
+def test_a_changed_row_for_a_stored_id_stops_before_any_call(
+    tmp_path, monkeypatch, field
+):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(2), out, store)
+    before = store.read_text(encoding="utf-8")
+    changed = _train_rows(3)
+    changed[0] = {**changed[0], field: "Something else entirely?"}
+    seen = _fake_generate_chain(monkeypatch)
+    with pytest.raises(ValueError, match="r-0"):
+        teacher.build_training_data(changed, out, store)
+    assert seen == []
+    assert store.read_text(encoding="utf-8") == before
+
+
+def test_rows_in_the_store_that_are_not_requested_are_kept_but_not_written(
+    tmp_path, monkeypatch
+):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(4), out, store)
+    seen = _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(2), out, store)
+    assert seen == []
+    assert _ids(out) == ["r-0", "r-1"]
+    assert _ids(store) == ["r-0", "r-1", "r-2", "r-3"]
+
+
+def test_the_train_file_is_rewritten_freely_because_it_costs_nothing(
+    tmp_path, monkeypatch
+):
+    out, store = _paths(tmp_path)
+    out.write_text("old\n", encoding="utf-8")
+    _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(2), out, store)
+    assert _ids(out) == ["r-0", "r-1"]
+
+
+def test_written_rows_keep_every_schema_field_and_a_chain(tmp_path, monkeypatch):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(2), out, store)
+    for row in data.read_jsonl(out):
+        data.check_schema(row)
+        assert row["chain"].startswith("CHAIN-")
 
 
 def test_build_training_data_empty_input_raises_and_writes_nothing(
     tmp_path, monkeypatch
 ):
     _fake_generate_chain(monkeypatch)
-    out, partial = _paths(tmp_path)
+    out, store = _paths(tmp_path)
     with pytest.raises(ValueError, match="no rows"):
-        teacher.build_training_data([], out, partial)
+        teacher.build_training_data([], out, store)
     assert not out.exists()
-    assert not partial.exists()
+    assert not store.exists()
 
 
 def test_build_training_data_duplicate_ids_raise(tmp_path, monkeypatch):
     _fake_generate_chain(monkeypatch)
-    out, partial = _paths(tmp_path)
+    out, store = _paths(tmp_path)
     rows = _train_rows(2)
     rows[1] = {**rows[1], "id": rows[0]["id"]}
     with pytest.raises(ValueError, match="id"):
-        teacher.build_training_data(rows, out, partial)
+        teacher.build_training_data(rows, out, store)
 
 
 def test_build_training_data_progress_is_called_once_per_input_row(
     tmp_path, monkeypatch
 ):
+    out, store = _paths(tmp_path)
     _fake_generate_chain(monkeypatch, fail_ids={"r-1"})
-    out, partial = _paths(tmp_path)
     ticks = []
     teacher.build_training_data(
-        _train_rows(4), out, partial, progress=lambda: ticks.append(1)
+        _train_rows(4), out, store, progress=lambda: ticks.append(1)
     )
     assert len(ticks) == 4
-
-
-def test_build_training_data_summary_counts(tmp_path, monkeypatch):
-    _fake_generate_chain(monkeypatch, fail_ids={"r-3"})
-    out, partial = _paths(tmp_path)
-    summary = teacher.build_training_data(_train_rows(4), out, partial)
-    assert summary["written"] == 3
-    assert summary["resumed"] == 0
-    assert summary["skipped"] == [{"id": "r-3", "reason": "no_valid_chain"}]
+    teacher.build_training_data(
+        _train_rows(4), out, store, progress=lambda: ticks.append(1)
+    )
+    assert len(ticks) == 8
 
 
 # ---- timing of API calls ----
@@ -1893,61 +1944,6 @@ def test_timing_summary_of_nothing_is_empty():
     assert teacher.timing_summary([]) == {}
 
 
-def test_build_training_data_summary_has_row_seconds(tmp_path, monkeypatch):
-    _fake_generate_chain(monkeypatch)
-    _fake_clock(monkeypatch, 1.0)
-    out, partial = _paths(tmp_path)
-    summary = teacher.build_training_data(_train_rows(4), out, partial)
-    assert summary["row_seconds"] == {"n": 4, "mean": 1.0, "max": 1.0}
-
-
-def test_build_training_data_row_seconds_skip_resumed_rows(tmp_path, monkeypatch):
-    out, partial = _paths(tmp_path)
-    _fake_generate_chain(monkeypatch, crash_on="r-2")
-    with pytest.raises(RuntimeError):
-        teacher.build_training_data(_train_rows(4), out, partial)
-    _fake_generate_chain(monkeypatch)
-    _fake_clock(monkeypatch, 1.0)
-    summary = teacher.build_training_data(_train_rows(4), out, partial)
-    assert summary["row_seconds"]["n"] == 2
-
-
-def test_build_training_data_row_seconds_when_nothing_was_generated(
-    tmp_path, monkeypatch
-):
-    out, partial = _paths(tmp_path)
-    rows = _train_rows(2)
-    data.write_jsonl(partial, [{**r, "chain": "c"} for r in rows])
-    _fake_generate_chain(monkeypatch)
-    summary = teacher.build_training_data(rows, out, partial)
-    assert summary["row_seconds"] == {"n": 0, "mean": None, "max": None}
-
-
-def test_build_training_data_timing_covers_only_this_run(tmp_path, monkeypatch):
-    _script_call_model(monkeypatch, ["old call"])
-    teacher._generate("p", "m", 0.0)
-    _fake_generate_chain(monkeypatch)
-    out, partial = _paths(tmp_path)
-    summary = teacher.build_training_data(_train_rows(2), out, partial)
-    assert summary["timing"] == {}
-
-
-def test_build_training_data_timing_reports_the_api_calls_it_made(
-    tmp_path, monkeypatch
-):
-    _script_call_model(monkeypatch, ["fine", "fine"])
-
-    def fake_generate_chain(row):
-        teacher._generate("p", "m-1", 0.0)
-        return {**row, "chain": "c"}
-
-    monkeypatch.setattr(teacher, "generate_chain", fake_generate_chain)
-    out, partial = _paths(tmp_path)
-    summary = teacher.build_training_data(_train_rows(2), out, partial)
-    assert summary["timing"]["m-1"]["calls"] == 2
-    assert summary["timing"]["m-1"]["outcomes"] == {"ok": 2}
-
-
 # ---- scripts/pipeline.py (no network: these paths exit before any API call) ----
 PIPELINE = str(ROOT / "scripts" / "pipeline.py")
 
@@ -1962,15 +1958,6 @@ def test_pipeline_train_data_requires_per_category(tmp_path):
     result = _run_pipeline("train-data", "--out", str(tmp_path / "t.jsonl"))
     assert result.returncode != 0
     assert "per-category" in result.stderr
-
-
-def test_pipeline_train_data_refuses_existing_output_before_any_network(tmp_path):
-    out = tmp_path / "t.jsonl"
-    out.write_text("old\n", encoding="utf-8")
-    result = _run_pipeline("train-data", "--per-category", "1", "--out", str(out))
-    assert result.returncode != 0
-    assert "--force" in result.stderr
-    assert out.read_text(encoding="utf-8") == "old\n"
 
 
 def _chain_rows():
@@ -2431,3 +2418,799 @@ def test_drop_leaked_does_not_mutate_the_input():
     with pytest.warns(UserWarning):
         data.drop_leaked(train, [_trow(1)])
     assert train == before
+
+
+# ---- M5: make_variants (code-side filters on the model's rewordings) ----
+LONG_Q = "If it takes 1 hour for 60 people to play an opera, how many hours will it take 600 people?"
+
+
+def _source_row(**overrides):
+    return _trow(
+        1,
+        question=LONG_Q,
+        answer="1",
+        accepted_alternatives=["1 hour"],
+        chain=_teacher_chain("1"),
+        **overrides,
+    )
+
+
+def _reworded(word):
+    return LONG_Q.replace("play", word)
+
+
+def test_variants_carry_source_id_category_answer_and_reference_chain():
+    row = _source_row(category="false_premise")
+    out = data.make_variants(row, [_reworded("perform")], cap=3)
+    assert len(out) == 1
+    variant = out[0]
+    assert variant["id"] == "t-1-v0"
+    assert variant["source_id"] == "t-1"
+    assert variant["category"] == "false_premise"
+    assert variant["answer"] == row["answer"]
+    assert variant["accepted_alternatives"] == row["accepted_alternatives"]
+    assert variant["chain"] == row["chain"]
+    assert variant["question"] == _reworded("perform")
+    assert variant["source"] == "paraphrase"
+    data.check_schema(variant)
+
+
+def test_variants_do_not_share_the_alternatives_list_with_the_source():
+    row = _source_row()
+    (variant,) = data.make_variants(row, [_reworded("perform")], cap=3)
+    variant["accepted_alternatives"].append("changed")
+    assert row["accepted_alternatives"] == ["1 hour"]
+
+
+def test_variants_drop_unchanged_and_whitespace_case_or_punctuation_only_changes():
+    good = _reworded("perform")
+    candidates = [
+        LONG_Q,
+        LONG_Q + "  ",
+        LONG_Q.upper(),
+        LONG_Q.replace(",", " ,"),
+        good,
+    ]
+    out = data.make_variants(_source_row(), candidates, cap=3)
+    assert [v["question"] for v in out] == [good]
+
+
+def test_variants_drop_duplicates_keeping_the_first():
+    a = _reworded("perform")
+    b = LONG_Q.replace("opera", "operetta")
+    out = data.make_variants(_source_row(), [a, b, a, b.upper()], cap=3)
+    assert [v["question"] for v in out] == [a, b]
+
+
+def test_variants_enforce_the_cap_and_keep_the_order():
+    candidates = [_reworded(w) for w in ("perform", "act", "stage", "sing", "do")]
+    out = data.make_variants(_source_row(), candidates, cap=2)
+    assert [v["question"] for v in out] == candidates[:2]
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        LONG_Q.replace("600", "six hundred"),
+        LONG_Q.replace("600", "60"),
+        LONG_Q.replace("1 hour", "1 minute"),
+        LONG_Q.replace("1 hour", "i hour"),
+    ],
+    ids=["digit-to-word", "digit-changed", "unit-changed", "number-as-letter"],
+)
+def test_variants_drop_changed_numbers_and_units(bad):
+    assert data.make_variants(_source_row(), [bad], cap=3) == []
+
+
+def test_variants_allow_a_plural_unit_with_the_same_number():
+    plural = LONG_Q.replace("1 hour for", "1 hours for")
+    out = data.make_variants(_source_row(), [plural], cap=3)
+    assert [v["question"] for v in out] == [plural]
+
+
+@pytest.mark.parametrize(
+    ("question", "bad"),
+    [
+        (
+            "Is it safe to go upstairs if there is not a shark in the pool?",
+            "Is it safe to go upstairs if there is a shark in the pool?",
+        ),
+        (
+            "Is it safe to go upstairs if there is a shark in the pool?",
+            "Is it safe to go upstairs if there is not a shark in the pool?",
+        ),
+        (
+            "Why can't a person with no shoes walk on hot sand today?",
+            "Why can a person with no shoes walk on hot sand today?",
+        ),
+        (
+            "Why does nobody never answer the door when I knock loudly?",
+            "Why does nobody ever answer the door when I knock loudly?",
+        ),
+    ],
+)
+def test_variants_drop_dropped_or_added_negations(question, bad):
+    row = _trow(1, question=question)
+    assert data.make_variants(row, [bad], cap=3) == []
+
+
+def test_variants_short_questions_yield_none():
+    row = _trow(1, question="Was Talos alive?")
+    assert data.make_variants(row, ["Was Talos living?"], cap=3) == []
+
+
+def test_variants_skip_blank_and_non_string_candidates():
+    good = _reworded("perform")
+    out = data.make_variants(_source_row(), ["", "   ", None, 5, good], cap=3)
+    assert [v["question"] for v in out] == [good]
+
+
+def test_variants_skip_candidates_containing_a_template_marker():
+    bad = _reworded("perform") + " ### Response:"
+    good = _reworded("act")
+    out = data.make_variants(_source_row(), [bad, good], cap=3)
+    assert [v["question"] for v in out] == [good]
+
+
+def test_variants_with_no_candidates_is_an_empty_list():
+    assert data.make_variants(_source_row(), [], cap=3) == []
+
+
+def test_variant_ids_count_the_kept_variants_of_each_question():
+    a = _reworded("perform")
+    b = LONG_Q.replace("opera", "operetta")
+    out = data.make_variants(_source_row(), [LONG_Q, a, b], cap=3)
+    assert [v["id"] for v in out] == ["t-1-v0", "t-1-v1"]
+
+
+# ---- M5: paraphrase_question (the teacher writes the rewordings) ----
+def _paraphrase_with(monkeypatch, *outputs):
+    prompts, settings = [], []
+    queue = list(outputs)
+
+    def fake(prompt, model, temperature):
+        prompts.append(prompt)
+        settings.append((model, temperature))
+        outcome = queue.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+    monkeypatch.setattr(teacher, "_generate", fake)
+    return prompts, settings
+
+
+def test_paraphrase_question_returns_the_rewordings_from_json(monkeypatch):
+    prompts, settings = _paraphrase_with(
+        monkeypatch, '{"rewordings": ["First way to ask?", "Second way to ask?"]}'
+    )
+    out = teacher.paraphrase_question("How do planes stay in the air?", 2)
+    assert out == ["First way to ask?", "Second way to ask?"]
+    assert "How do planes stay in the air?" in prompts[0]
+    assert "2" in prompts[0]
+    assert settings == [(config.TEACHER_MODEL, config.PARAPHRASE_TEMPERATURE)]
+
+
+def test_paraphrase_prompt_asks_to_keep_numbers_units_and_negations(monkeypatch):
+    prompts, _ = _paraphrase_with(monkeypatch, '{"rewordings": []}')
+    teacher.paraphrase_question("Q?", 3)
+    text = prompts[0].lower()
+    assert "number" in text and "unit" in text and "negation" in text
+
+
+def test_paraphrase_question_accepts_json_in_code_fences(monkeypatch):
+    _paraphrase_with(monkeypatch, '```json\n{"rewordings": ["One way to ask?"]}\n```')
+    assert teacher.paraphrase_question("Q?", 1) == ["One way to ask?"]
+
+
+def test_paraphrase_question_keeps_only_non_blank_strings(monkeypatch):
+    _paraphrase_with(monkeypatch, '{"rewordings": ["Good one?", 5, "", "  ", null]}')
+    assert teacher.paraphrase_question("Q?", 3) == ["Good one?"]
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        "not json",
+        "",
+        "[]",
+        '{"other": ["x"]}',
+        '{"rewordings": "one string"}',
+        '{"rewordings": null}',
+    ],
+)
+def test_paraphrase_question_invalid_output_gives_no_candidates(monkeypatch, reply):
+    _paraphrase_with(monkeypatch, reply)
+    assert teacher.paraphrase_question("Q?", 3) == []
+
+
+@pytest.mark.parametrize("kind", ["empty", "blocked", "truncated", "timeout", "server"])
+def test_paraphrase_question_one_failed_call_gives_no_candidates(monkeypatch, kind):
+    _paraphrase_with(monkeypatch, teacher.TeacherAPIError(kind))
+    assert teacher.paraphrase_question("Q?", 3) == []
+
+
+@pytest.mark.parametrize("kind", ["auth", "quota", "rate_limit", "bad_request"])
+def test_paraphrase_question_errors_that_would_repeat_stop_the_run(monkeypatch, kind):
+    _paraphrase_with(monkeypatch, teacher.TeacherAPIError(kind, "why"))
+    with pytest.raises(teacher.TeacherAPIError, match="why"):
+        teacher.paraphrase_question("Q?", 3)
+
+
+# ---- M5: judge_variant ----
+VARIANT_Q = "If it takes 1 hour for 60 people to perform an opera, how many hours will it take 600 people?"
+
+
+def _judge(monkeypatch, *outputs):
+    prompts, models = [], []
+    queue = list(outputs)
+
+    def fake(prompt, model, temperature):
+        prompts.append(prompt)
+        models.append((model, temperature))
+        outcome = queue.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+    monkeypatch.setattr(teacher, "_generate", fake)
+    return prompts, models
+
+
+def test_judge_variant_keeps_a_natural_variant_with_the_same_answer(monkeypatch):
+    prompts, models = _judge(monkeypatch, '{"natural": true, "answer_unchanged": true}')
+    verdict = teacher.judge_variant(_source_row(), VARIANT_Q)
+    assert verdict == {"keep": True, "reason": "kept"}
+    assert LONG_Q in prompts[0] and VARIANT_Q in prompts[0]
+    assert models == [(config.JUDGE_MODEL, config.JUDGE_TEMPERATURE)]
+
+
+def test_judge_variant_prompt_shows_the_answer_but_not_the_chain(monkeypatch):
+    prompts, _ = _judge(monkeypatch, '{"natural": true, "answer_unchanged": true}')
+    row = _source_row()
+    teacher.judge_variant(row, VARIANT_Q)
+    assert row["answer"] in prompts[0]
+    assert row["chain"] not in prompts[0]
+
+
+@pytest.mark.parametrize(
+    ("reply", "reason"),
+    [
+        ('{"natural": false, "answer_unchanged": true}', "not_natural"),
+        ('{"natural": true, "answer_unchanged": false}', "answer_changed"),
+        ('{"natural": false, "answer_unchanged": false}', "answer_changed"),
+    ],
+)
+def test_judge_variant_drops_variants_the_judge_rejects(monkeypatch, reply, reason):
+    _judge(monkeypatch, reply)
+    assert teacher.judge_variant(_source_row(), VARIANT_Q) == {
+        "keep": False,
+        "reason": reason,
+    }
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        "not json at all",
+        "",
+        "[]",
+        '{"natural": true}',
+        '{"answer_unchanged": true}',
+        '{"natural": "yes", "answer_unchanged": true}',
+        '{"natural": true, "answer_unchanged": 1}',
+        '{"natural": null, "answer_unchanged": null}',
+    ],
+)
+def test_judge_variant_invalid_or_non_boolean_output_is_dropped(monkeypatch, reply):
+    _judge(monkeypatch, reply)
+    assert teacher.judge_variant(_source_row(), VARIANT_Q) == {
+        "keep": False,
+        "reason": "invalid_judge_output",
+    }
+
+
+def test_judge_variant_accepts_json_wrapped_in_code_fences(monkeypatch):
+    _judge(monkeypatch, '```json\n{"natural": true, "answer_unchanged": true}\n```')
+    assert teacher.judge_variant(_source_row(), VARIANT_Q)["keep"] is True
+
+
+@pytest.mark.parametrize("kind", ["empty", "blocked", "truncated", "timeout", "server"])
+def test_judge_variant_one_failed_call_drops_only_that_variant(monkeypatch, kind):
+    _judge(monkeypatch, teacher.TeacherAPIError(kind))
+    assert teacher.judge_variant(_source_row(), VARIANT_Q) == {
+        "keep": False,
+        "reason": "judge_error",
+    }
+
+
+@pytest.mark.parametrize("kind", ["auth", "quota", "rate_limit", "bad_request"])
+def test_judge_variant_errors_that_would_repeat_stop_the_run(monkeypatch, kind):
+    _judge(monkeypatch, teacher.TeacherAPIError(kind, "why"))
+    with pytest.raises(teacher.TeacherAPIError, match="why"):
+        teacher.judge_variant(_source_row(), VARIANT_Q)
+
+
+# ---- M5: build_eval_data (permanent store; the paraphraser and judge are faked) ----
+QUESTIONS = [
+    "Why does the sky look blue during the day?",
+    "How do planes stay in the air?",
+    "What makes bread rise in the oven?",
+]
+
+
+def _qrow(i, **overrides):
+    return _trow(i, question=QUESTIONS[i - 1], **overrides)
+
+
+def _cands(question, n, start=0):
+    return [f"{question[:-1]} indeed{'x' * (start + k)}?" for k in range(n)]
+
+
+class _Spend:
+    def __init__(self, verdicts=None, errors=()):
+        self.verdicts = verdicts or {}
+        self.errors = set(errors)
+        self.asked = []
+        self.judged = []
+        self.calls_to_paraphrase = 0
+
+    def paraphrase(self, question, n):
+        self.asked.append((question, n))
+        return _cands(question, n)
+
+    def judge(self, source_row, variant_question):
+        self.judged.append(variant_question)
+        if variant_question in self.errors:
+            return {"keep": False, "reason": "judge_error"}
+        return self.verdicts.get(variant_question, {"keep": True, "reason": "kept"})
+
+
+def _eval_paths(tmp_path):
+    return (
+        tmp_path / "eval.jsonl",
+        tmp_path / "eval_review.jsonl",
+        tmp_path / "eval_store.jsonl",
+    )
+
+
+def _build(tmp_path, monkeypatch, rows, spend=None, per_question=2, paraphrase=None):
+    spend = spend or _Spend()
+    monkeypatch.setattr(teacher, "judge_variant", spend.judge)
+    out, review, store = _eval_paths(tmp_path)
+    summary = teacher.build_eval_data(
+        rows,
+        out,
+        review,
+        store,
+        per_question=per_question,
+        paraphrase=paraphrase or spend.paraphrase,
+    )
+    return summary, spend
+
+
+def test_build_eval_data_writes_kept_variants_with_their_verdict(tmp_path, monkeypatch):
+    rows = [_qrow(1), _qrow(2)]
+    summary, _ = _build(tmp_path, monkeypatch, rows)
+    out, review, _ = _eval_paths(tmp_path)
+    written = data.read_jsonl(out)
+    assert [r["id"] for r in written] == ["t-1-v0", "t-1-v1", "t-2-v0", "t-2-v1"]
+    assert all(r["verdict"] == {"keep": True, "reason": "kept"} for r in written)
+    assert all(r["chain"] == rows[0]["chain"] for r in written[:2])
+    assert (summary["kept"], summary["rejected"]) == (4, 0)
+    assert data.read_jsonl(review) == []
+
+
+def test_a_second_run_spends_nothing_and_gives_the_same_files(tmp_path, monkeypatch):
+    rows = [_qrow(1), _qrow(2)]
+    _build(tmp_path, monkeypatch, rows)
+    out, review, _ = _eval_paths(tmp_path)
+    first = (out.read_text(encoding="utf-8"), review.read_text(encoding="utf-8"))
+    summary, spend = _build(tmp_path, monkeypatch, rows)
+    assert spend.asked == []
+    assert spend.judged == []
+    assert (summary["paraphrase_calls"], summary["judge_calls"]) == (0, 0)
+    assert (
+        out.read_text(encoding="utf-8"),
+        review.read_text(encoding="utf-8"),
+    ) == first
+
+
+def test_build_eval_data_asks_for_a_pool_larger_than_the_kept_target(
+    tmp_path, monkeypatch
+):
+    _, spend = _build(tmp_path, monkeypatch, [_qrow(1)], per_question=2)
+    assert spend.asked == [(QUESTIONS[0], 2 * config.EVAL_OVERSAMPLE)]
+
+
+def test_build_eval_data_stops_judging_a_question_once_it_has_enough(
+    tmp_path, monkeypatch
+):
+    summary, spend = _build(tmp_path, monkeypatch, [_qrow(1)], per_question=2)
+    assert len(spend.judged) == 2
+    assert summary["judge_calls"] == 2
+    assert summary["paraphrase_calls"] == 1
+
+
+def test_a_higher_target_later_judges_cached_candidates_before_asking_for_more(
+    tmp_path, monkeypatch
+):
+    _build(tmp_path, monkeypatch, [_qrow(1)], per_question=1)
+    summary, spend = _build(tmp_path, monkeypatch, [_qrow(1)], per_question=2)
+    assert spend.asked == []
+    assert len(spend.judged) == 1
+    out, _, _ = _eval_paths(tmp_path)
+    assert [r["id"] for r in data.read_jsonl(out)] == ["t-1-v0", "t-1-v1"]
+    assert summary["kept"] == 2
+
+
+def test_a_lower_target_later_uses_the_cache_and_spends_nothing(tmp_path, monkeypatch):
+    _build(tmp_path, monkeypatch, [_qrow(1)], per_question=3)
+    _, spend = _build(tmp_path, monkeypatch, [_qrow(1)], per_question=1)
+    out, _, _ = _eval_paths(tmp_path)
+    assert spend.asked == [] and spend.judged == []
+    assert [r["id"] for r in data.read_jsonl(out)] == ["t-1-v0"]
+
+
+def test_build_eval_data_keeps_judging_past_rejections_until_enough(
+    tmp_path, monkeypatch
+):
+    pool = _cands(QUESTIONS[0], 2 * config.EVAL_OVERSAMPLE)
+    bad = {"keep": False, "reason": "not_natural"}
+    spend = _Spend({pool[0]: bad, pool[1]: bad})
+    _, spend = _build(tmp_path, monkeypatch, [_qrow(1)], spend, per_question=2)
+    out, review, _ = _eval_paths(tmp_path)
+    assert len(spend.judged) == 4
+    assert [r["id"] for r in data.read_jsonl(out)] == ["t-1-v2", "t-1-v3"]
+    assert [r["id"] for r in data.read_jsonl(review)] == ["t-1-v0", "t-1-v1"]
+
+
+def test_rejected_candidates_are_never_judged_again(tmp_path, monkeypatch):
+    pool = _cands(QUESTIONS[0], 2 * config.EVAL_OVERSAMPLE)
+    reject = {"keep": False, "reason": "not_natural"}
+    verdicts = {q: reject for q in pool}
+    _build(tmp_path, monkeypatch, [_qrow(1)], _Spend(verdicts), per_question=2)
+    spend = _Spend(verdicts)
+    spend.paraphrase = lambda question, n: _cands(question, n, start=100)
+    _build(tmp_path, monkeypatch, [_qrow(1)], spend, per_question=2)
+    assert not (set(spend.judged) & set(pool))
+
+
+def test_an_exhausted_cache_asks_once_but_never_rejudges_known_candidates(
+    tmp_path, monkeypatch
+):
+    pool = _cands(QUESTIONS[0], 2 * config.EVAL_OVERSAMPLE)
+    reject = {"keep": False, "reason": "not_natural"}
+    _build(tmp_path, monkeypatch, [_qrow(1)], _Spend({q: reject for q in pool}))
+    summary, spend = _build(tmp_path, monkeypatch, [_qrow(1)])
+    assert len(spend.asked) == 1
+    assert spend.judged == []
+    assert summary["paraphrase_calls"] == 1
+
+
+def test_a_paraphraser_that_repeats_itself_cannot_loop(tmp_path, monkeypatch):
+    _build(tmp_path, monkeypatch, [_qrow(1)], per_question=1)
+    spend = _Spend()
+    spend.paraphrase = lambda question, n: _cands(question, n)
+    summary, spend = _build(tmp_path, monkeypatch, [_qrow(1)], spend, per_question=9)
+    assert summary["paraphrase_calls"] == 1
+
+
+def test_review_file_records_the_reason(tmp_path, monkeypatch):
+    pool = _cands(QUESTIONS[0], 2 * config.EVAL_OVERSAMPLE)
+    spend = _Spend({pool[0]: {"keep": False, "reason": "answer_changed"}})
+    summary, _ = _build(tmp_path, monkeypatch, [_qrow(1)], spend)
+    _, review, _ = _eval_paths(tmp_path)
+    (rejected,) = data.read_jsonl(review)
+    assert rejected["verdict"] == {"keep": False, "reason": "answer_changed"}
+    assert summary["rejected_by_reason"] == {"answer_changed": 1}
+
+
+def test_a_failed_judge_call_is_not_cached_and_is_retried_next_run(
+    tmp_path, monkeypatch
+):
+    pool = _cands(QUESTIONS[0], 2 * config.EVAL_OVERSAMPLE)
+    summary, _ = _build(tmp_path, monkeypatch, [_qrow(1)], _Spend(errors={pool[0]}))
+    out, review, _ = _eval_paths(tmp_path)
+    assert summary["judge_errors"] == 1
+    assert [r["id"] for r in data.read_jsonl(out)] == ["t-1-v1", "t-1-v2"]
+    assert data.read_jsonl(review) == []
+    summary, spend = _build(tmp_path, monkeypatch, [_qrow(1)], _Spend())
+    assert spend.judged == [pool[0]]
+    assert [r["id"] for r in data.read_jsonl(out)] == ["t-1-v0", "t-1-v1"]
+
+
+def test_a_changed_source_question_stops_before_any_call(tmp_path, monkeypatch):
+    _build(tmp_path, monkeypatch, [_qrow(1)])
+    spend = _Spend()
+    with pytest.raises(ValueError, match="t-1"):
+        _build(
+            tmp_path,
+            monkeypatch,
+            [_trow(1, question="A completely different question text?")],
+            spend,
+        )
+    assert spend.asked == [] and spend.judged == []
+
+
+def test_build_eval_data_warns_about_a_question_with_no_kept_variants(
+    tmp_path, monkeypatch
+):
+    pool = _cands(QUESTIONS[1], 2 * config.EVAL_OVERSAMPLE)
+    reject = {"keep": False, "reason": "not_natural"}
+    spend = _Spend({q: reject for q in pool})
+    with pytest.warns(UserWarning, match="t-2"):
+        summary, _ = _build(tmp_path, monkeypatch, [_qrow(1), _qrow(2)], spend)
+    assert summary["questions_without_variants"] == ["t-2"]
+
+
+def test_build_eval_data_warns_about_a_category_with_no_kept_variants(
+    tmp_path, monkeypatch
+):
+    pool = _cands(QUESTIONS[1], 2 * config.EVAL_OVERSAMPLE)
+    reject = {"keep": False, "reason": "not_natural"}
+    spend = _Spend({q: reject for q in pool})
+    rows = [_qrow(1), _qrow(2, category="false_premise")]
+    with pytest.warns(UserWarning, match="false_premise"):
+        summary, _ = _build(tmp_path, monkeypatch, rows, spend)
+    assert summary["categories_without_variants"] == ["false_premise"]
+
+
+def test_build_eval_data_no_warning_when_every_question_has_a_variant(
+    tmp_path, monkeypatch, recwarn
+):
+    _build(tmp_path, monkeypatch, [_qrow(1)])
+    assert len(recwarn) == 0
+
+
+def test_a_paraphraser_that_returns_nothing_warns(tmp_path, monkeypatch):
+    with pytest.warns(UserWarning, match="t-1"):
+        summary, spend = _build(
+            tmp_path, monkeypatch, [_qrow(1)], paraphrase=lambda question, n: []
+        )
+    assert spend.judged == []
+    assert summary["questions_without_variants"] == ["t-1"]
+
+
+def test_build_eval_data_skips_short_questions_without_calling_the_paraphraser(
+    tmp_path, monkeypatch
+):
+    short = _trow(1, question="Was Talos alive?")
+    with pytest.warns(UserWarning, match="t-1"):
+        _, spend = _build(tmp_path, monkeypatch, [short])
+    assert spend.asked == []
+
+
+def test_the_eval_files_are_rewritten_freely_because_it_costs_nothing(
+    tmp_path, monkeypatch
+):
+    out, _, _ = _eval_paths(tmp_path)
+    out.write_text("old\n", encoding="utf-8")
+    _build(tmp_path, monkeypatch, [_qrow(1)])
+    assert [r["id"] for r in data.read_jsonl(out)] == ["t-1-v0", "t-1-v1"]
+
+
+@pytest.mark.parametrize("stage", ["judge", "paraphrase"])
+def test_a_stopping_error_keeps_the_store_progress_and_writes_no_outputs(
+    tmp_path, monkeypatch, stage
+):
+    def boom(*args):
+        raise teacher.TeacherAPIError("quota", "daily limit")
+
+    spend = _Spend()
+    if stage == "judge":
+        calls = {"n": 0}
+
+        def judge_then_boom(source_row, variant_question):
+            calls["n"] += 1
+            if calls["n"] == 2:
+                boom()
+            return {"keep": True, "reason": "kept"}
+
+        monkeypatch.setattr(teacher, "judge_variant", judge_then_boom)
+        paraphrase = spend.paraphrase
+    else:
+        monkeypatch.setattr(teacher, "judge_variant", spend.judge)
+        paraphrase = boom
+    out, review, store = _eval_paths(tmp_path)
+    with pytest.raises(teacher.TeacherAPIError, match="daily limit"):
+        teacher.build_eval_data(
+            [_qrow(1)], out, review, store, per_question=2, paraphrase=paraphrase
+        )
+    assert not out.exists()
+    assert not review.exists()
+    if stage == "judge":
+        record = data.read_jsonl(store)[0]
+        assert record["candidates"][0]["verdict"] == {"keep": True, "reason": "kept"}
+
+
+def test_build_eval_data_progress_ticks_for_every_candidate_it_goes_through(
+    tmp_path, monkeypatch
+):
+    ticks = []
+    spend = _Spend()
+    monkeypatch.setattr(teacher, "judge_variant", spend.judge)
+    out, review, store = _eval_paths(tmp_path)
+    for _ in range(2):
+        teacher.build_eval_data(
+            [_qrow(1)], out, review, store, per_question=2,
+            progress=lambda: ticks.append(1), paraphrase=spend.paraphrase,
+        )  # fmt: skip
+    assert len(ticks) == 4
+
+
+# ---- M5: pick_random (the printout of random variants) ----
+def test_pick_random_returns_n_rows_in_original_order_and_is_seeded():
+    rows = [{"id": i} for i in range(30)]
+    first = data.pick_random(rows, 20, seed=1)
+    assert len(first) == 20
+    assert first == data.pick_random(rows, 20, seed=1)
+    assert first != data.pick_random(rows, 20, seed=2)
+    assert [r["id"] for r in first] == sorted(r["id"] for r in first)
+
+
+def test_pick_random_with_fewer_rows_than_requested_returns_all():
+    rows = [{"id": i} for i in range(3)]
+    assert data.pick_random(rows, 20, seed=0) == rows
+    assert data.pick_random([], 20, seed=0) == []
+
+
+# ---- M5: eval-data command ----
+
+
+def test_pipeline_eval_data_invalid_test_set_fails_with_the_row_id(tmp_path):
+    test_path = tmp_path / "test_set.jsonl"
+    data.write_jsonl(test_path, [_trow(1, chain=_teacher_chain("12"))])
+    result = _run_pipeline(
+        "eval-data", "--test-set", str(test_path), "--out", str(tmp_path / "e.jsonl")
+    )
+    assert result.returncode != 0
+    assert "t-1" in result.stderr
+
+
+# ---- rate limits: wait for the delay the server asks for ----
+def _rate_limit_error(delay):
+    details = [
+        {"@type": "type.googleapis.com/google.rpc.RetryInfo", "retryDelay": delay}
+    ]
+    return _api_error(errors.ClientError, 429, "RESOURCE_EXHAUSTED", details)
+
+
+@pytest.mark.parametrize(
+    ("delay", "seconds"), [("23s", 23.0), ("1.5s", 1.5), ("81429s", 81429.0)]
+)
+def test_call_model_reads_the_retry_delay_the_server_asks_for(
+    monkeypatch, delay, seconds
+):
+    _use_client(monkeypatch, _rate_limit_error(delay))
+    with pytest.raises(teacher.TeacherAPIError) as caught:
+        teacher._call_model("m", "p", 0.0)
+    assert caught.value.kind == "rate_limit"
+    assert caught.value.retry_after == seconds
+
+
+def test_call_model_without_retry_info_has_no_retry_after(monkeypatch):
+    _use_client(monkeypatch, _api_error(errors.ClientError, 429, "RESOURCE_EXHAUSTED"))
+    with pytest.raises(teacher.TeacherAPIError) as caught:
+        teacher._call_model("m", "p", 0.0)
+    assert caught.value.retry_after is None
+
+
+def test_generate_waits_the_servers_delay_when_it_is_longer_than_the_default(
+    monkeypatch,
+):
+    _, sleeps = _script_call_model(
+        monkeypatch, [teacher.TeacherAPIError("rate_limit", retry_after=23.0), "fine"]
+    )
+    assert teacher._generate("p", "m", 0.0) == "fine"
+    assert sleeps == [23.0]
+
+
+def test_generate_uses_the_default_wait_when_the_servers_delay_is_shorter(monkeypatch):
+    _, sleeps = _script_call_model(
+        monkeypatch, [teacher.TeacherAPIError("rate_limit", retry_after=0.1), "fine"]
+    )
+    teacher._generate("p", "m", 0.0)
+    assert sleeps == [config.TEACHER_RETRY_SECONDS]
+
+
+def test_generate_does_not_wait_when_the_delay_is_longer_than_the_maximum(monkeypatch):
+    too_long = config.TEACHER_MAX_WAIT_SECONDS + 1
+    calls, sleeps = _script_call_model(
+        monkeypatch,
+        [teacher.TeacherAPIError("rate_limit", retry_after=too_long), "never"],
+    )
+    with pytest.raises(teacher.TeacherAPIError) as caught:
+        teacher._generate("p", "m", 0.0)
+    assert caught.value.retry_after == too_long
+    assert len(calls) == 1
+    assert sleeps == []
+
+
+def test_generate_waits_exactly_the_maximum_delay_allowed(monkeypatch):
+    _, sleeps = _script_call_model(
+        monkeypatch,
+        [
+            teacher.TeacherAPIError(
+                "rate_limit", retry_after=config.TEACHER_MAX_WAIT_SECONDS
+            ),
+            "fine",
+        ],
+    )
+    teacher._generate("p", "m", 0.0)
+    assert sleeps == [config.TEACHER_MAX_WAIT_SECONDS]
+
+
+# ---- timing of build_training_data (only rows that were generated count) ----
+def test_build_training_data_summary_has_row_seconds(tmp_path, monkeypatch):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    _fake_clock(monkeypatch, 1.0)
+    summary = teacher.build_training_data(_train_rows(4), out, store)
+    assert summary["row_seconds"] == {"n": 4, "mean": 1.0, "max": 1.0}
+
+
+def test_build_training_data_row_seconds_count_only_generated_rows(
+    tmp_path, monkeypatch
+):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(2), out, store)
+    _fake_generate_chain(monkeypatch)
+    _fake_clock(monkeypatch, 1.0)
+    summary = teacher.build_training_data(_train_rows(4), out, store)
+    assert summary["row_seconds"] == {"n": 2, "mean": 1.0, "max": 1.0}
+
+
+def test_build_training_data_row_seconds_when_nothing_was_generated(
+    tmp_path, monkeypatch
+):
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    teacher.build_training_data(_train_rows(2), out, store)
+    summary = teacher.build_training_data(_train_rows(2), out, store)
+    assert summary["row_seconds"] == {"n": 0, "mean": None, "max": None}
+
+
+def test_build_training_data_timing_covers_only_this_run(tmp_path, monkeypatch):
+    _script_call_model(monkeypatch, ["old call"])
+    teacher._generate("p", "m", 0.0)
+    out, store = _paths(tmp_path)
+    _fake_generate_chain(monkeypatch)
+    summary = teacher.build_training_data(_train_rows(2), out, store)
+    assert summary["timing"] == {}
+
+
+def test_build_training_data_timing_reports_the_api_calls_it_made(
+    tmp_path, monkeypatch
+):
+    _script_call_model(monkeypatch, ["fine", "fine"])
+
+    def fake_generate_chain(row):
+        teacher._generate("p", "m-1", 0.0)
+        return {**row, "chain": "c"}
+
+    monkeypatch.setattr(teacher, "generate_chain", fake_generate_chain)
+    out, store = _paths(tmp_path)
+    summary = teacher.build_training_data(_train_rows(2), out, store)
+    assert summary["timing"]["m-1"]["calls"] == 2
+    assert summary["timing"]["m-1"]["outcomes"] == {"ok": 2}
+
+
+# ---- stratified_sample is prefix-stable: a bigger n contains the smaller sample ----
+@pytest.mark.parametrize("seed", [0, 1, 7])
+@pytest.mark.parametrize("small", [1, 3, 10])
+def test_stratified_sample_larger_n_contains_the_smaller_sample(seed, small):
+    rows = _rows({"a": 40, "b": 25, "c": 6})
+    few = {r["id"] for r in data.stratified_sample(rows, small, seed=seed)}
+    many = {r["id"] for r in data.stratified_sample(rows, small + 12, seed=seed)}
+    assert few <= many
+
+
+def test_stratified_sample_stays_stable_when_other_categories_change_size():
+    base = _rows({"a": 40, "b": 25})
+    more = _rows({"a": 40, "b": 60})
+    pick_a = lambda rows: {
+        r["id"] for r in data.stratified_sample(rows, 5, seed=3) if r["category"] == "a"
+    }
+    assert pick_a(base) == pick_a(more)

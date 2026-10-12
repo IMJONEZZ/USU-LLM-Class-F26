@@ -188,11 +188,12 @@ def stratified_sample(rows, n, seed):
         if "category" not in row:
             raise ValueError(f"row has no 'category': {row!r}")
         groups.setdefault(row["category"], []).append(row)
-    rng = random.Random(seed)
     sampled = []
-    for group in groups.values():
-        picked = rng.sample(range(len(group)), min(n, len(group)))
-        sampled.extend(group[i] for i in sorted(picked))
+    for category, group in groups.items():
+        order = list(range(len(group)))
+        random.Random(f"{seed}:{category}").shuffle(order)
+        picked = sorted(order[: min(n, len(group))])
+        sampled.extend(group[i] for i in picked)
     return sampled
 
 
@@ -347,3 +348,70 @@ def check_test_set_hash(test_path, hash_path):
         stacklevel=2,
     )
     return "changed"
+
+
+_NEGATION_WORDS = frozenset(
+    {
+        "not",
+        "no",
+        "never",
+        "nor",
+        "none",
+        "nobody",
+        "nothing",
+        "neither",
+        "cannot",
+        "without",
+    }
+)
+_NUMBER = r"\d+(?:\.\d+)?"
+
+
+def _facts(text):
+    numbers = sorted(re.findall(_NUMBER, text))
+    units = sorted(
+        unit.lower().removesuffix("s")
+        for unit in re.findall(_NUMBER + r"\s*([A-Za-z%]+)", text)
+    )
+    words = re.findall(r"[a-z']+", text.lower())
+    negations = sum(w in _NEGATION_WORDS or w.endswith("n't") for w in words)
+    return numbers, units, negations
+
+
+def variant_record(row, question, index):
+    return {
+        "id": f"{row['id']}-v{index}",
+        "source_id": row["id"],
+        "question": question,
+        "answer": row["answer"],
+        "accepted_alternatives": list(row["accepted_alternatives"]),
+        "category": row["category"],
+        "chain": row["chain"],
+        "source": "paraphrase",
+    }
+
+
+def make_variants(row, candidates, cap):
+    question = row["question"]
+    if len(question.split()) < config.MIN_QUESTION_WORDS:
+        return []
+    seen = {normalize(question)}
+    variants = []
+    for candidate in candidates:
+        if not isinstance(candidate, str) or not candidate.strip():
+            continue
+        key = normalize(candidate)
+        if key in seen or _facts(candidate) != _facts(question):
+            continue
+        if any(marker in candidate for marker in _MARKERS):
+            continue
+        seen.add(key)
+        variants.append(variant_record(row, candidate, len(variants)))
+        if len(variants) == cap:
+            break
+    return variants
+
+
+def pick_random(rows, n, seed):
+    picked = random.Random(seed).sample(range(len(rows)), min(n, len(rows)))
+    return [rows[i] for i in sorted(picked)]
