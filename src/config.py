@@ -57,6 +57,22 @@ INSTRUCTION_MARKER = "### Instruction:\n"
 RESPONSE_MARKER = "### Response:\n"
 SECTION_LABELS = ["Restate:", "Check:", "Solve:", "Verify:", "Final answer:"]
 FINAL_ANSWER_LABEL = "Final answer:"
+EOS_TOKEN = "<|end_of_text|>"
+
+# ---- hardware (Modal prices per second from modal.com/pricing, 2026-10-11;
+# memory sizes are the cards' NVIDIA specs; the Modal request strings are not
+# verified yet and are confirmed when scripts/modal_app.py is written) ----
+GPU_OPTIONS = {
+    "T4": {"vram_gib": 16, "usd_per_second": 0.000164},
+    "L4": {"vram_gib": 24, "usd_per_second": 0.000222},
+    "A10": {"vram_gib": 24, "usd_per_second": 0.000306},
+    "L40S": {"vram_gib": 48, "usd_per_second": 0.000542},
+    "A100-40GB": {"vram_gib": 40, "usd_per_second": 0.000583},
+    "A100-80GB": {"vram_gib": 80, "usd_per_second": 0.000694},
+    "H100": {"vram_gib": 80, "usd_per_second": 0.001097},
+}
+GPU_USABLE_FRACTION = 0.85
+GPU_TYPE = "L4"
 
 # ---- paths ----
 ROOT = Path(__file__).resolve().parents[1]
@@ -77,6 +93,7 @@ TRAIN_SUMMARY_PATH = DATA_DIR / "train_summary.json"
 TEST_SET_HASH_PATH = DATA_DIR / "test_set_hash.jsonl"
 EVAL_REVIEW_PATH = DATA_DIR / "eval_review.jsonl"
 EVAL_SUMMARY_PATH = DATA_DIR / "eval_summary.json"
+TOKEN_AUDIT_PATH = DATA_DIR / "token_audit.json"
 REVIEW_SAMPLE_PATH = DATA_DIR / "review_sample.json"
 SEED = 0
 

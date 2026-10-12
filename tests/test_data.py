@@ -10,8 +10,9 @@ import pytest
 import truststore
 from google import genai
 from google.genai import errors, types
+from tokenizers import Tokenizer, models, pre_tokenizers, processors
 
-from src import config, data, sources, teacher
+from src import config, data, sources, teacher, train
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -3214,3 +3215,365 @@ def test_stratified_sample_stays_stable_when_other_categories_change_size():
         r["id"] for r in data.stratified_sample(rows, 5, seed=3) if r["category"] == "a"
     }
     assert pick_a(base) == pick_a(more)
+
+
+# ---- M6: token audit ----
+def _tiny_tokenizer(with_bos=True):
+    tok = Tokenizer(models.WordLevel({"<unk>": 0}, unk_token="<unk>"))
+    tok.pre_tokenizer = pre_tokenizers.Whitespace()
+    tok.add_special_tokens(["<unk>", "<bos>", config.EOS_TOKEN])
+    if with_bos:
+        tok.post_processor = processors.TemplateProcessing(
+            single="<bos> $A", special_tokens=[("<bos>", tok.token_to_id("<bos>"))]
+        )
+    return tok
+
+
+def _tok_len(tok, text, special=False):
+    return len(tok.encode(text, add_special_tokens=special).ids)
+
+
+def test_load_tokenizer_from_a_local_file(tmp_path):
+    path = tmp_path / "tok.json"
+    _tiny_tokenizer().save(str(path))
+    loaded = data.load_tokenizer(str(path))
+    assert _tok_len(loaded, "a b c") == 3
+
+
+def test_token_lengths_prompt_matches_a_hand_count_including_the_start_token():
+    # "### Instruction : a b ### Response :" is 8 words, plus <bos> = 9
+    row = _trow(1, question="a b", chain=_teacher_chain("9"))
+    (length,) = data.token_lengths([row], _tiny_tokenizer())
+    assert length["prompt"] == 9
+
+
+def test_token_lengths_start_token_is_counted_only_when_the_tokenizer_adds_it():
+    row = _trow(1, question="a b")
+    with_bos = data.token_lengths([row], _tiny_tokenizer(with_bos=True))[0]
+    without = data.token_lengths([row], _tiny_tokenizer(with_bos=False))[0]
+    assert with_bos["prompt"] == without["prompt"] + 1
+    assert with_bos["total"] == without["total"] + 1
+
+
+def test_token_lengths_response_counts_the_chain_and_one_end_token():
+    tok = _tiny_tokenizer()
+    chain = _teacher_chain("9")
+    row = _trow(1, question="a b", chain=chain)
+    (length,) = data.token_lengths([row], tok)
+    assert length["response"] == _tok_len(tok, chain) + 1
+    assert length["total"] == length["prompt"] + length["response"]
+
+
+def test_token_lengths_report_prompt_and_response_separately_per_row():
+    tok = _tiny_tokenizer()
+    short = _trow(1, question="a b", chain=_teacher_chain("9"))
+    long = _trow(
+        2, question="a b c d e f g h", chain=_teacher_chain("9", "extra words " * 8)
+    )
+    first, second = data.token_lengths([short, long], tok)
+    assert second["prompt"] == first["prompt"] + 6
+    assert second["response"] > first["response"]
+    assert [first["id"], second["id"]] == ["t-1", "t-2"]
+
+
+def test_token_lengths_row_without_a_chain_names_the_row():
+    row = {k: v for k, v in _trow(1).items() if k != "chain"}
+    with pytest.raises(ValueError, match="t-1"):
+        data.token_lengths([row], _tiny_tokenizer())
+
+
+def test_token_lengths_of_no_rows_is_empty():
+    assert data.token_lengths([], _tiny_tokenizer()) == []
+
+
+def test_token_lengths_uses_the_configured_end_token_by_default(monkeypatch):
+    tok = _tiny_tokenizer()
+    tok.add_special_tokens(["<other_eos>"])
+    row = _trow(1, question="a b")
+    default = data.token_lengths([row], tok)[0]
+    explicit = data.token_lengths([row], tok, eos_token="<other_eos>")[0]
+    assert default["total"] == explicit["total"]
+
+
+def _lengths(*totals):
+    return [
+        {"id": f"x-{i}", "prompt": t // 4, "response": t - t // 4, "total": t}
+        for i, t in enumerate(totals)
+    ]
+
+
+def test_length_summary_reports_prompt_response_and_total_separately():
+    summary = data.length_summary(_lengths(10, 20, 30, 40, 100))
+    assert summary["n"] == 5
+    assert summary["max_total"] == 100
+    assert summary["total"]["p50"] == 30
+    assert summary["total"]["p90"] == pytest.approx(76.0)
+    assert summary["total"]["max"] == 100
+    assert summary["prompt"]["max"] == 25
+    assert summary["response"]["max"] == 75
+
+
+def test_length_summary_with_one_example_has_equal_percentiles():
+    summary = data.length_summary(_lengths(42))
+    assert summary["total"]["p50"] == summary["total"]["p90"] == 42
+    assert summary["total"]["p99"] == summary["total"]["max"] == 42
+
+
+def test_length_summary_lists_the_longest_examples_first():
+    summary = data.length_summary(_lengths(10, 50, 30, 40))
+    assert summary["longest"][:3] == [
+        {"id": "x-1", "total": 50},
+        {"id": "x-3", "total": 40},
+        {"id": "x-2", "total": 30},
+    ]
+
+
+def test_length_summary_of_nothing_raises():
+    with pytest.raises(ValueError, match="no examples"):
+        data.length_summary([])
+
+
+def test_check_token_limit_accepts_an_example_exactly_at_the_limit():
+    assert data.check_token_limit(_lengths(10, 64), 64) is None
+
+
+def test_check_token_limit_rejects_an_example_over_the_limit_naming_it():
+    with pytest.raises(ValueError, match="x-1") as caught:
+        data.check_token_limit(_lengths(10, 65, 20), 64)
+    assert "65" in str(caught.value)
+    assert "1 example" in str(caught.value)
+
+
+def test_check_token_limit_counts_every_example_over_the_limit():
+    with pytest.raises(ValueError, match="3 examples"):
+        data.check_token_limit(_lengths(70, 80, 90, 10), 64)
+
+
+def test_check_token_limit_of_nothing_raises():
+    with pytest.raises(ValueError, match="no examples"):
+        data.check_token_limit([], 64)
+
+
+@pytest.mark.parametrize(
+    ("longest", "expected"),
+    [
+        (1, 64),
+        (64, 64),
+        (65, 128),
+        (227, 256),
+        (1000, 1024),
+        (1024, 1024),
+        (1025, 1088),
+    ],
+)
+def test_recommended_max_seq_length_is_the_next_multiple_of_64(longest, expected):
+    assert data.recommended_max_seq_length(longest) == expected
+
+
+@pytest.mark.parametrize("bad", [0, -5])
+def test_recommended_max_seq_length_rejects_non_positive_lengths(bad):
+    with pytest.raises(ValueError):
+        data.recommended_max_seq_length(bad)
+
+
+@pytest.mark.slow
+def test_real_llama_tokenizer_counts_start_and_end_as_single_tokens():
+    tok = data.load_tokenizer(config.MODEL_NAME)
+    with_special = tok.encode("hi" + config.EOS_TOKEN, add_special_tokens=True)
+    assert with_special.ids[0] == tok.token_to_id("<|begin_of_text|>")
+    assert with_special.ids[-1] == tok.token_to_id(config.EOS_TOKEN)
+    assert with_special.ids.count(tok.token_to_id(config.EOS_TOKEN)) == 1
+
+
+@pytest.mark.slow
+def test_real_llama_tokenizer_keeps_the_prompt_as_an_exact_prefix_of_the_example():
+    tok = data.load_tokenizer(config.MODEL_NAME)
+    chain = _teacher_chain("9")
+    prompt = data.format_prompt(LONG_Q)
+    full = data.format_example(LONG_Q, chain, config.EOS_TOKEN)
+    prompt_ids = tok.encode(prompt, add_special_tokens=True).ids
+    full_ids = tok.encode(full, add_special_tokens=True).ids
+    assert full_ids[: len(prompt_ids)] == prompt_ids
+
+
+# ---- M6: train.py (memory estimate and GPU choice) ----
+def test_memory_estimate_has_positive_parts_that_sum_to_the_total():
+    parts = train.estimate_training_memory_gib(256, batch_size=1)
+    pieces = ("weights", "lora_and_optimizer", "activations", "logits", "overhead")
+    assert all(parts[name] > 0 for name in pieces)
+    assert parts["total"] == pytest.approx(sum(parts[name] for name in pieces))
+
+
+def test_memory_estimate_grows_with_tokens_and_batch_size():
+    small = train.estimate_training_memory_gib(256, batch_size=1)["total"]
+    longer = train.estimate_training_memory_gib(1024, batch_size=1)["total"]
+    wider = train.estimate_training_memory_gib(256, batch_size=4)["total"]
+    assert small < longer
+    assert small < wider
+
+
+def test_memory_estimate_logits_scale_linearly_with_tokens():
+    short = train.estimate_training_memory_gib(256)["logits"]
+    long = train.estimate_training_memory_gib(512)["logits"]
+    assert long == pytest.approx(2 * short)
+
+
+def test_memory_estimate_for_short_examples_is_a_few_gib():
+    assert 1 < train.estimate_training_memory_gib(256)["total"] < 8
+
+
+@pytest.mark.parametrize("tokens, batch", [(0, 1), (-1, 1), (256, 0), (256, -2)])
+def test_memory_estimate_rejects_non_positive_inputs(tokens, batch):
+    with pytest.raises(ValueError):
+        train.estimate_training_memory_gib(tokens, batch_size=batch)
+
+
+OPTIONS = {
+    "A": {"vram_gib": 16, "usd_per_second": 0.3},
+    "B": {"vram_gib": 24, "usd_per_second": 0.2},
+    "C": {"vram_gib": 48, "usd_per_second": 0.5},
+}
+
+
+def test_choose_gpu_picks_the_cheapest_that_fits_not_the_smallest():
+    assert train.choose_gpu(10, OPTIONS) == "B"
+
+
+def test_choose_gpu_only_trusts_a_fraction_of_the_memory():
+    assert train.choose_gpu(20, OPTIONS) == "B"  # 24 * 0.85 = 20.4
+    assert train.choose_gpu(21, OPTIONS) == "C"
+
+
+def test_choose_gpu_with_nothing_big_enough_raises():
+    with pytest.raises(ValueError, match="fits"):
+        train.choose_gpu(100, OPTIONS)
+
+
+def test_choose_gpu_breaks_a_price_tie_with_the_smaller_memory():
+    tied = {
+        "big": {"vram_gib": 48, "usd_per_second": 0.2},
+        "small": {"vram_gib": 24, "usd_per_second": 0.2},
+    }
+    assert train.choose_gpu(5, tied) == "small"
+
+
+@pytest.mark.parametrize(
+    ("needed", "expected"), [(5, "T4"), (20, "L4"), (30, "L40S"), (60, "A100-80GB")]
+)
+def test_choose_gpu_with_the_real_modal_prices(needed, expected):
+    assert train.choose_gpu(needed) == expected
+
+
+def test_every_gpu_option_has_a_positive_size_and_price():
+    for name, option in config.GPU_OPTIONS.items():
+        assert option["vram_gib"] > 0, name
+        assert option["usd_per_second"] > 0, name
+
+
+# ---- M6: validate --tokens ----
+def _tiny_tokenizer_file(tmp_path):
+    path = tmp_path / "tok.json"
+    _tiny_tokenizer().save(str(path))
+    return path
+
+
+def _validate_tokens(tmp_path, *extra, eval_rows=()):
+    paths = _write_all(
+        tmp_path, [_trow(1)], [_train_row(1), _train_row(2)], list(eval_rows)
+    )
+    test_path, train_path, eval_path, hash_path = paths
+    return _run_pipeline(
+        "validate",
+        "--test-set", str(test_path),
+        "--train", str(train_path),
+        "--eval", str(eval_path),
+        "--hash", str(hash_path),
+        "--tokens",
+        "--tokenizer", str(_tiny_tokenizer_file(tmp_path)),
+        "--token-audit", str(tmp_path / "audit.json"),
+        *extra,
+    )  # fmt: skip
+
+
+def test_pipeline_validate_tokens_passes_and_writes_the_audit(tmp_path):
+    result = _validate_tokens(tmp_path, "--max-seq-length", "1000")
+    assert result.returncode == 0, result.stderr
+    audit = json.loads((tmp_path / "audit.json").read_text(encoding="utf-8"))
+    assert audit["train"]["n"] == 2
+    assert audit["max_seq_length"] == 1000
+    assert audit["recommended_max_seq_length"] % 64 == 0
+    assert "max" in result.stdout
+
+
+def test_pipeline_validate_tokens_fails_when_the_limit_is_below_the_longest(tmp_path):
+    result = _validate_tokens(tmp_path, "--max-seq-length", "5")
+    assert result.returncode != 0
+    assert "tr-" in result.stderr
+    assert "recommended" in result.stderr
+
+
+def test_pipeline_validate_tokens_reports_eval_and_test_sets_separately(tmp_path):
+    eval_rows = [
+        {**_trow(1), "id": "e-1", "question": "A reworded variant of question one?"}
+    ]
+    result = _validate_tokens(tmp_path, "--max-seq-length", "1000", eval_rows=eval_rows)
+    assert result.returncode == 0, result.stderr
+    audit = json.loads((tmp_path / "audit.json").read_text(encoding="utf-8"))
+    assert audit["eval"]["n"] == 1
+    assert audit["test"]["n"] == 1
+
+
+def test_pipeline_validate_tokens_prints_the_memory_estimate_and_cheapest_gpu(tmp_path):
+    result = _validate_tokens(tmp_path, "--max-seq-length", "1000")
+    assert "GiB" in result.stdout
+    assert "T4" in result.stdout
+
+
+def test_the_chosen_gpu_is_one_of_the_known_options():
+    assert config.GPU_TYPE in config.GPU_OPTIONS
+
+
+def test_pipeline_validate_tokens_reports_the_chosen_gpu_and_that_it_fits(tmp_path):
+    result = _validate_tokens(tmp_path, "--max-seq-length", "1000")
+    assert result.returncode == 0, result.stderr
+    assert f"chosen GPU: {config.GPU_TYPE}" in result.stdout
+    audit = json.loads((tmp_path / "audit.json").read_text(encoding="utf-8"))
+    assert audit["gpu_type"] == config.GPU_TYPE
+    assert audit["fits_chosen_gpu"] is True
+
+
+def test_pipeline_validate_tokens_fails_when_the_estimate_does_not_fit_the_gpu(
+    tmp_path,
+):
+    result = _validate_tokens(
+        tmp_path, "--max-seq-length", "1000", "--gpu", "T4", "--batch-size", "512"
+    )
+    assert result.returncode != 0
+    assert "does not fit" in result.stderr
+    audit = json.loads((tmp_path / "audit.json").read_text(encoding="utf-8"))
+    assert audit["fits_chosen_gpu"] is False
+
+
+def test_pipeline_validate_tokens_names_a_bigger_gpu_when_the_chosen_one_is_too_small(
+    tmp_path,
+):
+    result = _validate_tokens(
+        tmp_path, "--max-seq-length", "1000", "--gpu", "T4", "--batch-size", "128"
+    )
+    assert result.returncode != 0
+    assert "does not fit" in result.stderr
+    audit = json.loads((tmp_path / "audit.json").read_text(encoding="utf-8"))
+    assert audit["cheapest_gpu"] not in (None, "T4")
+
+
+def test_pipeline_validate_tokens_when_no_gpu_fits_says_so_and_still_writes_the_audit(
+    tmp_path,
+):
+    result = _validate_tokens(
+        tmp_path, "--max-seq-length", "1000", "--batch-size", "100000"
+    )
+    assert result.returncode != 0
+    assert "Traceback" not in result.stderr
+    assert "no GPU" in result.stdout
+    audit = json.loads((tmp_path / "audit.json").read_text(encoding="utf-8"))
+    assert audit["cheapest_gpu"] is None

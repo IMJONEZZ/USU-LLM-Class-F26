@@ -9,6 +9,8 @@ import unicodedata
 import warnings
 from pathlib import Path
 
+import numpy as np
+
 from src import config
 
 _FINAL_LABEL_WORDS = config.FINAL_ANSWER_LABEL.rstrip(":").split()
@@ -415,3 +417,78 @@ def make_variants(row, candidates, cap):
 def pick_random(rows, n, seed):
     picked = random.Random(seed).sample(range(len(rows)), min(n, len(rows)))
     return [rows[i] for i in sorted(picked)]
+
+
+def load_tokenizer(name_or_path):
+    from tokenizers import Tokenizer
+
+    if Path(name_or_path).exists():
+        return Tokenizer.from_file(str(name_or_path))
+    return Tokenizer.from_pretrained(name_or_path)
+
+
+def token_lengths(rows, tokenizer, eos_token=None):
+    eos_token = config.EOS_TOKEN if eos_token is None else eos_token
+    lengths = []
+    for row in rows:
+        if not row.get("chain"):
+            raise ValueError(f"row {row.get('id')!r} has no chain to measure")
+        prompt = tokenizer.encode(
+            format_prompt(row["question"]), add_special_tokens=True
+        )
+        example = format_example(row["question"], row["chain"], eos_token)
+        total = tokenizer.encode(example, add_special_tokens=True)
+        lengths.append(
+            {
+                "id": row["id"],
+                "prompt": len(prompt.ids),
+                "response": len(total.ids) - len(prompt.ids),
+                "total": len(total.ids),
+            }
+        )
+    return lengths
+
+
+def length_summary(lengths):
+    if not lengths:
+        raise ValueError("no examples to summarize")
+
+    def stats(key):
+        values = np.array([item[key] for item in lengths])
+        return {
+            "p50": float(np.percentile(values, 50)),
+            "p90": float(np.percentile(values, 90)),
+            "p99": float(np.percentile(values, 99)),
+            "max": int(values.max()),
+        }
+
+    longest = sorted(lengths, key=lambda item: item["total"], reverse=True)[:5]
+    return {
+        "n": len(lengths),
+        "max_total": max(item["total"] for item in lengths),
+        "prompt": stats("prompt"),
+        "response": stats("response"),
+        "total": stats("total"),
+        "longest": [{"id": item["id"], "total": item["total"]} for item in longest],
+    }
+
+
+def recommended_max_seq_length(longest, multiple=64):
+    if longest <= 0:
+        raise ValueError(f"longest must be positive, got {longest}")
+    return -(-longest // multiple) * multiple
+
+
+def check_token_limit(lengths, limit):
+    if not lengths:
+        raise ValueError("no examples to check")
+    over = [item for item in lengths if item["total"] > limit]
+    if over:
+        worst = max(over, key=lambda item: item["total"])
+        plural = "example" if len(over) == 1 else "examples"
+        raise ValueError(
+            f"{len(over)} {plural} longer than the limit of {limit} tokens "
+            f"(longest: {worst['id']!r} with {worst['total']}); truncation would cut "
+            "the final answer. recommended MAX_SEQ_LENGTH = "
+            f"{recommended_max_seq_length(worst['total'])}"
+        )

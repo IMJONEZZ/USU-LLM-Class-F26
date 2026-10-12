@@ -9,6 +9,7 @@ dependencies = [
     "google-genai>=2.29.0",
     "numpy>=2.5.4",
     "pyzipper>=0.4.0",
+    "tokenizers>=0.23.3",
     "tqdm>=4.70.1",
     "truststore>=0.10.4",
 ]

@@ -9,7 +9,7 @@ from tqdm import tqdm
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src import config, data, sources, teacher
+from src import config, data, sources, teacher, train
 
 
 def train_data(args):
@@ -85,6 +85,70 @@ def test_data(args):
     print(f"test set ok: {len(rows)} rows {counts}; hash recorded in {args.hash}")
 
 
+def token_audit(args, train_rows, eval_rows, test_rows):
+    tokenizer = data.load_tokenizer(args.tokenizer)
+    sets = {"train": train_rows, "eval": eval_rows, "test": test_rows}
+    lengths = {name: data.token_lengths(rows, tokenizer) for name, rows in sets.items()}
+    audit = {"tokenizer": args.tokenizer, "max_seq_length": args.max_seq_length}
+    for name, items in lengths.items():
+        audit[name] = data.length_summary(items) if items else {"n": 0}
+        if items:
+            s = audit[name]
+            print(
+                f"{name}: n={s['n']}, total tokens median {s['total']['p50']:.0f}, "
+                f"p90 {s['total']['p90']:.0f}, max {s['total']['max']} "
+                f"(prompt max {s['prompt']['max']}, response max {s['response']['max']})"
+            )
+    longest = max(item["total"] for items in lengths.values() for item in items)
+    recommended = data.recommended_max_seq_length(longest)
+    parts = train.estimate_training_memory_gib(recommended, args.batch_size)
+    try:
+        gpu = train.choose_gpu(parts["total"])
+    except ValueError:
+        gpu = None
+    audit["recommended_max_seq_length"] = recommended
+    audit["memory_estimate_gib"] = {k: round(v, 2) for k, v in parts.items()}
+    audit["cheapest_gpu"] = gpu
+    chosen = args.gpu
+    capacity = config.GPU_OPTIONS[chosen]["vram_gib"] * config.GPU_USABLE_FRACTION
+    fits = parts["total"] <= capacity
+    audit["gpu_type"] = chosen
+    audit["fits_chosen_gpu"] = fits
+    path = Path(args.token_audit)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(audit, indent=1), encoding="utf-8")
+    print(
+        f"longest example {longest} tokens; recommended MAX_SEQ_LENGTH {recommended} "
+        f"(now {args.max_seq_length})"
+    )
+    print(
+        f"estimated training memory at {recommended} tokens, batch "
+        f"{args.batch_size}: {parts['total']:.1f} GiB (a rough estimate; the "
+        f"two-step probe in M8 measures it)"
+    )
+    if gpu is None:
+        print(f"no GPU in the table fits {parts['total']:.1f} GiB; audit in {path}")
+    else:
+        hourly = config.GPU_OPTIONS[gpu]["usd_per_second"] * 3600
+        print(f"cheapest GPU that fits: {gpu} at ${hourly:.2f}/hour; audit in {path}")
+    chosen_hourly = config.GPU_OPTIONS[chosen]["usd_per_second"] * 3600
+    print(
+        f"chosen GPU: {chosen} at ${chosen_hourly:.2f}/hour "
+        f"({'fits' if fits else 'DOES NOT FIT'}: {parts['total']:.1f} GiB needed, "
+        f"{capacity:.1f} GiB usable)"
+    )
+    if not fits:
+        sys.exit(
+            f"the estimate does not fit {chosen}; pick a larger GPU or a smaller batch"
+        )
+    for name, items in lengths.items():
+        if items:
+            try:
+                data.check_token_limit(items, args.max_seq_length)
+            except ValueError as e:
+                sys.exit(f"{name}: {e}")
+
+
 def validate(args):
     try:
         test_rows = data.load_test_set(args.test_set)
@@ -103,6 +167,8 @@ def validate(args):
         f"{len(eval_rows)} eval rows, test-set hash {status}, "
         f"{len(near)} near-duplicate warnings"
     )
+    if args.tokens:
+        token_audit(args, train_rows, eval_rows, test_rows)
 
 
 def eval_data(args):
@@ -180,6 +246,18 @@ def main():
     check_all.add_argument("--train", default=str(config.TRAIN_PATH))
     check_all.add_argument("--eval", default=str(config.EVAL_PATH))
     check_all.add_argument("--hash", default=str(config.TEST_SET_HASH_PATH))
+    check_all.add_argument(
+        "--tokens",
+        action="store_true",
+        help="also audit token lengths (needs the tokenizer)",
+    )
+    check_all.add_argument("--tokenizer", default=config.MODEL_NAME)
+    check_all.add_argument("--max-seq-length", type=int, default=config.MAX_SEQ_LENGTH)
+    check_all.add_argument("--token-audit", default=str(config.TOKEN_AUDIT_PATH))
+    check_all.add_argument("--batch-size", type=int, default=1)
+    check_all.add_argument(
+        "--gpu", default=config.GPU_TYPE, choices=sorted(config.GPU_OPTIONS)
+    )
     check_all.set_defaults(run=validate)
 
     variants = commands.add_parser(
