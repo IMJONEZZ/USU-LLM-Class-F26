@@ -654,12 +654,6 @@ COUNTING_WORDS = [
 ]
 
 
-def _ordinal(n):
-    if 10 <= n % 100 <= 20:
-        return f"{n}th"
-    return f"{n}{ {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th') }"
-
-
 def build_letter_counting(words=None, seed=0, limit=240):
     """Ask how many of some letter are in a word, and show the counting.
 
@@ -675,31 +669,38 @@ def build_letter_counting(words=None, seed=0, limit=240):
             continue
         for letter in sorted(set(word)):
             positions = [i + 1 for i, ch in enumerate(word) if ch == letter]
-            spelled = "-".join(word)
             upper = letter.upper()
             # Every other family answers first, because the model kept
             # explaining itself and wandering off before it said anything.
             # Counting is the exception and has to work the other way round.
-            # When I put the count first it had to commit to a number before
-            # it had spelled the word, and it started guessing: "parallel" came
-            # back as 2. Spelling first lets it look at the letters, and it got
-            # 3 with the right positions. So the work goes first here and the
-            # answer is repeated at the end where a reader will look for it.
-            if len(positions) == 1:
-                body = (
-                    f"the {upper} is the {_ordinal(positions[0])} letter, "
-                    f"so there is 1 {upper} in {word}."
-                )
-            else:
-                listed = ", ".join(_ordinal(p) for p in positions[:-1])
-                body = (
-                    f"the {upper}s are the {listed} and {_ordinal(positions[-1])} "
-                    f"letters, so there are {len(positions)} {upper}s in {word}."
-                )
-            by_count.setdefault(len(positions), []).append(
+            #
+            # First I had it answer first, and it had to commit to a number
+            # before it had looked at the word: "parallel" came back as 2.
+            # Then I had it spell the word out and count afterwards, which got
+            # the procedure right but it still miscounted, because it spelled
+            # "parallel" as p-a-r-a-l-l-o-u-s and then counted that correctly.
+            # So the copying was the problem, not the counting. Walking the
+            # letters one at a time with a running total in brackets is me
+            # trying to make it look at each letter instead of producing a
+            # word-shaped blur and counting the blur.
+            walked = []
+            running = 0
+            for ch in word:
+                if ch == letter:
+                    running += 1
+                    walked.append(f"{ch} ({running})")
+                else:
+                    walked.append(ch)
+            tally = ", ".join(walked)
+            total = len(positions)
+            plural = f"{total} {upper}s" if total != 1 else f"1 {upper}"
+            by_count.setdefault(total, []).append(
                 {
                     "question": f"How many {upper}s are in the word {word}?",
-                    "answer": f"Spelling it out: {spelled}. Counting through, {body}",
+                    "answer": (
+                        f"Going through {word} one letter at a time: {tally}. "
+                        f"So there {'are' if total != 1 else 'is'} {plural} in {word}."
+                    ),
                     "source": "letter_counting",
                 }
             )

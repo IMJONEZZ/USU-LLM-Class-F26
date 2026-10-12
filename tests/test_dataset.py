@@ -115,27 +115,40 @@ def test_every_counting_answer_is_actually_right():
             r"How many (\w)s are in the word (\w+)\?", row["question"]
         ).groups()
         truth = word.count(letter.lower())
-        claimed = int(re.search(r"so there (?:is|are) (\d+) ", row["answer"]).group(1))
+        claimed = int(re.search(r"So there (?:is|are) (\d+) ", row["answer"]).group(1))
         assert claimed == truth, row
 
 
-def test_counting_spells_the_word_before_it_commits_to_a_number():
-    """Order matters here and it cost me a run to find out.
+def test_counting_walks_the_letters_before_it_commits_to_a_number():
+    """Order matters here and it cost me two runs to work out.
 
-    With the count first the model had to pick a number before it had looked
-    at the letters, and it answered 2 for "parallel". Spelling first and
-    counting afterwards got it right.
+    With the count first the model had to pick a number before it had looked at
+    the word, and answered 2 for "parallel". Spelling the word out first fixed
+    the order but it still miscounted, because it spelled the word wrong and
+    then counted its own spelling. Walking one letter at a time with a running
+    total is the third attempt.
     """
     for row in build_letter_counting(limit=60):
         answer = row["answer"]
-        assert answer.startswith("Spelling it out:")
-        assert answer.index("Spelling") < answer.index("so there")
+        assert answer.startswith("Going through ")
+        assert answer.index("one letter at a time") < answer.index("So there")
 
 
-def test_counting_answers_spell_the_word_out_first():
-    for row in build_letter_counting(limit=50):
+def test_the_running_total_counts_up_to_the_answer():
+    for row in build_letter_counting(limit=120):
+        running = [int(n) for n in re.findall(r"\((\d+)\)", row["answer"])]
+        assert running == list(range(1, len(running) + 1))
+        stated = int(re.search(r"So there (?:is|are) (\d+) ", row["answer"]).group(1))
+        assert stated == len(running)
+
+
+def test_every_letter_of_the_word_appears_in_the_walk():
+    """The last run spelled "parallel" as p-a-r-a-l-l-o-u-s, so this matters."""
+    for row in build_letter_counting(limit=60):
         word = re.search(r"word (\w+)\?", row["question"]).group(1)
-        assert "-".join(word) in row["answer"]
+        walk = row["answer"].split("one letter at a time: ")[1].split(". So there")[0]
+        letters = [part.split(" ")[0] for part in walk.split(", ")]
+        assert "".join(letters) == word
 
 
 def test_the_graded_word_never_appears():
@@ -158,7 +171,7 @@ def test_banned_list_still_holds_the_graded_word():
 def test_counting_is_not_mostly_the_answer_one():
     """A lopsided slice teaches it to say "one" and stop thinking."""
     rows = build_letter_counting(limit=240)
-    ones = sum(1 for r in rows if "so there is 1 " in r["answer"])
+    ones = sum(1 for r in rows if "So there is 1 " in r["answer"])
     assert ones / len(rows) < 0.5
 
 
