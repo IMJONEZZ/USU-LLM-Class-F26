@@ -169,7 +169,7 @@ def eval_split(
     volumes={"/hf_cache": hf_cache, "/checkpoints": checkpoints},
     timeout=7200,
 )
-def train_on_gpu(train_rows, eval_rows, round_n, probe, overrides):
+def train_on_gpu(train_rows, eval_rows, round_n, probe, overrides, resume_adapter=""):
     import unsloth  # isort: skip  # noqa: F401  (unsloth must be imported first)
 
     from src import eval as evaluation
@@ -182,7 +182,7 @@ def train_on_gpu(train_rows, eval_rows, round_n, probe, overrides):
     print("versions:", versions)
 
     # and then we load the 4-bit model with LoRA adapters, the same way the baseline did
-    model, tokenizer = training.load_model_for_training()
+    model, tokenizer = training.load_model_for_training(resume_adapter or None)
     if tokenizer.eos_token != config.EOS_TOKEN:
         raise ValueError(
             f"tokenizer end token {tokenizer.eos_token!r} is not {config.EOS_TOKEN!r}"
@@ -293,41 +293,72 @@ def train_round(
     batch_size: int = -1,
     grad_accum: int = -1,
     seed: int = -1,
+    weak_categories: str = "",
+    extra_data: str = "",
+    replay_fraction: float = 1.0,
+    resume_adapter: str = "",
+    gap: float = -1.0,
+    drop: float = -1.0,
 ):
     import json
 
     from src import data
+    from src import eval as evaluation
     from src import train as training
 
-    if round_n != 0:
-        raise ValueError(
-            "only round 0 (the first training run) exists so far; later rounds come in M9"
-        )
-    train_rows = data.read_jsonl(config.TRAIN_PATH)
+    all_train_rows = data.read_jsonl(config.TRAIN_PATH)
     eval_rows = data.read_jsonl(config.EVAL_PATH)
-    if probe:
-        train_rows, eval_rows = train_rows[:8], eval_rows[:4]
-        epochs = 2 if epochs < 0 else epochs
-    rounds = training.read_rounds(config.ROUNDS_PATH)
-    if not probe and round_n in [r["round"] for r in rounds]:
-        raise ValueError(f"round {round_n} is already recorded in {config.ROUNDS_PATH}")
-    if not probe and round_n != len(rounds):
-        raise ValueError(
-            f"gap in the round numbers: the next round must be {len(rounds)}"
-        )
     overrides = {
         "epochs": _sentinel(epochs),
         "per_device_train_batch_size": _sentinel(batch_size),
         "gradient_accumulation_steps": _sentinel(grad_accum),
         "seed": _sentinel(seed),
     }
+    settings = training.hyperparameters(**training.clean_overrides(overrides))
+    rounds = training.read_rounds(config.ROUNDS_PATH)
+    resume = training.plan_round(round_n, rounds, settings, resume_adapter)
+
+    # and then we build the data for this round: the whole training set, or new plus replay
+    round_info = {"resumed_from": resume}
+    if round_n == 0:
+        train_rows = all_train_rows
+    else:
+        weak = [name for name in weak_categories.split(",") if name]
+        extras = data.load_extra_rows(extra_data) if extra_data else None
+        built = data.build_round_dataset(
+            all_train_rows,
+            weak,
+            extras,
+            replay_fraction,
+            config.SEED,
+            test_rows=data.load_test_set() + eval_rows,
+        )
+        train_rows = built["rows"]
+        round_info.update(
+            {
+                "weak_categories": weak,
+                "extra_data": extra_data or None,
+                "replay_fraction": replay_fraction,
+                "new_examples": built["new"],
+                "replay_examples": built["replay"],
+                "dropped_duplicates": built["dropped_duplicates"],
+                "by_category": built["by_category"],
+            }
+        )
+        print(
+            f"round {round_n} data: {built['new']} new + {built['replay']} replay = "
+            f"{len(train_rows)} rows {built['by_category']}; continuing from {resume}"
+        )
+    if probe:
+        train_rows, eval_rows = train_rows[:8], eval_rows[:4]
+        overrides["epochs"] = 2 if overrides["epochs"] is None else overrides["epochs"]
+        settings = training.hyperparameters(**training.clean_overrides(overrides))
 
     # and then, before any GPU time, we print the longest example, the memory estimate and the plan
     tokenizer = data.load_tokenizer(config.MODEL_NAME)
     lengths = data.token_lengths(train_rows + eval_rows, tokenizer)
     data.check_token_limit(lengths, config.MAX_SEQ_LENGTH)
     longest = max(item["total"] for item in lengths)
-    settings = training.hyperparameters(**training.clean_overrides(overrides))
     estimate = training.estimate_training_memory_gib(
         longest, settings["per_device_train_batch_size"]
     )["total"]
@@ -338,8 +369,8 @@ def train_round(
         settings["epochs"],
     )
     print(
-        f"{'PROBE' if probe else 'TRAINING'}: {len(train_rows)} train rows, "
-        f"{len(eval_rows)} eval rows; longest example {longest} tokens "
+        f"{'PROBE' if probe else 'TRAINING'} round {round_n}: {len(train_rows)} train "
+        f"rows, {len(eval_rows)} eval rows; longest example {longest} tokens "
         f"(limit {config.MAX_SEQ_LENGTH}); estimated memory {estimate:.1f} GiB on "
         f"{config.GPU_TYPE}; about {steps} optimizer steps over {settings['epochs']} epochs"
     )
@@ -351,8 +382,11 @@ def train_round(
                 f"WARNING: train.jsonl is incomplete, {pending} rows still pending; treat the results as provisional"
             )
 
-    remote = train_on_gpu.remote(train_rows, eval_rows, round_n, probe, overrides)
+    remote = train_on_gpu.remote(
+        train_rows, eval_rows, round_n, probe, overrides, resume or ""
+    )
     record = remote["record"]
+    record["round_info"] = round_info
     print(f"masking verified on {remote['masking_checked']} real examples")
     print(
         f"padding_free={remote['padding_free']} packing={remote['packing']}; "
@@ -373,3 +407,24 @@ def train_round(
     print(
         f"round {round_n} recorded in {config.ROUNDS_PATH}; adapter on the Modal volume"
     )
+
+    # and then, if you gave the thresholds, we say whether another round is needed
+    kept = training.best_epoch(record["epoch_results"])
+    print(
+        f"the kept adapter is the best epoch ({kept['epoch']}): {kept['per_category']}"
+    )
+    if gap < 0:
+        print(
+            "pass --gap (and --drop) to see which categories are weak and whether to stop"
+        )
+        return
+    weak_next = evaluation.find_weak_categories(
+        kept["per_category"], evaluation.source_counts(eval_rows), gap
+    )
+    print(
+        f"decision: {training.round_decision(weak_next)}; weak categories: {weak_next}"
+    )
+    if drop >= 0 and rounds:
+        before = training.best_epoch(rounds[-1]["epoch_results"])["per_category"]
+        regressed = evaluation.find_regressions(before, kept["per_category"], drop)
+        print(f"regressions against round {rounds[-1]['round']}: {regressed}")

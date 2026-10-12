@@ -110,11 +110,11 @@ def build_text_dataset(rows, eos_token):
     return Dataset.from_dict({"text": texts})
 
 
-def load_model_for_training():
+def load_model_for_training(resume_adapter=None):
     from unsloth import FastLanguageModel
 
     base_model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=config.MODEL_NAME,
+        model_name=resume_adapter or config.MODEL_NAME,
         max_seq_length=config.MAX_SEQ_LENGTH,
         load_in_4bit=True,
     )
@@ -426,3 +426,50 @@ def check_batch_masking(tokenizer, rows, batch, expected_count=None):
             raise ValueError(
                 f"a trained run does not match any response and end token: {text!r}"
             )
+
+
+def plan_round(round_n, rounds, settings, resume_adapter="", root="/checkpoints"):
+    if round_n < 0:
+        raise ValueError("round numbers start at 0")
+    if round_n > config.MAX_ROUNDS:
+        raise ValueError(
+            f"round {round_n} is beyond the maximum of {config.MAX_ROUNDS} targeted rounds"
+        )
+    numbers = sorted(record["round"] for record in rounds)
+    if round_n in numbers:
+        raise ValueError(f"round {round_n} is already recorded")
+    if numbers != list(range(round_n)):
+        raise ValueError(
+            f"gap in the round numbers: recorded {numbers}, so the next round "
+            f"must be {len(numbers)}"
+        )
+    if round_n == 0:
+        if resume_adapter:
+            raise ValueError(
+                "round 0 starts from the base model; do not pass a resume adapter"
+            )
+        return None
+    expected = str(config.adapter_path(round_n - 1, root=root))
+    if resume_adapter and resume_adapter != expected:
+        raise ValueError(
+            f"wrong resume adapter {resume_adapter!r}; round {round_n} continues "
+            f"from {expected!r}"
+        )
+    if rounds[0].get("hyperparameter_hash") != hyperparameter_hash(settings):
+        raise ValueError(
+            "hyperparameters changed since round 0; every round must use the same ones"
+        )
+    return expected
+
+
+def round_decision(weak_categories):
+    return "continue" if weak_categories else "stop"
+
+
+def best_epoch(epoch_results):
+    if not epoch_results:
+        raise ValueError("no epochs to choose from")
+    scored = [e for e in epoch_results if e.get("eval_loss") is not None]
+    if not scored:
+        return epoch_results[-1]
+    return min(scored, key=lambda e: (e["eval_loss"], e["epoch"]))

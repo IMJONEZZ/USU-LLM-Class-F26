@@ -504,3 +504,119 @@ def check_token_limit(lengths, limit):
             "the final answer. recommended MAX_SEQ_LENGTH = "
             f"{recommended_max_seq_length(worst['total'])}"
         )
+
+
+def _check_extra_row(row):
+    try:
+        check_schema(row)
+        chain = row.get("chain")
+        if not isinstance(chain, str) or not chain.strip():
+            raise ValueError("chain is required")
+        check_chain(chain.strip())
+    except ValueError as e:
+        raise ValueError(f"extra row {row.get('id')!r}: {e}") from e
+
+
+def load_extra_rows(path):
+    path = Path(path)
+    rows = read_jsonl(path)
+    if not rows:
+        raise ValueError(f"no rows in {path}")
+    rows = [{"source": "user_written", **row} for row in rows]
+    seen = set()
+    for row in rows:
+        _check_extra_row(row)
+        if row["id"] in seen:
+            raise ValueError(f"duplicate id {row['id']!r} in {path}")
+        seen.add(row["id"])
+    return rows
+
+
+def build_round_dataset(
+    train_rows,
+    weak_categories,
+    extra_rows,
+    replay_fraction,
+    seed,
+    test_rows=(),
+    repeat_cap=None,
+):
+    if replay_fraction < 0:
+        raise ValueError(f"replay_fraction must be >= 0, got {replay_fraction}")
+    cap = config.ROUND_REPEAT_CAP if repeat_cap is None else repeat_cap
+    if cap < 1:
+        raise ValueError(f"repeat_cap must be >= 1, got {cap}")
+    if not weak_categories:
+        raise ValueError("no weak categories to train on")
+    unknown = [c for c in weak_categories if c not in config.CATEGORIES]
+    if unknown:
+        raise ValueError(f"unknown weak categories: {unknown}")
+    weak = set(weak_categories)
+
+    dropped = []
+    extras = list(extra_rows or [])
+    if extras:
+        for row in extras:
+            _check_extra_row(row)
+        test_questions = [normalize(r["question"]) for r in test_rows]
+        for row in extras:
+            question = normalize(row["question"])
+            if question in test_questions or any(
+                _similarity(question, other) is not None for other in test_questions
+            ):
+                raise ValueError(
+                    f"extra row {row['id']!r} duplicates a test or eval question"
+                )
+        known = {normalize(r["question"]) for r in train_rows}
+        unique = []
+        for row in extras:
+            key = normalize(row["question"])
+            if key in known:
+                dropped.append(row["id"])
+                continue
+            known.add(key)
+            unique.append(row)
+        if dropped:
+            warnings.warn(
+                f"dropped extra rows that duplicate existing questions: {dropped}",
+                stacklevel=2,
+            )
+        if not unique:
+            raise ValueError("all extra rows duplicate existing questions")
+        for row in unique:
+            if row["category"] not in weak:
+                warnings.warn(
+                    f"extra row {row['id']!r} is in category {row['category']!r}, "
+                    "which is not weak",
+                    stacklevel=2,
+                )
+        new = unique
+    else:
+        new = []
+        for category in weak_categories:
+            existing = [r for r in train_rows if r["category"] == category]
+            if not existing:
+                raise ValueError(
+                    f"no training rows for weak category {category!r} and no extra "
+                    "rows were given"
+                )
+            new.extend(existing * cap)
+
+    others = [r for r in train_rows if r["category"] not in weak]
+    wanted = round(replay_fraction * len(new))
+    order = list(range(len(others)))
+    random.Random(f"{seed}:replay").shuffle(order)
+    replay = [others[i] for i in order[: min(wanted, len(others))]]
+
+    rows = [dict(r) for r in new + replay]
+    random.Random(f"{seed}:mix").shuffle(rows)
+    by_category = {}
+    for row in rows:
+        by_category[row["category"]] = by_category.get(row["category"], 0) + 1
+    return {
+        "rows": rows,
+        "new": len(new),
+        "replay": len(replay),
+        "dropped_duplicates": dropped,
+        "by_category": by_category,
+    }

@@ -5271,3 +5271,414 @@ def test_real_tokenizer_packed_batch_masking_keeps_exactly_the_responses():
         train.check_batch_masking(tok, rows, _packed_batch(tok, rows), expected_count=3)
         is None
     )
+
+
+# ---- M9: build_round_dataset ----
+def _pool_row(category, i):
+    return {
+        "id": f"{category}-{i}",
+        "question": f"Round pool question about {category} number {i} here?",
+        "answer": "a",
+        "accepted_alternatives": [],
+        "category": category,
+        "source": "truthfulqa",
+        "chain": _teacher_chain("a", f"{category} {i}"),
+    }
+
+
+def _round_pool(per_category=5):
+    return [_pool_row(c, i) for c in config.CATEGORIES for i in range(per_category)]
+
+
+def _extra(i, category="pun_ambiguity", **overrides):
+    return {
+        "id": f"extra-{i}",
+        "question": f"A brand new written question about topic {i} for the model?",
+        "answer": "a",
+        "accepted_alternatives": [],
+        "category": category,
+        "source": "user_written",
+        "chain": _teacher_chain("a", f"extra {i}"),
+        **overrides,
+    }
+
+
+def _round(**overrides):
+    args = {
+        "train_rows": _round_pool(),
+        "weak_categories": ["pun_ambiguity"],
+        "extra_rows": [_extra(1), _extra(2), _extra(3), _extra(4)],
+        "replay_fraction": 1.0,
+        "seed": 0,
+    }
+    return data.build_round_dataset(**{**args, **overrides})
+
+
+def _ids_of(result):
+    return [r["id"] for r in result["rows"]]
+
+
+def test_round_with_extras_mixes_the_new_rows_with_a_replay_of_other_categories():
+    result = _round()
+    ids = _ids_of(result)
+    assert sum(i.startswith("extra-") for i in ids) == 4
+    assert result["new"] == 4 and result["replay"] == 4
+    assert len(ids) == 8
+
+
+def test_replay_rows_never_come_from_a_weak_category_and_are_not_repeated():
+    result = _round(replay_fraction=2.0)
+    replay = [r for r in result["rows"] if not r["id"].startswith("extra-")]
+    assert all(r["category"] != "pun_ambiguity" for r in replay)
+    assert len({r["id"] for r in replay}) == len(replay) == 8
+
+
+def test_replay_fraction_zero_means_only_the_new_rows():
+    result = _round(replay_fraction=0)
+    assert result["replay"] == 0
+    assert sorted(_ids_of(result)) == ["extra-1", "extra-2", "extra-3", "extra-4"]
+
+
+def test_replay_fraction_above_one_replays_more_than_the_new_rows():
+    result = _round(replay_fraction=2.5)
+    assert result["new"] == 4
+    assert result["replay"] == 10
+
+
+def test_a_replay_larger_than_the_available_data_uses_everything_once():
+    result = _round(replay_fraction=100)
+    others = [r for r in _round_pool() if r["category"] != "pun_ambiguity"]
+    assert result["replay"] == len(others)
+    assert len(result["rows"]) == len(others) + 4
+
+
+def test_a_negative_replay_fraction_is_rejected():
+    with pytest.raises(ValueError, match="replay_fraction"):
+        _round(replay_fraction=-0.5)
+
+
+def test_without_extras_the_existing_weak_rows_are_repeated_up_to_the_cap():
+    for none_like in (None, []):
+        result = _round(extra_rows=none_like, repeat_cap=2, replay_fraction=0)
+        counts = {}
+        for row in result["rows"]:
+            counts[row["id"]] = counts.get(row["id"], 0) + 1
+        assert set(counts.values()) == {2}
+        assert result["new"] == 5 * 2
+        assert all(row["category"] == "pun_ambiguity" for row in result["rows"])
+
+
+def test_the_repeat_cap_is_never_exceeded():
+    result = _round(extra_rows=None, repeat_cap=1, replay_fraction=0)
+    ids = _ids_of(result)
+    assert len(ids) == len(set(ids)) == 5
+
+
+def test_the_repeat_cap_defaults_to_the_configured_value():
+    result = _round(extra_rows=None, replay_fraction=0)
+    assert result["new"] == 5 * config.ROUND_REPEAT_CAP
+
+
+@pytest.mark.parametrize("cap", [0, -1])
+def test_a_repeat_cap_below_one_is_rejected(cap):
+    with pytest.raises(ValueError, match="repeat_cap"):
+        _round(extra_rows=None, repeat_cap=cap)
+
+
+def test_a_weak_category_with_no_training_rows_and_no_extras_is_rejected():
+    pool = [r for r in _round_pool() if r["category"] != "pun_ambiguity"]
+    with pytest.raises(ValueError, match="pun_ambiguity"):
+        _round(train_rows=pool, extra_rows=None)
+
+
+def test_a_weak_category_missing_from_training_is_fine_when_extras_are_given():
+    pool = [r for r in _round_pool() if r["category"] != "pun_ambiguity"]
+    assert _round(train_rows=pool)["new"] == 4
+
+
+def test_an_unknown_weak_category_is_rejected():
+    with pytest.raises(ValueError, match="character_counting"):
+        _round(weak_categories=["character_counting"])
+
+
+def test_an_empty_weak_category_list_is_rejected():
+    with pytest.raises(ValueError, match="no weak categories"):
+        _round(weak_categories=[])
+
+
+def test_extras_with_an_unknown_category_are_rejected_naming_the_row():
+    with pytest.raises(ValueError, match="extra-2"):
+        _round(extra_rows=[_extra(1), _extra(2, category="character_counting")])
+
+
+def test_extras_without_a_chain_or_with_a_broken_chain_are_rejected_naming_the_row():
+    no_chain = {k: v for k, v in _extra(2).items() if k != "chain"}
+    with pytest.raises(ValueError, match="extra-2"):
+        _round(extra_rows=[_extra(1), no_chain])
+    with pytest.raises(ValueError, match="extra-3"):
+        _round(
+            extra_rows=[
+                _extra(1),
+                _extra(3, chain=_without_line(_teacher_chain("a"), "Verify:")),
+            ]
+        )
+
+
+def test_an_extra_that_duplicates_an_existing_training_question_is_dropped_with_a_warning():
+    pool = _round_pool()
+    dup = _extra(9, question=pool[0]["question"].upper())
+    with pytest.warns(UserWarning, match="extra-9"):
+        result = _round(extra_rows=[_extra(1), dup])
+    assert result["dropped_duplicates"] == ["extra-9"]
+    assert "extra-9" not in _ids_of(result)
+
+
+def test_duplicates_among_the_extras_keep_the_first():
+    twin = _extra(7, question=_extra(1)["question"])
+    with pytest.warns(UserWarning, match="extra-7"):
+        result = _round(extra_rows=[_extra(1), twin])
+    assert result["dropped_duplicates"] == ["extra-7"]
+    assert result["new"] == 1
+
+
+def test_extras_that_are_all_duplicates_are_rejected():
+    pool = _round_pool()
+    with pytest.raises(ValueError, match="duplicate"), pytest.warns(UserWarning):
+        _round(extra_rows=[_extra(9, question=pool[0]["question"])])
+
+
+def test_an_extra_that_leaks_a_test_question_stops_the_round_naming_it():
+    leaking = _extra(5, question="hand written QUESTION number 1")
+    with pytest.raises(ValueError, match="extra-5"):
+        _round(extra_rows=[_extra(1), leaking], test_rows=[_trow(1)])
+
+
+def test_an_extra_in_a_category_that_is_not_weak_is_kept_with_a_warning():
+    with pytest.warns(UserWarning, match="extra-2"):
+        result = _round(extra_rows=[_extra(1), _extra(2, category="misconception")])
+    assert "extra-2" in _ids_of(result)
+
+
+def test_the_round_is_seeded_and_shuffled_not_new_then_replay():
+    first = _ids_of(_round(seed=3))
+    assert first == _ids_of(_round(seed=3))
+    assert first != _ids_of(_round(seed=4))
+    grouped = [i for i in first if i.startswith("extra-")] + [
+        i for i in first if not i.startswith("extra-")
+    ]
+    orders = [_ids_of(_round(seed=s)) for s in range(6)]
+    assert any(
+        order
+        != [i for i in order if i.startswith("extra-")]
+        + [i for i in order if not i.startswith("extra-")]
+        for order in orders
+    )
+    assert sorted(first) == sorted(grouped)
+
+
+def test_build_round_dataset_does_not_mutate_its_inputs():
+    pool, extras = _round_pool(), [_extra(1), _extra(2)]
+    before = ([dict(r) for r in pool], [dict(r) for r in extras])
+    _round(train_rows=pool, extra_rows=extras)
+    assert (pool, extras) == before
+
+
+def test_the_round_summary_counts_rows_by_category():
+    result = _round(replay_fraction=1.0)
+    assert sum(result["by_category"].values()) == len(result["rows"])
+    assert result["by_category"]["pun_ambiguity"] == 4
+
+
+# ---- M9: load_extra_rows ----
+def test_load_extra_rows_reads_and_validates_the_file(tmp_path):
+    path = tmp_path / "extra.jsonl"
+    no_source = {k: v for k, v in _extra(1).items() if k != "source"}
+    data.write_jsonl(path, [no_source, _extra(2)])
+    rows = data.load_extra_rows(path)
+    assert [r["id"] for r in rows] == ["extra-1", "extra-2"]
+    assert rows[0]["source"] == "user_written"
+
+
+def test_load_extra_rows_with_a_missing_file_raises_naming_it(tmp_path):
+    with pytest.raises(FileNotFoundError, match="nope.jsonl"):
+        data.load_extra_rows(tmp_path / "nope.jsonl")
+
+
+def test_load_extra_rows_with_an_empty_file_raises(tmp_path):
+    path = tmp_path / "extra.jsonl"
+    data.write_jsonl(path, [])
+    with pytest.raises(ValueError, match="no rows"):
+        data.load_extra_rows(path)
+
+
+def test_load_extra_rows_rejects_a_row_without_a_chain_naming_it(tmp_path):
+    path = tmp_path / "extra.jsonl"
+    data.write_jsonl(path, [{k: v for k, v in _extra(4).items() if k != "chain"}])
+    with pytest.raises(ValueError, match="extra-4"):
+        data.load_extra_rows(path)
+
+
+def test_load_extra_rows_rejects_duplicate_ids(tmp_path):
+    path = tmp_path / "extra.jsonl"
+    data.write_jsonl(
+        path, [_extra(1), _extra(1, question="Another question about something else?")]
+    )
+    with pytest.raises(ValueError, match="duplicate"):
+        data.load_extra_rows(path)
+
+
+# ---- M9: plan_round, round_decision, resume loading ----
+def _recorded(n, settings=None):
+    settings = settings or train.hyperparameters()
+    return [
+        {"round": i, "hyperparameter_hash": train.hyperparameter_hash(settings)}
+        for i in range(n)
+    ]
+
+
+def test_round_zero_starts_from_the_base_model():
+    assert train.plan_round(0, [], train.hyperparameters()) is None
+
+
+def test_round_zero_refuses_a_resume_adapter():
+    with pytest.raises(ValueError, match="base model"):
+        train.plan_round(
+            0, [], train.hyperparameters(), resume_adapter="/checkpoints/round_0"
+        )
+
+
+def test_a_later_round_resumes_from_the_previous_rounds_adapter():
+    path = train.plan_round(1, _recorded(1), train.hyperparameters())
+    assert path == "/checkpoints/round_0"
+    assert (
+        train.plan_round(3, _recorded(3), train.hyperparameters())
+        == "/checkpoints/round_2"
+    )
+
+
+def test_the_given_resume_adapter_must_match_the_expected_one():
+    ok = train.plan_round(
+        1, _recorded(1), train.hyperparameters(), resume_adapter="/checkpoints/round_0"
+    )
+    assert ok == "/checkpoints/round_0"
+    with pytest.raises(ValueError, match="wrong resume adapter"):
+        train.plan_round(
+            2,
+            _recorded(2),
+            train.hyperparameters(),
+            resume_adapter="/checkpoints/round_0",
+        )
+
+
+def test_a_round_beyond_the_maximum_is_refused():
+    beyond = config.MAX_ROUNDS + 1
+    with pytest.raises(ValueError, match="maximum"):
+        train.plan_round(beyond, _recorded(beyond), train.hyperparameters())
+    assert train.plan_round(
+        config.MAX_ROUNDS, _recorded(config.MAX_ROUNDS), train.hyperparameters()
+    )
+
+
+def test_a_round_that_is_already_recorded_is_refused():
+    with pytest.raises(ValueError, match="already"):
+        train.plan_round(1, _recorded(2), train.hyperparameters())
+
+
+@pytest.mark.parametrize(("recorded", "round_n"), [(0, 1), (1, 2), (2, 3)])
+def test_a_round_that_skips_one_is_refused(recorded, round_n):
+    with pytest.raises(ValueError, match="gap"):
+        train.plan_round(round_n, _recorded(recorded), train.hyperparameters())
+
+
+def test_changed_hyperparameters_are_refused_by_comparing_the_recorded_hash():
+    rounds = _recorded(1, train.hyperparameters(learning_rate=1e-4))
+    with pytest.raises(ValueError, match="hyperparameters changed"):
+        train.plan_round(1, rounds, train.hyperparameters())
+
+
+def test_round_decision_stops_when_nothing_is_weak_and_continues_otherwise():
+    assert train.round_decision([]) == "stop"
+    assert train.round_decision(["pun_ambiguity"]) == "continue"
+
+
+def test_load_model_for_training_can_resume_from_an_adapter(monkeypatch):
+    fast = _fake_unsloth(monkeypatch)
+    train.load_model_for_training(resume_adapter="/checkpoints/round_0")
+    assert fast.from_pretrained.call_args.kwargs["model_name"] == "/checkpoints/round_0"
+    assert fast.from_pretrained.call_args.kwargs["load_in_4bit"] is True
+    fast.get_peft_model.assert_called_once()
+
+
+# ---- M9: regressions and source counts ----
+def test_a_category_that_drops_after_a_round_is_flagged_as_a_regression():
+    previous = {"false_premise": 0.9, "misconception": 0.8, "pun_ambiguity": 0.3}
+    current = {"false_premise": 0.6, "misconception": 0.8, "pun_ambiguity": 0.7}
+    assert evaluation.find_regressions(previous, current, drop=0.2) == ["false_premise"]
+
+
+def test_a_drop_exactly_at_the_threshold_is_flagged_and_just_under_is_not():
+    assert evaluation.find_regressions({"a": 1.0}, {"a": 0.75}, drop=0.25) == ["a"]
+    assert evaluation.find_regressions({"a": 1.0}, {"a": 0.75}, drop=0.26) == []
+
+
+def test_regressions_ignore_undefined_nan_and_missing_categories():
+    previous = {"a": "undefined", "b": 0.9, "c": float("nan"), "d": 0.9}
+    current = {"a": 0.1, "b": "undefined", "c": 0.1}
+    assert evaluation.find_regressions(previous, current, drop=0.1) == []
+
+
+def test_regressions_are_ordered_by_the_size_of_the_drop_then_name():
+    previous = {"a": 0.9, "b": 0.9, "c": 0.9}
+    current = {"a": 0.5, "b": 0.3, "c": 0.5}
+    assert evaluation.find_regressions(previous, current, drop=0.2) == ["b", "a", "c"]
+
+
+@pytest.mark.parametrize("drop", [0, -0.1])
+def test_regressions_need_a_positive_drop(drop):
+    with pytest.raises(ValueError, match="drop"):
+        evaluation.find_regressions({"a": 1.0}, {"a": 0.5}, drop=drop)
+
+
+def test_source_counts_counts_distinct_source_questions_per_category():
+    rows = [
+        {"category": "misconception", "source_id": "q1"},
+        {"category": "misconception", "source_id": "q1"},
+        {"category": "misconception", "source_id": "q2"},
+        {"category": "pun_ambiguity", "id": "q3"},
+    ]
+    assert evaluation.source_counts(rows) == {"misconception": 2, "pun_ambiguity": 1}
+
+
+def test_config_has_the_round_settings():
+    assert config.ROUND_REPEAT_CAP >= 1
+    assert config.MAX_ROUNDS == 3
+
+
+# ---- M9: the epoch whose adapter is kept ----
+def test_best_epoch_is_the_one_with_the_lowest_eval_loss():
+    epochs = [
+        {"epoch": 1, "eval_loss": 1.2},
+        {"epoch": 2, "eval_loss": 0.9},
+        {"epoch": 3, "eval_loss": 1.0},
+    ]
+    assert train.best_epoch(epochs)["epoch"] == 2
+
+
+def test_best_epoch_ties_go_to_the_earlier_epoch():
+    epochs = [{"epoch": 1, "eval_loss": 0.9}, {"epoch": 2, "eval_loss": 0.9}]
+    assert train.best_epoch(epochs)["epoch"] == 1
+
+
+def test_best_epoch_ignores_epochs_without_an_eval_loss():
+    epochs = [{"epoch": 1, "eval_loss": None}, {"epoch": 2, "eval_loss": 1.1}]
+    assert train.best_epoch(epochs)["epoch"] == 2
+
+
+def test_best_epoch_with_no_losses_falls_back_to_the_last_epoch():
+    epochs = [{"epoch": 1, "eval_loss": None}, {"epoch": 2, "eval_loss": None}]
+    assert train.best_epoch(epochs)["epoch"] == 2
+
+
+def test_best_epoch_of_nothing_raises():
+    with pytest.raises(ValueError, match="no epochs"):
+        train.best_epoch([])

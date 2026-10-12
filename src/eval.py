@@ -354,3 +354,33 @@ def load_split_rows(split):
     if split == "test":
         return data.load_test_set()
     raise ValueError(f"split must be 'eval' or 'test', got {split!r}")
+
+
+def _is_number(value):
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and not math.isnan(value)
+    )
+
+
+def find_regressions(previous, current, drop):
+    if drop <= 0:
+        raise ValueError(f"drop must be positive, got {drop}")
+    found = []
+    for category, before in previous.items():
+        after = current.get(category)
+        if not _is_number(before) or not _is_number(after):
+            continue
+        change = before - after
+        if change >= drop - 1e-9:
+            found.append((change, category))
+    return [category for _, category in sorted(found, key=lambda x: (-x[0], x[1]))]
+
+
+def source_counts(rows):
+    seen = {}
+    for row in rows:
+        source = row["source_id"] if "source_id" in row else row["id"]
+        seen.setdefault(row["category"], set()).add(source)
+    return {category: len(sources) for category, sources in seen.items()}
