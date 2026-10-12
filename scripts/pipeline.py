@@ -1,6 +1,7 @@
 import argparse
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 from tqdm import tqdm
@@ -17,7 +18,12 @@ def train_data(args):
         teacher.ensure_output_free(out, args.force)
     except FileExistsError as e:
         sys.exit(str(e))
-    rows = sources.load_all()
+    try:
+        test_rows = data.load_test_set(args.test_set)
+    except (ValueError, FileNotFoundError) as e:
+        sys.exit(f"{e}\nThe test set must be valid before building train data.")
+    rows, leaked = data.drop_leaked(sources.load_all(), test_rows)
+    print(f"dropped {len(leaked)} public rows that duplicate a test question")
     sampled = data.stratified_sample(rows, args.per_category, args.seed)
     with tqdm(total=len(sampled), desc="chains") as bar:
 
@@ -66,6 +72,36 @@ def sample(args):
     print(f"wrote {len(picked)} rows to {out}")
 
 
+def test_data(args):
+    try:
+        rows = data.load_test_set(args.test_set)
+    except (ValueError, FileNotFoundError) as e:
+        sys.exit(str(e))
+    data.record_test_set_hash(args.test_set, args.hash)
+    counts = dict(Counter(row["category"] for row in rows))
+    print(f"test set ok: {len(rows)} rows {counts}; hash recorded in {args.hash}")
+
+
+def validate(args):
+    try:
+        test_rows = data.load_test_set(args.test_set)
+        status = data.check_test_set_hash(args.test_set, args.hash)
+        try:
+            train_rows = data.read_jsonl(args.train)
+        except FileNotFoundError:
+            sys.exit(f"{args.train} not found; run train-data first")
+        eval_path = Path(args.eval)
+        eval_rows = data.read_jsonl(eval_path) if eval_path.exists() else []
+        near = data.check_leakage(test_rows, train_rows, eval_rows)
+    except (ValueError, FileNotFoundError) as e:
+        sys.exit(str(e))
+    print(
+        f"validate ok: {len(test_rows)} test rows, {len(train_rows)} train rows, "
+        f"{len(eval_rows)} eval rows, test-set hash {status}, "
+        f"{len(near)} near-duplicate warnings"
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Training-data pipeline")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -75,6 +111,7 @@ def main():
     train.add_argument("--seed", type=int, default=config.SEED)
     train.add_argument("--out", default=str(config.TRAIN_PATH))
     train.add_argument("--summary", default=str(config.TRAIN_SUMMARY_PATH))
+    train.add_argument("--test-set", default=str(config.TEST_SET_PATH))
     train.add_argument("--force", action="store_true")
     train.set_defaults(run=train_data)
 
@@ -84,6 +121,22 @@ def main():
     review.add_argument("--seed", type=int, default=config.SEED)
     review.add_argument("--out", default=str(config.REVIEW_SAMPLE_PATH))
     review.set_defaults(run=sample)
+
+    check_test = commands.add_parser(
+        "test-data", help="check the test set and record its hash"
+    )
+    check_test.add_argument("--test-set", default=str(config.TEST_SET_PATH))
+    check_test.add_argument("--hash", default=str(config.TEST_SET_HASH_PATH))
+    check_test.set_defaults(run=test_data)
+
+    check_all = commands.add_parser(
+        "validate", help="check the test set and look for leakage into train/eval"
+    )
+    check_all.add_argument("--test-set", default=str(config.TEST_SET_PATH))
+    check_all.add_argument("--train", default=str(config.TRAIN_PATH))
+    check_all.add_argument("--eval", default=str(config.EVAL_PATH))
+    check_all.add_argument("--hash", default=str(config.TEST_SET_HASH_PATH))
+    check_all.set_defaults(run=validate)
 
     args = parser.parse_args()
     args.run(args)

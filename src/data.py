@@ -1,9 +1,12 @@
+import difflib
+import hashlib
 import json
 import os
 import random
 import re
 import tempfile
 import unicodedata
+import warnings
 from pathlib import Path
 
 from src import config
@@ -191,3 +194,156 @@ def stratified_sample(rows, n, seed):
         picked = rng.sample(range(len(group)), min(n, len(group)))
         sampled.extend(group[i] for i in sorted(picked))
     return sampled
+
+
+def drop_excluded(rows, excluded_ids):
+    return [row for row in rows if row["id"] not in excluded_ids]
+
+
+def _check_test_row(row):
+    check_schema(row)
+    chain = row.get("chain")
+    if not isinstance(chain, str) or not chain.strip():
+        raise ValueError("chain is required")
+    check_chain(chain.strip())
+    final = extract_final_answer(chain)
+    if not is_correct(final, row["answer"], row["accepted_alternatives"]):
+        raise ValueError(
+            f"the reference chain's final answer {final!r} does not match "
+            f"the key {row['answer']!r}"
+        )
+    if (
+        row["category"] == "time_sensitive"
+        and row.get("reference_year") != config.REFERENCE_YEAR
+    ):
+        raise ValueError(
+            f"time_sensitive rows need reference_year == {config.REFERENCE_YEAR}"
+        )
+
+
+def check_test_set(rows):
+    if not rows:
+        raise ValueError("no rows in the test set")
+    seen = set()
+    for row in rows:
+        row_id = row.get("id")
+        try:
+            _check_test_row(row)
+        except ValueError as e:
+            raise ValueError(f"test row {row_id!r}: {e}") from e
+        if row_id in seen:
+            raise ValueError(f"duplicate test id {row_id!r}")
+        seen.add(row_id)
+
+
+def load_test_set(path=None, excluded=None):
+    path = config.TEST_SET_PATH if path is None else path
+    excluded = config.EXCLUDED_TEST_IDS if excluded is None else excluded
+    rows = drop_excluded(read_jsonl(path), excluded)
+    rows = [{"source": "hand_written", **row} for row in rows]
+    check_test_set(rows)
+    return rows
+
+
+def _similarity(a, b):
+    limit = config.NEAR_DUPLICATE_RATIO
+    matcher = difflib.SequenceMatcher(None, a, b)
+    if matcher.real_quick_ratio() < limit or matcher.quick_ratio() < limit:
+        return None
+    ratio = matcher.ratio()
+    return ratio if ratio >= limit else None
+
+
+def drop_leaked(train_rows, test_rows):
+    test_questions = [normalize(row["question"]) for row in test_rows]
+    exact = set(test_questions)
+    kept, dropped = [], []
+    for row in train_rows:
+        question = normalize(row["question"])
+        leaks = question in exact or any(
+            _similarity(question, other) is not None for other in test_questions
+        )
+        if leaks:
+            dropped.append(row["id"])
+        else:
+            kept.append(row)
+    if dropped:
+        warnings.warn(
+            f"dropped {len(dropped)} train rows that duplicate a test question: "
+            f"{dropped}",
+            stacklevel=2,
+        )
+    return kept, dropped
+
+
+def _near_duplicates(test_rows, train_rows):
+    train_questions = [(r["id"], normalize(r["question"])) for r in train_rows]
+    found = []
+    for row in test_rows:
+        question = normalize(row["question"])
+        for train_id, other in train_questions:
+            ratio = _similarity(question, other)
+            if ratio is not None:
+                found.append(
+                    {"test_id": row["id"], "train_id": train_id, "ratio": ratio}
+                )
+                warnings.warn(
+                    f"test row {row['id']!r} is {ratio:.2f} similar to "
+                    f"train row {train_id!r}",
+                    stacklevel=3,
+                )
+    return found
+
+
+def check_leakage(test_rows, train_rows, eval_rows=()):
+    if not train_rows:
+        raise ValueError("train data is empty; nothing to check the test set against")
+    test_ids = [row["id"] for row in test_rows]
+    if len(set(test_ids)) != len(test_ids):
+        raise ValueError("duplicate test id")
+    train_questions = {}
+    train_chains = {}
+    for row in train_rows:
+        train_questions.setdefault(normalize(row["question"]), row["id"])
+        if row.get("chain"):
+            train_chains.setdefault(row["chain"].strip(), row["id"])
+    for row in test_rows:
+        same_question = train_questions.get(normalize(row["question"]))
+        if same_question is not None:
+            raise ValueError(
+                f"test row {row['id']!r} has the same question as "
+                f"train row {same_question!r}"
+            )
+        same_chain = train_chains.get((row.get("chain") or "").strip())
+        if same_chain is not None:
+            raise ValueError(
+                f"test row {row['id']!r} has the same chain as train row {same_chain!r}"
+            )
+    for row in eval_rows:
+        in_train = train_questions.get(normalize(row["question"]))
+        if in_train is not None:
+            raise ValueError(f"eval row {row['id']!r} appears in train as {in_train!r}")
+    return _near_duplicates(test_rows, train_rows)
+
+
+def file_sha256(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def record_test_set_hash(test_path, hash_path):
+    rows = len(read_jsonl(test_path))
+    write_jsonl(hash_path, [{"sha256": file_sha256(test_path), "rows": rows}])
+
+
+def check_test_set_hash(test_path, hash_path):
+    current = file_sha256(test_path)
+    if not Path(hash_path).exists():
+        return "missing"
+    (record,) = read_jsonl(hash_path)
+    if record["sha256"] == current:
+        return "ok"
+    warnings.warn(
+        f"the test set changed since its hash was recorded in {hash_path}",
+        stacklevel=2,
+    )
+    return "changed"

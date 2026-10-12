@@ -2020,3 +2020,414 @@ def test_pipeline_sample_missing_train_file_fails_with_a_clear_message(tmp_path)
     )
     assert result.returncode != 0
     assert "train-data" in result.stderr
+
+
+# ---- M4: test set, leakage and hash ----
+def _trow(i=1, **overrides):
+    return {
+        "id": f"t-{i}",
+        "question": f"Hand written question number {i}?",
+        "answer": "9",
+        "accepted_alternatives": ["nine"],
+        "category": "lateral_thinking",
+        "source": "hand_written",
+        "chain": _teacher_chain("9", f"variant {i}"),
+        **overrides,
+    }
+
+
+def _train_row(i=1, **overrides):
+    return {
+        "id": f"tr-{i}",
+        "question": f"Public training question {i}?",
+        "answer": "a",
+        "accepted_alternatives": [],
+        "category": "misconception",
+        "source": "truthfulqa",
+        "chain": _teacher_chain("a", f"train {i}"),
+        **overrides,
+    }
+
+
+# ---- drop_excluded ----
+def test_drop_excluded_removes_by_id_even_when_the_text_differs():
+    rows = [_trow(1), _trow(2, id="t-sphinx", question="Reworded sphinx riddle?")]
+    assert [r["id"] for r in data.drop_excluded(rows, {"t-sphinx"})] == ["t-1"]
+
+
+def test_drop_excluded_keeps_a_similar_looking_row_with_another_id():
+    rows = [_trow(1, question="What walks on four legs, the sphinx riddle?")]
+    assert data.drop_excluded(rows, {"t-sphinx"}) == rows
+
+
+def test_drop_excluded_with_nothing_excluded_returns_all_rows_as_a_new_list():
+    rows = [_trow(1), _trow(2)]
+    kept = data.drop_excluded(rows, set())
+    assert kept == rows
+    assert kept is not rows
+
+
+# ---- check_test_set ----
+def test_check_test_set_accepts_good_rows():
+    assert data.check_test_set([_trow(1), _trow(2)]) is None
+
+
+def test_check_test_set_rejects_no_rows():
+    with pytest.raises(ValueError, match="no rows"):
+        data.check_test_set([])
+
+
+def test_check_test_set_schema_failure_names_the_row():
+    with pytest.raises(ValueError, match="t-1"):
+        data.check_test_set([_trow(1, category="not_a_category")])
+
+
+def test_check_test_set_requires_a_chain():
+    row = {k: v for k, v in _trow(1).items() if k != "chain"}
+    with pytest.raises(ValueError, match="chain"):
+        data.check_test_set([row])
+
+
+def test_check_test_set_rejects_a_chain_missing_a_section():
+    chain = _without_line(_teacher_chain("9"), "Verify:")
+    with pytest.raises(ValueError, match="t-1"):
+        data.check_test_set([_trow(1, chain=chain)])
+
+
+def test_check_test_set_final_answer_must_equal_the_key():
+    with pytest.raises(ValueError, match="final answer"):
+        data.check_test_set([_trow(1, chain=_teacher_chain("12"))])
+
+
+def test_check_test_set_final_answer_may_equal_an_alternative():
+    assert data.check_test_set([_trow(1, chain=_teacher_chain("nine"))]) is None
+
+
+def test_check_test_set_rejects_duplicate_ids():
+    with pytest.raises(ValueError, match="duplicate"):
+        data.check_test_set([_trow(1), _trow(2, id="t-1")])
+
+
+def test_check_test_set_time_sensitive_needs_the_reference_year():
+    row = _trow(1, category="time_sensitive")
+    with pytest.raises(ValueError, match="reference_year"):
+        data.check_test_set([row])
+    with pytest.raises(ValueError, match="reference_year"):
+        data.check_test_set([{**row, "reference_year": config.REFERENCE_YEAR - 1}])
+    assert (
+        data.check_test_set([{**row, "reference_year": config.REFERENCE_YEAR}]) is None
+    )
+
+
+def test_check_test_set_reference_year_is_read_at_call_time(monkeypatch):
+    row = _trow(1, category="time_sensitive", reference_year=2026)
+    monkeypatch.setattr(config, "REFERENCE_YEAR", 2027)
+    with pytest.raises(ValueError, match="reference_year"):
+        data.check_test_set([row])
+
+
+def test_check_test_set_other_categories_need_no_reference_year():
+    assert data.check_test_set([_trow(1, category="false_premise")]) is None
+
+
+# ---- load_test_set ----
+def _write_test_set(tmp_path, rows):
+    path = tmp_path / "test_set.jsonl"
+    data.write_jsonl(path, rows)
+    return path
+
+
+def test_load_test_set_defaults_the_source_and_keeps_a_given_one(tmp_path):
+    no_source = {k: v for k, v in _trow(1).items() if k != "source"}
+    path = _write_test_set(tmp_path, [no_source, _trow(2, source="class")])
+    rows = data.load_test_set(path, excluded=set())
+    assert [r["source"] for r in rows] == ["hand_written", "class"]
+
+
+def test_load_test_set_drops_excluded_ids_then_validates(tmp_path):
+    bad_but_excluded = _trow(9, id="t-sphinx", category="not_a_category")
+    path = _write_test_set(tmp_path, [_trow(1), bad_but_excluded])
+    rows = data.load_test_set(path, excluded={"t-sphinx"})
+    assert [r["id"] for r in rows] == ["t-1"]
+
+
+def test_load_test_set_validation_failure_stops(tmp_path):
+    path = _write_test_set(tmp_path, [_trow(1), _trow(2, chain=_teacher_chain("12"))])
+    with pytest.raises(ValueError, match="t-2"):
+        data.load_test_set(path, excluded=set())
+
+
+def test_load_test_set_everything_excluded_raises(tmp_path):
+    path = _write_test_set(tmp_path, [_trow(1)])
+    with pytest.raises(ValueError, match="no rows"):
+        data.load_test_set(path, excluded={"t-1"})
+
+
+def test_load_test_set_missing_file_raises(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        data.load_test_set(tmp_path / "nope.jsonl", excluded=set())
+
+
+def test_load_test_set_reads_config_defaults_at_call_time(monkeypatch, tmp_path):
+    path = _write_test_set(tmp_path, [_trow(1), _trow(2, id="t-sphinx")])
+    monkeypatch.setattr(config, "TEST_SET_PATH", path)
+    monkeypatch.setattr(config, "EXCLUDED_TEST_IDS", frozenset({"t-sphinx"}))
+    assert [r["id"] for r in data.load_test_set()] == ["t-1"]
+
+
+# ---- check_leakage ----
+def test_check_leakage_clean_returns_no_warnings(recwarn):
+    assert data.check_leakage([_trow(1)], [_train_row(1), _train_row(2)]) == []
+    assert len(recwarn) == 0
+
+
+def test_check_leakage_empty_train_raises():
+    with pytest.raises(ValueError, match="empty"):
+        data.check_leakage([_trow(1)], [])
+
+
+def test_check_leakage_duplicate_test_ids_raise():
+    with pytest.raises(ValueError, match="duplicate"):
+        data.check_leakage([_trow(1), _trow(2, id="t-1")], [_train_row(1)])
+
+
+def test_check_leakage_same_question_in_train_raises_naming_both_ids():
+    train = [_train_row(1, question="Hand written question number 1?")]
+    with pytest.raises(ValueError, match="t-1.*tr-1"):
+        data.check_leakage([_trow(1)], train)
+
+
+def test_check_leakage_same_question_differing_in_case_and_punctuation_raises():
+    train = [_train_row(1, question="HAND written question number 1")]
+    with pytest.raises(ValueError, match="t-1"):
+        data.check_leakage([_trow(1)], train)
+
+
+def test_check_leakage_identical_chain_raises_even_with_whitespace_differences():
+    train = [_train_row(1, chain="\n" + _trow(1)["chain"] + "\n\n")]
+    with pytest.raises(ValueError, match="chain"):
+        data.check_leakage([_trow(1)], train)
+
+
+def test_check_leakage_eval_variant_in_train_raises():
+    eval_rows = [{**_trow(1), "id": "e-1", "question": "A reworded variant of one?"}]
+    train = [_train_row(1, question="a reworded VARIANT of one")]
+    with pytest.raises(ValueError, match="eval.*e-1"):
+        data.check_leakage([_trow(1)], train, eval_rows)
+
+
+def test_check_leakage_eval_variants_not_in_train_are_fine():
+    eval_rows = [{**_trow(1), "id": "e-1", "question": "A reworded variant of one?"}]
+    assert data.check_leakage([_trow(1)], [_train_row(1)], eval_rows) == []
+
+
+def test_check_leakage_near_duplicate_warns_and_is_returned():
+    test = [
+        _trow(
+            1, question="What is the capital of France and why is it famous worldwide?"
+        )
+    ]
+    train = [
+        _train_row(
+            1, question="What is the capital of France and why is it famous world wide?"
+        )
+    ]
+    with pytest.warns(UserWarning, match="t-1"):
+        found = data.check_leakage(test, train)
+    assert len(found) == 1
+    assert (found[0]["test_id"], found[0]["train_id"]) == ("t-1", "tr-1")
+    assert found[0]["ratio"] >= config.NEAR_DUPLICATE_RATIO
+
+
+def test_check_leakage_clearly_different_questions_do_not_warn(recwarn):
+    test = [_trow(1, question="How many sheep are left after the farmer sells nine?")]
+    train = [_train_row(1, question="What is the boiling point of water at sea level?")]
+    assert data.check_leakage(test, train) == []
+    assert len(recwarn) == 0
+
+
+# ---- test-set hash ----
+def test_file_sha256_matches_a_known_value(tmp_path):
+    path = tmp_path / "f.bin"
+    path.write_bytes(b"abc")
+    assert data.file_sha256(path) == (
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    )
+
+
+def test_record_test_set_hash_stores_sha_and_row_count(tmp_path):
+    test_path = _write_test_set(tmp_path, [_trow(1), _trow(2)])
+    hash_path = tmp_path / "hash.jsonl"
+    data.record_test_set_hash(test_path, hash_path)
+    (record,) = data.read_jsonl(hash_path)
+    assert record == {"sha256": data.file_sha256(test_path), "rows": 2}
+
+
+def test_check_test_set_hash_ok_changed_and_missing(tmp_path, recwarn):
+    test_path = _write_test_set(tmp_path, [_trow(1)])
+    hash_path = tmp_path / "hash.jsonl"
+    assert data.check_test_set_hash(test_path, hash_path) == "missing"
+    assert len(recwarn) == 0
+    data.record_test_set_hash(test_path, hash_path)
+    assert data.check_test_set_hash(test_path, hash_path) == "ok"
+    assert len(recwarn) == 0
+    data.write_jsonl(test_path, [_trow(1), _trow(2)])
+    with pytest.warns(UserWarning, match="changed"):
+        assert data.check_test_set_hash(test_path, hash_path) == "changed"
+
+
+def test_record_test_set_hash_overwrites_the_old_record(tmp_path):
+    test_path = _write_test_set(tmp_path, [_trow(1)])
+    hash_path = tmp_path / "hash.jsonl"
+    data.record_test_set_hash(test_path, hash_path)
+    data.write_jsonl(test_path, [_trow(1), _trow(2)])
+    data.record_test_set_hash(test_path, hash_path)
+    assert data.check_test_set_hash(test_path, hash_path) == "ok"
+
+
+def test_check_test_set_hash_missing_test_file_raises(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        data.check_test_set_hash(tmp_path / "nope.jsonl", tmp_path / "hash.jsonl")
+
+
+# ---- scripts/pipeline.py: test-data and validate ----
+def _write_all(tmp_path, test_rows, train_rows, eval_rows=None):
+    test_path = tmp_path / "test_set.jsonl"
+    train_path = tmp_path / "train.jsonl"
+    data.write_jsonl(test_path, test_rows)
+    data.write_jsonl(train_path, train_rows)
+    if eval_rows is not None:
+        data.write_jsonl(tmp_path / "eval.jsonl", eval_rows)
+    return test_path, train_path, tmp_path / "eval.jsonl", tmp_path / "hash.jsonl"
+
+
+def test_pipeline_test_data_records_the_hash(tmp_path):
+    test_path, _, _, hash_path = _write_all(tmp_path, [_trow(1), _trow(2)], [])
+    result = _run_pipeline(
+        "test-data", "--test-set", str(test_path), "--hash", str(hash_path)
+    )
+    assert result.returncode == 0, result.stderr
+    (record,) = data.read_jsonl(hash_path)
+    assert record["sha256"] == data.file_sha256(test_path)
+    assert "2 rows" in result.stdout
+
+
+def test_pipeline_test_data_failure_names_the_row_and_records_nothing(tmp_path):
+    rows = [_trow(1), _trow(2, chain=_teacher_chain("12"))]
+    test_path, _, _, hash_path = _write_all(tmp_path, rows, [])
+    result = _run_pipeline(
+        "test-data", "--test-set", str(test_path), "--hash", str(hash_path)
+    )
+    assert result.returncode != 0
+    assert "t-2" in result.stderr
+    assert not hash_path.exists()
+
+
+def test_pipeline_validate_passes_on_clean_data(tmp_path):
+    paths = _write_all(tmp_path, [_trow(1)], [_train_row(1)], eval_rows=[])
+    test_path, train_path, eval_path, hash_path = paths
+    result = _run_pipeline(
+        "validate",
+        "--test-set", str(test_path),
+        "--train", str(train_path),
+        "--eval", str(eval_path),
+        "--hash", str(hash_path),
+    )  # fmt: skip
+    assert result.returncode == 0, result.stderr
+
+
+def test_pipeline_validate_fails_on_leakage_naming_the_test_row(tmp_path):
+    train = [_train_row(1, question="Hand written question number 1?")]
+    test_path, train_path, eval_path, hash_path = _write_all(
+        tmp_path, [_trow(1)], train
+    )
+    result = _run_pipeline(
+        "validate",
+        "--test-set", str(test_path),
+        "--train", str(train_path),
+        "--eval", str(eval_path),
+        "--hash", str(hash_path),
+    )  # fmt: skip
+    assert result.returncode != 0
+    assert "t-1" in result.stderr
+
+
+def test_pipeline_validate_warns_when_the_test_set_changed(tmp_path):
+    test_path, train_path, eval_path, hash_path = _write_all(
+        tmp_path, [_trow(1)], [_train_row(1)]
+    )
+    data.record_test_set_hash(test_path, hash_path)
+    data.write_jsonl(test_path, [_trow(1), _trow(2)])
+    result = _run_pipeline(
+        "validate",
+        "--test-set", str(test_path),
+        "--train", str(train_path),
+        "--eval", str(eval_path),
+        "--hash", str(hash_path),
+    )  # fmt: skip
+    assert result.returncode == 0, result.stderr
+    assert "changed" in result.stderr
+
+
+def test_pipeline_validate_missing_train_file_fails_clearly(tmp_path):
+    test_path, _, eval_path, hash_path = _write_all(tmp_path, [_trow(1)], [])
+    result = _run_pipeline(
+        "validate",
+        "--test-set", str(test_path),
+        "--train", str(tmp_path / "nope.jsonl"),
+        "--eval", str(eval_path),
+        "--hash", str(hash_path),
+    )  # fmt: skip
+    assert result.returncode != 0
+    assert "train-data" in result.stderr
+
+
+# ---- M4: drop_leaked (training rows that duplicate a test question) ----
+def test_drop_leaked_removes_an_exact_question_ignoring_case_and_punctuation():
+    train = [
+        _train_row(1, question="What happens if you crack your knuckles a lot?"),
+        _train_row(2),
+    ]
+    test = [_trow(1, question="what happens if you CRACK your knuckles a lot")]
+    with pytest.warns(UserWarning, match="tr-1"):
+        kept, dropped = data.drop_leaked(train, test)
+    assert [r["id"] for r in kept] == ["tr-2"]
+    assert dropped == ["tr-1"]
+
+
+def test_drop_leaked_removes_a_near_duplicate():
+    train = [
+        _train_row(
+            1, question="What is the capital of France and why is it famous world wide?"
+        )
+    ]
+    test = [
+        _trow(
+            1, question="What is the capital of France and why is it famous worldwide?"
+        )
+    ]
+    with pytest.warns(UserWarning):
+        kept, dropped = data.drop_leaked(train, test)
+    assert kept == []
+    assert dropped == ["tr-1"]
+
+
+def test_drop_leaked_keeps_everything_when_nothing_leaks(recwarn):
+    train = [_train_row(1), _train_row(2)]
+    kept, dropped = data.drop_leaked(train, [_trow(1)])
+    assert kept == train
+    assert dropped == []
+    assert len(recwarn) == 0
+
+
+def test_drop_leaked_with_no_test_rows_keeps_everything():
+    train = [_train_row(1)]
+    assert data.drop_leaked(train, []) == (train, [])
+
+
+def test_drop_leaked_does_not_mutate_the_input():
+    train = [_train_row(1, question="Hand written question number 1?"), _train_row(2)]
+    before = list(train)
+    with pytest.warns(UserWarning):
+        data.drop_leaked(train, [_trow(1)])
+    assert train == before

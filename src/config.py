@@ -29,6 +29,8 @@ CATEGORIES = [
     "time_sensitive",
 ]
 REFERENCE_YEAR = 2026
+EXCLUDED_TEST_IDS = frozenset()
+NEAR_DUPLICATE_RATIO = 0.9
 
 # ---- teacher / judge ----
 TEACHER_MODEL = "gemini-3.5-flash-lite"
@@ -65,6 +67,7 @@ BASELINE_PATH = RESULTS_DIR / "baseline.json"
 ROUNDS_PATH = RESULTS_DIR / "rounds.json"
 FINAL_TEST_PATH = RESULTS_DIR / "final_test.json"
 TRAIN_SUMMARY_PATH = DATA_DIR / "train_summary.json"
+TEST_SET_HASH_PATH = DATA_DIR / "test_set_hash.jsonl"
 REVIEW_SAMPLE_PATH = DATA_DIR / "review_sample.json"
 SEED = 0
 
