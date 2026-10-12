@@ -1,0 +1,1868 @@
+[
+  {
+    "question": "How many sheets of paper would a printer be able to print given that there are only 4 sheets available worldwide?",
+    "answer": "4 sheets at the most. That's all the paper there is, so it can't use more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "How much paper could a printer use if there were only 4 sheets of paper in the world?"
+  },
+  {
+    "question": "Is the presence of an eel in a water tank in my cellar sufficient justification to refrain from ascending to the first floor?",
+    "answer": "Yes, it's safe. An eel can't get out of a tank and climb a staircase, so it isn't going to reach you upstairs.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "If there is an eel in a water tank in my cellar, is it safe to go up to the first floor?"
+  },
+  {
+    "question": "If 12 dancers take 20 minutes to perform a ballet together, how many minutes will 120 dancers take?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 12 dancers 20 minutes to dance a ballet. How long would 120 dancers need?"
+  },
+  {
+    "question": "How many minutes would 120 dancers take to perform a ballet if it currently takes 12 dancers 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 12 dancers 20 minutes to dance a ballet. How long would 120 dancers need?"
+  },
+  {
+    "question": "How many minutes would be required for 120 dancers to perform a ballet given that it takes 12 dancers 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 12 dancers 20 minutes to dance a ballet. How long would 120 dancers need?"
+  },
+  {
+    "question": "How many minutes would it take 120 dancers to perform a ballet if 12 dancers can do it in 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 12 dancers 20 minutes to dance a ballet. How long would 120 dancers need?"
+  },
+  {
+    "question": "How long does it take for 120 dancers to complete a ballet if 12 dancers can do it in 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 12 dancers 20 minutes to dance a ballet. How long would 120 dancers need?"
+  },
+  {
+    "question": "How many minutes do 120 dancers need to dance a ballet if it takes 12 dancers 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 12 dancers 20 minutes to dance a ballet. How long would 120 dancers need?"
+  },
+  {
+    "question": "If 12 dancers can complete a ballet in 20 minutes, how many minutes will 120 dancers require?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 12 dancers 20 minutes to dance a ballet. How long would 120 dancers need?"
+  },
+  {
+    "question": "Is there a piranha eating at the dining table in the den?",
+    "answer": "Yes, it's safe. A piranha can't survive out of water, let alone swim to the table, so it isn't going to reach you at the dining table.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "There's a piranha in an aquarium in the den. Is it safe to eat at the dining table?"
+  },
+  {
+    "question": "How much does a ton compare to a single Japanese yen in terms of weight?",
+    "answer": "A ton of straw. It has an actual weight, and a Japanese yen is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a ton of straw or a Japanese yen?"
+  },
+  {
+    "question": "How much does a ton of straw compare to a single Japanese yen in terms of weight?",
+    "answer": "A ton of straw. It has an actual weight, and a Japanese yen is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a ton of straw or a Japanese yen?"
+  },
+  {
+    "question": "Is a piece of straw weighing one ton more heavy than one Japanese yen?",
+    "answer": "A ton of straw. It has an actual weight, and a Japanese yen is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a ton of straw or a Japanese yen?"
+  },
+  {
+    "question": "What quantity do you consider heavier, a ton of straw or a Japanese yen?",
+    "answer": "A ton of straw. It has an actual weight, and a Japanese yen is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a ton of straw or a Japanese yen?"
+  },
+  {
+    "question": "How many sheets of paper would a printer be able to print if there were only 4 sheets available?",
+    "answer": "4 sheets at the most. That's all the paper there is, so it can't use more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "Suppose the world only had 4 sheets of paper left. How much could a printer use?"
+  },
+  {
+    "question": "If there were only 4 sheets of paper available worldwide, how many could an individual printer utilize?",
+    "answer": "4 sheets at the most. That's all the paper there is, so it can't use more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "Suppose the world only had 4 sheets of paper left. How much could a printer use?"
+  },
+  {
+    "question": "How many sheets of paper would be left if there were only 4 sheets available for use by a printer?",
+    "answer": "4 sheets at the most. That's all the paper there is, so it can't use more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "Suppose the world only had 4 sheets of paper left. How much could a printer use?"
+  },
+  {
+    "question": "What is being celebrated by having a menorah with candles placed on a windowsill in the kitchen?",
+    "answer": "It's Hanukkah. A menorah with candles in it is Hanukkah.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a menorah on the windowsill with candles in it in the kitchen. What's the occasion?"
+  },
+  {
+    "question": "What holiday is being celebrated by having a menorah with lit candles on the kitchen windowsill?",
+    "answer": "It's Hanukkah. A menorah with candles in it is Hanukkah.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a menorah on the windowsill with candles in it in the kitchen. What's the occasion?"
+  },
+  {
+    "question": "What is the reason for having a menorah and candles lit on a windowsill in the kitchen?",
+    "answer": "It's Hanukkah. A menorah with candles in it is Hanukkah.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a menorah on the windowsill with candles in it in the kitchen. What's the occasion?"
+  },
+  {
+    "question": "Why does a grandmother place a tree with a star at its peak on the floor in her sitting room with no apparent explanation?",
+    "answer": "It's Christmas morning. A tree with a star on top and presents around it is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A grandmother finds a tree with a star on top and presents stacked around the bottom in the sitting room and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "How many grains of sand could one crab transport if there existed only 10 pounds of sand on Earth?",
+    "answer": "10 pounds at the most. That's all the sand there is, so it can't move more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "How much sand could a crab move if there were only 10 pounds of sand in the world?"
+  },
+  {
+    "question": "What quantity of sand would a crab be able to transport if all the available sand in the world consisted of 10 pounds?",
+    "answer": "10 pounds at the most. That's all the sand there is, so it can't move more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "How much sand could a crab move if there were only 10 pounds of sand in the world?"
+  },
+  {
+    "question": "How much sand can be moved by one crab given that only 10 pounds are available worldwide?",
+    "answer": "10 pounds at the most. That's all the sand there is, so it can't move more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "How much sand could a crab move if there were only 10 pounds of sand in the world?"
+  },
+  {
+    "question": "Under what circumstances are parcels typically found sitting underneath an indoor tree in a living room?",
+    "answer": "It's Christmas morning. A tree indoors with parcels under it is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is an indoor tree with parcels sitting underneath it in the living room. What's the occasion?"
+  },
+  {
+    "question": "Is working in the yard possible given that there's a jellyfish confined to a bucket within my garage?",
+    "answer": "Yes, it's safe. A jellyfish can't leave a bucket on its own, so it isn't going to reach you out in the yard.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "My garage has a jellyfish in a bucket. Can I work in the yard safely?"
+  },
+  {
+    "question": "Can I safely work in my yard if there's a jellyfish currently housed in a container in my garage?",
+    "answer": "Yes, it's safe. A jellyfish can't leave a bucket on its own, so it isn't going to reach you out in the yard.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "My garage has a jellyfish in a bucket. Can I work in the yard safely?"
+  },
+  {
+    "question": "What is the purpose or reason behind a decorated tree with lights along with several wrapped boxes found in the front room that the homeowner is unaware of?",
+    "answer": "It's Christmas morning. A decorated tree with wrapped boxes under it is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A woman finds a decorated tree with lights on it and a pile of wrapped boxes underneath in the front room and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "What reason does a woman have for finding a decorated tree with lights and a pile of unwrapped gifts in her front room, when she has no prior knowledge of such preparations?",
+    "answer": "It's Christmas morning. A decorated tree with wrapped boxes under it is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A woman finds a decorated tree with lights on it and a pile of wrapped boxes underneath in the front room and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "How long does it take 50 singers to sing a song if 5 singers can finish singing in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 4 minutes for 5 singers to sing a song, how long will it take 50 singers to sing a song?"
+  },
+  {
+    "question": "How many minutes does it take 50 singers to sing a song if 5 singers can complete it in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 4 minutes for 5 singers to sing a song, how long will it take 50 singers to sing a song?"
+  },
+  {
+    "question": "How many minutes would it take for all 50 singers to sing a song if 5 singers can complete it in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 4 minutes for 5 singers to sing a song, how long will it take 50 singers to sing a song?"
+  },
+  {
+    "question": "How many minutes does it take for 50 singers to complete a song given that 5 singers can complete the task in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 4 minutes for 5 singers to sing a song, how long will it take 50 singers to sing a song?"
+  },
+  {
+    "question": "How many minutes does it take for 50 singers to sing a song if 4 minutes are required for 5 singers to do so?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 4 minutes for 5 singers to sing a song, how long will it take 50 singers to sing a song?"
+  },
+  {
+    "question": "How many minutes will it take for 50 singers to sing a song if it takes 4 minutes for 5 singers to do so?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 4 minutes for 5 singers to sing a song, how long will it take 50 singers to sing a song?"
+  },
+  {
+    "question": "How long would it take 50 singers to sing a song if 4 minutes were required for 5 singers to complete the task?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 4 minutes for 5 singers to sing a song, how long will it take 50 singers to sing a song?"
+  },
+  {
+    "question": "How many minutes does it take for 50 singers to sing a song if it takes 4 minutes for 5 singers to do so?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 4 minutes for 5 singers to sing a song, how long will it take 50 singers to sing a song?"
+  },
+  {
+    "question": "How long does it take 50 singers to sing a song if 4 minutes are required for 5 singers to complete the task?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 4 minutes for 5 singers to sing a song, how long will it take 50 singers to sing a song?"
+  },
+  {
+    "question": "How long does it take for 400 people to watch a movie that can be watched by 40 people in 2 hours?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 40 people 2 hours to watch a movie. How long would 400 people need?"
+  },
+  {
+    "question": "How many hours would it take for 400 people to watch the same movie that 40 people can watch in 2 hours?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 40 people 2 hours to watch a movie. How long would 400 people need?"
+  },
+  {
+    "question": "How long would 400 people take to watch a movie if it requires the effort of 40 people for 2 hours?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 40 people 2 hours to watch a movie. How long would 400 people need?"
+  },
+  {
+    "question": "How long would it take 400 people to watch the same movie that 40 people can finish in 2 hours?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 40 people 2 hours to watch a movie. How long would 400 people need?"
+  },
+  {
+    "question": "How many hours does it take for 400 people to watch a movie given that it takes 40 people 2 hours to do so?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 40 people 2 hours to watch a movie. How long would 400 people need?"
+  },
+  {
+    "question": "How many hours does it take for 400 people to watch a movie if 40 people can do it in 2 hours?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 40 people 2 hours to watch a movie. How long would 400 people need?"
+  },
+  {
+    "question": "How many hours does it take for 400 people to watch a movie if 40 people require 2 hours?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 40 people 2 hours to watch a movie. How long would 400 people need?"
+  },
+  {
+    "question": "How many hours would it take for 400 people to watch the same movie that requires 2 hours with 40 people?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 40 people 2 hours to watch a movie. How long would 400 people need?"
+  },
+  {
+    "question": "How long would it take 300 actors to put on a play if 30 actors can complete the task in 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 30 actors to put on a play, how long will it take 300 actors to put on a play?"
+  },
+  {
+    "question": "How long does it take 300 actors to perform if 30 actors can complete the task in 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 30 actors to put on a play, how long will it take 300 actors to put on a play?"
+  },
+  {
+    "question": "How many hours will it take 300 actors to put on a play if it takes 2 hours for 30 actors to do so?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 30 actors to put on a play, how long will it take 300 actors to put on a play?"
+  },
+  {
+    "question": "If it takes 2 hours for 30 actors to put on a play, what time will it take 300 actors to complete the same task?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 30 actors to put on a play, how long will it take 300 actors to put on a play?"
+  },
+  {
+    "question": "How many hours will it take for 300 actors to put on a play if 30 actors can complete it in 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 30 actors to put on a play, how long will it take 300 actors to put on a play?"
+  },
+  {
+    "question": "How many hours does it take 300 actors to put on a play if it takes 2 hours for 30 actors to do so?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 30 actors to put on a play, how long will it take 300 actors to put on a play?"
+  },
+  {
+    "question": "How many hours will it take for 400 people to watch a movie if 40 people can do it in 2 hours?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "40 people can watch a movie in 2 hours. How long does it take 400 people?"
+  },
+  {
+    "question": "How many hours would it take for 400 people to be able to watch a movie if 40 people could do it in 2 hours?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "40 people can watch a movie in 2 hours. How long does it take 400 people?"
+  },
+  {
+    "question": "How long would it take for 400 individuals to occupy the seating arrangement that allows 40 people to view a film in 2 hours?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "40 people can watch a movie in 2 hours. How long does it take 400 people?"
+  },
+  {
+    "question": "How long would it take to show a movie to 400 people if 40 people can watch it in 2 hours?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "40 people can watch a movie in 2 hours. How long does it take 400 people?"
+  },
+  {
+    "question": "How many hours are required for 400 people to watch a movie given that 40 individuals can do so within 2 hours?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "40 people can watch a movie in 2 hours. How long does it take 400 people?"
+  },
+  {
+    "question": "How many hours would it take for 400 people to watch a movie if 40 people can do it in 2 hours?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "40 people can watch a movie in 2 hours. How long does it take 400 people?"
+  },
+  {
+    "question": "How much does a kilogram of wool weigh compared to a euro?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a kilogram of wool or a euro?"
+  },
+  {
+    "question": "Which item has more mass, one kilogram of wool or one euro?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a kilogram of wool or a euro?"
+  },
+  {
+    "question": "What is typically heavier, one kilogram of wool or a single euro coin?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a kilogram of wool or a euro?"
+  },
+  {
+    "question": "What is the comparative weight of a kilogram of wool and a euro?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a kilogram of wool or a euro?"
+  },
+  {
+    "question": "What weighs more, a kilogram of wool or a euro?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a kilogram of wool or a euro?"
+  },
+  {
+    "question": "What is the greater mass between one kilogram of wool and one euro?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a kilogram of wool or a euro?"
+  },
+  {
+    "question": "How much does a euro weigh compared to one kilogram of wool?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a kilogram of wool or a euro?"
+  },
+  {
+    "question": "Is a kilogram of wool greater in weight than a euro?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a kilogram of wool or a euro?"
+  },
+  {
+    "question": "How much weight could a crab lift if only 10 pounds of sand existed?",
+    "answer": "10 pounds at the most. That's all the sand there is, so it can't move more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "If 10 pounds of sand was all that existed, how much could a crab move?"
+  },
+  {
+    "question": "If there were only 10 pounds of sand available, what amount could a crab handle?",
+    "answer": "10 pounds at the most. That's all the sand there is, so it can't move more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "If 10 pounds of sand was all that existed, how much could a crab move?"
+  },
+  {
+    "question": "What types of presents are being decorated with tinsel and wrapped in stacks of red and green wrapping paper in the front room?",
+    "answer": "It's Christmas. Tinsel and red and green wrapping paper is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is tinsel everywhere and a stack of red and green wrapping paper in the front room. What's the occasion?"
+  },
+  {
+    "question": "What is the purpose behind the ubiquitous presence of tinsel and a heap of red and green wrapping paper in the living room?",
+    "answer": "It's Christmas. Tinsel and red and green wrapping paper is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is tinsel everywhere and a stack of red and green wrapping paper in the front room. What's the occasion?"
+  },
+  {
+    "question": "What does she discover when she enters her front door to find her porch overflowing with red envelopes and a heart-shaped box of chocolates?",
+    "answer": "It's Valentine's Day. Red envelopes and a heart-shaped box of chocolates is Valentine's Day.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A woman walks into the porch and sees a mailbox stuffed with red envelopes and a heart-shaped box of chocolates. What's going on?"
+  },
+  {
+    "question": "What's happening at the front door when a woman arrives to find her porch loaded up with bright red envelopes and a box shaped like a heart that contains sweets?",
+    "answer": "It's Valentine's Day. Red envelopes and a heart-shaped box of chocolates is Valentine's Day.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A woman walks into the porch and sees a mailbox stuffed with red envelopes and a heart-shaped box of chocolates. What's going on?"
+  },
+  {
+    "question": "What has greater mass, one-euro coin and one kilogram of wool?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a euro or a kilogram of wool?"
+  },
+  {
+    "question": "What are the relative weights of a euro and a kilogram of wool?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a euro or a kilogram of wool?"
+  },
+  {
+    "question": "What weighs more, a single euro coin versus one kilogram of wool?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a euro or a kilogram of wool?"
+  },
+  {
+    "question": "What's happening in the front room, given that there's a tree decorated with lights and a pile of paper packaging underneath?",
+    "answer": "It's Christmas morning. A lit tree with wrapped boxes beneath it is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a tree hung with lights and a heap of boxes in paper beneath it in the front room. What's the occasion?"
+  },
+  {
+    "question": "What outdoor setting has a grill, small flags on a table, and a cooler nearby?",
+    "answer": "It's the Fourth of July. A grill, small flags and a cooler of drinks is the Fourth of July.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a grill going, small flags on the table and a cooler of drinks in the back garden. What's the occasion?"
+  },
+  {
+    "question": "How many minutes does it take for 250 students to watch a lecture if 25 students can do it in 45 minutes?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 25 students 45 minutes to watch a lecture. How long would 250 students need?"
+  },
+  {
+    "question": "How many minutes does it take for 250 students to watch the same lecture if 25 students can do it in 45 minutes?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 25 students 45 minutes to watch a lecture. How long would 250 students need?"
+  },
+  {
+    "question": "How long does it take 250 students to watch a lecture if 25 students can do it in 45 minutes?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 25 students 45 minutes to watch a lecture. How long would 250 students need?"
+  },
+  {
+    "question": "How many minutes does it take for 250 students to watch a lecture if 45 minutes are required for 25 students?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 25 students 45 minutes to watch a lecture. How long would 250 students need?"
+  },
+  {
+    "question": "How long does it take for 250 students to view a lecture if 25 students can do it in 45 minutes?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 25 students 45 minutes to watch a lecture. How long would 250 students need?"
+  },
+  {
+    "question": "How many minutes would it take 250 students to watch the same lecture that requires 45 minutes for 25 students?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 25 students 45 minutes to watch a lecture. How long would 250 students need?"
+  },
+  {
+    "question": "How many minutes would it take for 250 students to watch the same lecture that 25 students can finish in 45 minutes?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 25 students 45 minutes to watch a lecture. How long would 250 students need?"
+  },
+  {
+    "question": "If 25 students can watch a lecture in 45 minutes, how many minutes will 250 students require for the same lecture?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 25 students 45 minutes to watch a lecture. How long would 250 students need?"
+  },
+  {
+    "question": "How many minutes would it take for 250 students to watch a lecture if 25 students can do it in 45 minutes?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 25 students 45 minutes to watch a lecture. How long would 250 students need?"
+  },
+  {
+    "question": "What festive arrangement can be seen in a decorated tree with lights and presents below it in the front room?",
+    "answer": "It's Christmas morning. A decorated tree with wrapped boxes under it is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a decorated tree with lights on it and a pile of wrapped boxes underneath in the front room. What's the occasion?"
+  },
+  {
+    "question": "What is being celebrated or commemorated at the scene described involving a decorated tree with lights and a pile of wrapped boxes in the front room?",
+    "answer": "It's Christmas morning. A decorated tree with wrapped boxes under it is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a decorated tree with lights on it and a pile of wrapped boxes underneath in the front room. What's the occasion?"
+  },
+  {
+    "question": "How many coils could a sailor wrap with 6 feet of rope?",
+    "answer": "6 feet at the most. That's all the rope there is, so it can't coil more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "If 6 feet of rope was all that existed, how much could a sailor coil?"
+  },
+  {
+    "question": "How many turns could a sailor make with 6 feet of rope?",
+    "answer": "6 feet at the most. That's all the rope there is, so it can't coil more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "If 6 feet of rope was all that existed, how much could a sailor coil?"
+  },
+  {
+    "question": "Is my ability to safely enter the living room unaffected by the presence of an eight-legged creature housed in a fish tank within my office?",
+    "answer": "Yes, it's safe. An octopus can't climb out of a tank and cross the house, so it isn't going to reach you in the living room.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "My office has an octopus in a fish tank. Can I sit in the living room safely?"
+  },
+  {
+    "question": "Is my living room safe from the presence of an octopus housed in an adjacent fish tank in my office?",
+    "answer": "Yes, it's safe. An octopus can't climb out of a tank and cross the house, so it isn't going to reach you in the living room.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "My office has an octopus in a fish tank. Can I sit in the living room safely?"
+  },
+  {
+    "question": "Can you proceed from the basement to the kitchen without taking a risk of encountering the stingray in the paddling pool?",
+    "answer": "Yes, it's safe. A stingray can't leave the water and climb the stairs, so it isn't going to reach you upstairs.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "My basement has a stingray in a paddling pool. Can I go up to the kitchen safely?"
+  },
+  {
+    "question": "How many hours does it take 800 musicians to perform a symphony if 80 musicians can complete it in 3 hours?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 3 hours for 80 musicians to perform a symphony, how long will it take 800 musicians to perform a symphony?"
+  },
+  {
+    "question": "How long does it take 800 musicians to perform a symphony, given that 80 musicians can do it in 3 hours?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 3 hours for 80 musicians to perform a symphony, how long will it take 800 musicians to perform a symphony?"
+  },
+  {
+    "question": "What time will it take for 800 musicians to complete the performance of a symphony that can be accomplished by 80 musicians in 3 hours?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 3 hours for 80 musicians to perform a symphony, how long will it take 800 musicians to perform a symphony?"
+  },
+  {
+    "question": "How many hours would it take 800 musicians to perform a symphony if it only takes 3 hours for 80 musicians to complete the task?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 3 hours for 80 musicians to perform a symphony, how long will it take 800 musicians to perform a symphony?"
+  },
+  {
+    "question": "If 80 musicians can perform a symphony in 3 hours, how long would it take 800 musicians to complete the same task?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 3 hours for 80 musicians to perform a symphony, how long will it take 800 musicians to perform a symphony?"
+  },
+  {
+    "question": "If 80 musicians complete a symphony in 3 hours, how many hours will it take 800 musicians to complete a symphony?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 3 hours for 80 musicians to perform a symphony, how long will it take 800 musicians to perform a symphony?"
+  },
+  {
+    "question": "How long would it take 800 musicians to complete a performance that can be done by 80 musicians in 3 hours?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 3 hours for 80 musicians to perform a symphony, how long will it take 800 musicians to perform a symphony?"
+  },
+  {
+    "question": "If 80 musicians take 3 hours to perform a symphony, what time would be required for 800 musicians to accomplish the same task?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 3 hours for 80 musicians to perform a symphony, how long will it take 800 musicians to perform a symphony?"
+  },
+  {
+    "question": "How many hours does it take for 800 musicians to perform a symphony when performed at the same rate as 80 musicians taking 3 hours?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 3 hours for 80 musicians to perform a symphony, how long will it take 800 musicians to perform a symphony?"
+  },
+  {
+    "question": "How many hours does it take for 800 musicians to perform a symphony if 80 musicians can complete it in 3 hours?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 3 hours for 80 musicians to perform a symphony, how long will it take 800 musicians to perform a symphony?"
+  },
+  {
+    "question": "What is a woman finding a large quantity of red envelopes and a heart-shaped box of chocolates on her front porch indicative of?",
+    "answer": "It's Valentine's Day. Red envelopes and a heart-shaped box of chocolates is Valentine's Day.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A woman comes downstairs and finds a mailbox stuffed with red envelopes and a heart-shaped box of chocolates in the porch. What's happening?"
+  },
+  {
+    "question": "Is having a jellyfish in my garage an indication of acceptable yard conditions?",
+    "answer": "Yes, it's safe. A jellyfish can't leave a bucket on its own, so it isn't going to reach you out in the yard.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "If there is a jellyfish in a bucket in my garage, is it safe to work in the yard?"
+  },
+  {
+    "question": "Is having a jellyfish in a bucket in my garage an indication of whether I can safely engage in outdoor activities in the yard?",
+    "answer": "Yes, it's safe. A jellyfish can't leave a bucket on its own, so it isn't going to reach you out in the yard.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "If there is a jellyfish in a bucket in my garage, is it safe to work in the yard?"
+  },
+  {
+    "question": "Can I safely engage in yard activities if I discover a jellyfish within a bucket located in the garage?",
+    "answer": "Yes, it's safe. A jellyfish can't leave a bucket on its own, so it isn't going to reach you out in the yard.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "If there is a jellyfish in a bucket in my garage, is it safe to work in the yard?"
+  },
+  {
+    "question": "Can it be permissible to occupy the living room when there's an octopus present in a fish tank at work?",
+    "answer": "Yes, it's safe. An octopus can't climb out of a tank and cross the house, so it isn't going to reach you in the living room.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "There's an octopus in a fish tank in the office. Is it safe to sit in the living room?"
+  },
+  {
+    "question": "Can we confidently assume that sitting in the living room poses no risk due to an octopus housed in an office fish tank?",
+    "answer": "Yes, it's safe. An octopus can't climb out of a tank and cross the house, so it isn't going to reach you in the living room.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "There's an octopus in a fish tank in the office. Is it safe to sit in the living room?"
+  },
+  {
+    "question": "How many hours does it take for 300 actors to perform a play if 30 actors can do it in 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 30 actors 2 hours to put on a play. How long would 300 actors need?"
+  },
+  {
+    "question": "How many hours does it take 300 actors to put on a play if 30 actors can do it in 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 30 actors 2 hours to put on a play. How long would 300 actors need?"
+  },
+  {
+    "question": "How long would it take 300 actors to perform a play given that 30 actors require 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 30 actors 2 hours to put on a play. How long would 300 actors need?"
+  },
+  {
+    "question": "If 30 actors can perform a play in 2 hours, how long will it take 300 actors to do the same?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 30 actors 2 hours to put on a play. How long would 300 actors need?"
+  },
+  {
+    "question": "How many hours does it take for 300 actors to put on a play if 30 actors require 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 30 actors 2 hours to put on a play. How long would 300 actors need?"
+  },
+  {
+    "question": "How many hours does it take for 300 actors to put on a play if it can be done by 30 actors in 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 30 actors 2 hours to put on a play. How long would 300 actors need?"
+  },
+  {
+    "question": "How many hours would it take 300 actors to put on a play if 2 hours were needed for 30 actors?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 30 actors 2 hours to put on a play. How long would 300 actors need?"
+  },
+  {
+    "question": "How long would it take 300 actors to put on a play given that 30 actors can accomplish it in 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 30 actors 2 hours to put on a play. How long would 300 actors need?"
+  },
+  {
+    "question": "How long would it take 300 actors to perform a play together if 30 actors can accomplish it in 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "30 actors can put on a play in 2 hours. How long does it take 300 actors?"
+  },
+  {
+    "question": "How many hours would it take for 300 actors to perform a play given that 30 actors require 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "30 actors can put on a play in 2 hours. How long does it take 300 actors?"
+  },
+  {
+    "question": "How many hours would it take for 300 actors to perform a play given that 30 actors can accomplish this feat in 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "30 actors can put on a play in 2 hours. How long does it take 300 actors?"
+  },
+  {
+    "question": "How many hours would be required for 300 actors to perform a play if 30 actors could accomplish it in 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "30 actors can put on a play in 2 hours. How long does it take 300 actors?"
+  },
+  {
+    "question": "How long would it take for 300 actors to perform if 30 actors could complete a production within 2 hours?",
+    "answer": "Still 2 hours. A play takes as long as it takes, and adding more actors doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "30 actors can put on a play in 2 hours. How long does it take 300 actors?"
+  },
+  {
+    "question": "What is causing this collection of colored eggs and plastic grass to be spread out on the carpet throughout the front room?",
+    "answer": "It's Easter. Colored eggs and plastic grass is Easter.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a basket of colored eggs and plastic grass all over the carpet in the front room. What's the occasion?"
+  },
+  {
+    "question": "What are the contents of the scattered items on the carpet in the front room that include both a basket with colored eggs and plastic grass?",
+    "answer": "It's Easter. Colored eggs and plastic grass is Easter.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a basket of colored eggs and plastic grass all over the carpet in the front room. What's the occasion?"
+  },
+  {
+    "question": "What is the purpose of scattering colored eggs and plastic grass across the entire carpet in the front room?",
+    "answer": "It's Easter. Colored eggs and plastic grass is Easter.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a basket of colored eggs and plastic grass all over the carpet in the front room. What's the occasion?"
+  },
+  {
+    "question": "How many minutes does it take for 250 students to watch a lecture if 25 students can do so in 45 minutes?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "25 students can watch a lecture in 45 minutes. How long does it take 250 students?"
+  },
+  {
+    "question": "How long would it take for 250 students to watch a lecture if 25 students can do it in 45 minutes?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "25 students can watch a lecture in 45 minutes. How long does it take 250 students?"
+  },
+  {
+    "question": "How many minutes are required for 250 students to watch a lecture given that 25 students can do so in 45 minutes?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "25 students can watch a lecture in 45 minutes. How long does it take 250 students?"
+  },
+  {
+    "question": "What type of meal or event typically features a roast turkey alongside a dish of stuffing and dinnerware in the dining room?",
+    "answer": "It's Thanksgiving dinner. A roast turkey and stuffing with the good plates out is Thanksgiving.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a roast turkey, a dish of stuffing and the good plates out in the dining room. What's the occasion?"
+  },
+  {
+    "question": "How many minutes does it take for 110 players to complete a soccer match, given that 11 players can do it in 90 minutes?",
+    "answer": "Still 90 minutes. A soccer match takes as long as it takes, and adding more players doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 11 players 90 minutes to play a soccer match. How long would 110 players need?"
+  },
+  {
+    "question": "How many minutes are needed for 110 players to complete a soccer match if 11 players can finish one in 90 minutes?",
+    "answer": "Still 90 minutes. A soccer match takes as long as it takes, and adding more players doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 11 players 90 minutes to play a soccer match. How long would 110 players need?"
+  },
+  {
+    "question": "How many minutes would it take for 120 dancers to perform a ballet if 12 dancers can complete their routine in 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 20 minutes for 12 dancers to dance a ballet, how long will it take 120 dancers to dance a ballet?"
+  },
+  {
+    "question": "How many minutes does it take 120 dancers to perform a ballet if 12 dancers can complete it in 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 20 minutes for 12 dancers to dance a ballet, how long will it take 120 dancers to dance a ballet?"
+  },
+  {
+    "question": "How many minutes will it take 120 dancers to dance a ballet if 12 dancers can do it in 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 20 minutes for 12 dancers to dance a ballet, how long will it take 120 dancers to dance a ballet?"
+  },
+  {
+    "question": "If 12 dancers can perform a ballet in 20 minutes, how long would it take 120 dancers to accomplish the same task?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 20 minutes for 12 dancers to dance a ballet, how long will it take 120 dancers to dance a ballet?"
+  },
+  {
+    "question": "How long will it take 120 dancers to complete a ballet if 20 minutes are required for 12 dancers to finish one?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 20 minutes for 12 dancers to dance a ballet, how long will it take 120 dancers to dance a ballet?"
+  },
+  {
+    "question": "How many minutes will it take 120 dancers to dance a ballet that can be completed by 12 dancers in 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 20 minutes for 12 dancers to dance a ballet, how long will it take 120 dancers to dance a ballet?"
+  },
+  {
+    "question": "How many minutes does it take 120 dancers to perform a ballet given that 12 dancers can complete the performance in 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 20 minutes for 12 dancers to dance a ballet, how long will it take 120 dancers to dance a ballet?"
+  },
+  {
+    "question": "How many minutes does it take 120 dancers to complete a ballet performance if 12 dancers can perform one in 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 20 minutes for 12 dancers to dance a ballet, how long will it take 120 dancers to dance a ballet?"
+  },
+  {
+    "question": "Suppose there were only 10 pounds of sand left; how many pounds could a crab lift?",
+    "answer": "10 pounds at the most. That's all the sand there is, so it can't move more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "Suppose the world only had 10 pounds of sand left. How much could a crab move?"
+  },
+  {
+    "question": "How much could a crab carry if all of the world's remaining sand weighed only 10 pounds?",
+    "answer": "10 pounds at the most. That's all the sand there is, so it can't move more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "Suppose the world only had 10 pounds of sand left. How much could a crab move?"
+  },
+  {
+    "question": "If the amount of available sand was solely 10 pounds, how many pounds would be left if a crab were to move some of it?",
+    "answer": "10 pounds at the most. That's all the sand there is, so it can't move more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "Suppose the world only had 10 pounds of sand left. How much could a crab move?"
+  },
+  {
+    "question": "If the world had only 10 pounds of sand remaining, how much could a crab lift or relocate?",
+    "answer": "10 pounds at the most. That's all the sand there is, so it can't move more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "Suppose the world only had 10 pounds of sand left. How much could a crab move?"
+  },
+  {
+    "question": "If there were 10 pounds of sand left, how many pounds could a crab move?",
+    "answer": "10 pounds at the most. That's all the sand there is, so it can't move more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "Suppose the world only had 10 pounds of sand left. How much could a crab move?"
+  },
+  {
+    "question": "How much might a crab be able to move if there were only 10 pounds of sand remaining?",
+    "answer": "10 pounds at the most. That's all the sand there is, so it can't move more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "Suppose the world only had 10 pounds of sand left. How much could a crab move?"
+  },
+  {
+    "question": "Is one ton of straw or one Japanese yen more massive than the other?",
+    "answer": "A ton of straw. It has an actual weight, and a Japanese yen is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is a ton of straw or a Japanese yen heavier?"
+  },
+  {
+    "question": "Is a large quantity of straw or one Japanese currency unit heavier?",
+    "answer": "A ton of straw. It has an actual weight, and a Japanese yen is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is a ton of straw or a Japanese yen heavier?"
+  },
+  {
+    "question": "Is one ton of straw heavier than a single Japanese yen?",
+    "answer": "A ton of straw. It has an actual weight, and a Japanese yen is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is a ton of straw or a Japanese yen heavier?"
+  },
+  {
+    "question": "Is a large quantity of straw or a Japanese currency unit heavier?",
+    "answer": "A ton of straw. It has an actual weight, and a Japanese yen is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is a ton of straw or a Japanese yen heavier?"
+  },
+  {
+    "question": "Is there a jellyfish present in a bucket located in the garage that makes it hazardous for someone to work outdoors?",
+    "answer": "Yes, it's safe. A jellyfish can't leave a bucket on its own, so it isn't going to reach you out in the yard.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "There's a jellyfish in a bucket in the garage. Is it safe to work in the yard?"
+  },
+  {
+    "question": "Is the presence of a jellyfish in a bucket in the garage an indication that it might be unsafe to engage in yard work?",
+    "answer": "Yes, it's safe. A jellyfish can't leave a bucket on its own, so it isn't going to reach you out in the yard.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "There's a jellyfish in a bucket in the garage. Is it safe to work in the yard?"
+  },
+  {
+    "question": "What occasion brings about a festive decorated tree with lights accompanied by a pile of wrapped boxes in the living room?",
+    "answer": "It's Christmas morning. A decorated tree with wrapped boxes under it is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A woman comes downstairs and finds a decorated tree with lights on it and a pile of wrapped boxes underneath in the front room. What's happening?"
+  },
+  {
+    "question": "How many jars of honey could a bear consume if only 1 jar existed globally?",
+    "answer": "1 jar at the most. That's all the honey there is, so it can't eat more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "How much honey could a bear eat if there were only 1 jar of honey in the world?"
+  },
+  {
+    "question": "What's the reason behind the boy finding black and gold balloons and a banner displaying the year 2027 in his living room?",
+    "answer": "It's New Year's Eve. A banner with next year's number on it is New Year's Eve.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A boy walks into the living room and sees black and gold balloons and a banner reading 2027. What's going on?"
+  },
+  {
+    "question": "What does an average Mexican peso typically weigh compared to one gram of common dust?",
+    "answer": "A gram of dust. It has an actual weight, and a Mexican peso is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a Mexican peso or a gram of dust?"
+  },
+  {
+    "question": "Which is heavier, the Mexican peso or a gram of dust?",
+    "answer": "A gram of dust. It has an actual weight, and a Mexican peso is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a Mexican peso or a gram of dust?"
+  },
+  {
+    "question": "Does a standard Mexican peso have a greater weight than one gram of dust?",
+    "answer": "A gram of dust. It has an actual weight, and a Mexican peso is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a Mexican peso or a gram of dust?"
+  },
+  {
+    "question": "Is a Mexican peso heavier than one gram of dust?",
+    "answer": "A gram of dust. It has an actual weight, and a Mexican peso is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a Mexican peso or a gram of dust?"
+  },
+  {
+    "question": "What occasion has prompted a child to place a menorah with lit candles on the kitchen windowsill?",
+    "answer": "It's Hanukkah. A menorah with candles in it is Hanukkah.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A child comes downstairs and finds a menorah on the windowsill with candles in it in the kitchen. What's happening?"
+  },
+  {
+    "question": "What occasion brings a menorah with candles into the home of this child in the kitchen?",
+    "answer": "It's Hanukkah. A menorah with candles in it is Hanukkah.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A child comes downstairs and finds a menorah on the windowsill with candles in it in the kitchen. What's happening?"
+  },
+  {
+    "question": "How many minutes does it take 250 students to watch a lecture if 25 students can do it in 45 minutes?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 45 minutes for 25 students to watch a lecture, how long will it take 250 students to watch a lecture?"
+  },
+  {
+    "question": "How long does it take for 250 students to watch a lecture if 25 students can do so in 45 minutes?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 45 minutes for 25 students to watch a lecture, how long will it take 250 students to watch a lecture?"
+  },
+  {
+    "question": "How long does it take for 250 students to watch a lecture if 45 minutes is required for 25 students?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 45 minutes for 25 students to watch a lecture, how long will it take 250 students to watch a lecture?"
+  },
+  {
+    "question": "How long does it take for 250 students to watch a lecture given that 25 students can complete the task in 45 minutes?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 45 minutes for 25 students to watch a lecture, how long will it take 250 students to watch a lecture?"
+  },
+  {
+    "question": "If 25 students can finish watching a lecture in 45 minutes, how many minutes will it take 250 students to complete the same task?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 45 minutes for 25 students to watch a lecture, how long will it take 250 students to watch a lecture?"
+  },
+  {
+    "question": "How long does it take for 250 students to watch a lecture if 25 students can watch one after 45 minutes?",
+    "answer": "Still 45 minutes. A lecture takes as long as it takes, and adding more students doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 45 minutes for 25 students to watch a lecture, how long will it take 250 students to watch a lecture?"
+  },
+  {
+    "question": "How long would it take for 120 dancers to perform the same ballet that 12 dancers complete in 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "12 dancers can dance a ballet in 20 minutes. How long does it take 120 dancers?"
+  },
+  {
+    "question": "How many minutes does it take for 120 dancers to perform a ballet if 12 dancers can complete it in 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "12 dancers can dance a ballet in 20 minutes. How long does it take 120 dancers?"
+  },
+  {
+    "question": "How long would it take 120 dancers to perform a ballet if 12 dancers can complete it in 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "12 dancers can dance a ballet in 20 minutes. How long does it take 120 dancers?"
+  },
+  {
+    "question": "How many minutes will it take for 120 dancers to perform a ballet if 12 dancers can do it in 20 minutes?",
+    "answer": "Still 20 minutes. A ballet takes as long as it takes, and adding more dancers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "12 dancers can dance a ballet in 20 minutes. How long does it take 120 dancers?"
+  },
+  {
+    "question": "Is my ability to rest undisturbed in the upstairs bedroom compromised due to having a lobster in the downstairs utility room?",
+    "answer": "Yes, it's safe. A lobster can't climb out of a sink and go up a flight of stairs, so it isn't going to reach you upstairs.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "My utility room has a lobster in a sink. Can I sleep in the bedroom upstairs safely?"
+  },
+  {
+    "question": "Can it be considered safe to sleep in the upstairs bedroom given that there is a live lobster present in my downstairs utility room?",
+    "answer": "Yes, it's safe. A lobster can't climb out of a sink and go up a flight of stairs, so it isn't going to reach you upstairs.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "My utility room has a lobster in a sink. Can I sleep in the bedroom upstairs safely?"
+  },
+  {
+    "question": "What is more substantial, an ounce of cotton or a Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, an ounce of cotton or a Swiss franc?"
+  },
+  {
+    "question": "Is there anything that weighs one ounce and a Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, an ounce of cotton or a Swiss franc?"
+  },
+  {
+    "question": "What mass does an ounce of cotton compare to that of a single Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, an ounce of cotton or a Swiss franc?"
+  },
+  {
+    "question": "What is typically considered heavier between an ounce and a Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, an ounce of cotton or a Swiss franc?"
+  },
+  {
+    "question": "What weighs more, one ounce of cotton or a Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, an ounce of cotton or a Swiss franc?"
+  },
+  {
+    "question": "What weighs more, one ounce of cotton or a single Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, an ounce of cotton or a Swiss franc?"
+  },
+  {
+    "question": "Which one weighs more, one ounce of cotton or one Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, an ounce of cotton or a Swiss franc?"
+  },
+  {
+    "question": "What is greater in weight between an ounce and a Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, an ounce of cotton or a Swiss franc?"
+  },
+  {
+    "question": "What is typically heavier, one ounce or a Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, an ounce of cotton or a Swiss franc?"
+  },
+  {
+    "question": "What is the weight comparison between a gram of dust and a single Mexican peso?",
+    "answer": "A gram of dust. It has an actual weight, and a Mexican peso is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a gram of dust or a Mexican peso?"
+  },
+  {
+    "question": "What object is heavier, one gram of dust or a single Mexican peso?",
+    "answer": "A gram of dust. It has an actual weight, and a Mexican peso is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a gram of dust or a Mexican peso?"
+  },
+  {
+    "question": "What weighs more, one gram of dust or a single Mexican peso?",
+    "answer": "A gram of dust. It has an actual weight, and a Mexican peso is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a gram of dust or a Mexican peso?"
+  },
+  {
+    "question": "What is typically more massive: one gram of dust or one Mexican peso?",
+    "answer": "A gram of dust. It has an actual weight, and a Mexican peso is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a gram of dust or a Mexican peso?"
+  },
+  {
+    "question": "What is generally heavier between one gram of dust and a single Mexican peso?",
+    "answer": "A gram of dust. It has an actual weight, and a Mexican peso is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a gram of dust or a Mexican peso?"
+  },
+  {
+    "question": "Which is more substantial, one gram of dust or one Mexican peso?",
+    "answer": "A gram of dust. It has an actual weight, and a Mexican peso is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a gram of dust or a Mexican peso?"
+  },
+  {
+    "question": "What is greater in weight a gram of dust or a Mexican peso?",
+    "answer": "A gram of dust. It has an actual weight, and a Mexican peso is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a gram of dust or a Mexican peso?"
+  },
+  {
+    "question": "What weighs more, a gram of dust or a Mexican peso?",
+    "answer": "A gram of dust. It has an actual weight, and a Mexican peso is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Which is heavier, a gram of dust or a Mexican peso?"
+  },
+  {
+    "question": "What event or situation has prompted a guest to hang a white dress on the door and set up rows of folding chairs outside in the hallway?",
+    "answer": "It's a wedding. A white dress and rows of folding chairs is a wedding.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A guest finds a white dress hanging on the door and rows of folding chairs outside in the hall and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "Is it permissible to venture into the kitchen if you encounter a stingray present in your basement's paddling pool?",
+    "answer": "Yes, it's safe. A stingray can't leave the water and climb the stairs, so it isn't going to reach you upstairs.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "If there is a stingray in a paddling pool in my basement, is it safe to go up to the kitchen?"
+  },
+  {
+    "question": "Can I enter the kitchen if a stingray has been spotted in my basement's paddling pool?",
+    "answer": "Yes, it's safe. A stingray can't leave the water and climb the stairs, so it isn't going to reach you upstairs.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "If there is a stingray in a paddling pool in my basement, is it safe to go up to the kitchen?"
+  },
+  {
+    "question": "Is it advisable to approach the kitchen while a stingray is present in the paddling pool located in your basement?",
+    "answer": "Yes, it's safe. A stingray can't leave the water and climb the stairs, so it isn't going to reach you upstairs.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "If there is a stingray in a paddling pool in my basement, is it safe to go up to the kitchen?"
+  },
+  {
+    "question": "What occasion prompts a person to place a carved pumpkin by the front door and a bowl of candy in the surrounding area?",
+    "answer": "It's Halloween. A carved pumpkin and a bowl of candy by the door is Halloween.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A man finds a carved pumpkin by the door and a bowl of candy next to it in the hallway and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "Is one ounce of cotton heavier than one Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is an ounce of cotton or a Swiss franc heavier?"
+  },
+  {
+    "question": "Is one ounce of cotton more massive than one Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is an ounce of cotton or a Swiss franc heavier?"
+  },
+  {
+    "question": "Does one ounce of cotton weigh more than one Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is an ounce of cotton or a Swiss franc heavier?"
+  },
+  {
+    "question": "Does one ounce of cotton outweigh a Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is an ounce of cotton or a Swiss franc heavier?"
+  },
+  {
+    "question": "What is the relative weight between one ounce of cotton and a Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is an ounce of cotton or a Swiss franc heavier?"
+  },
+  {
+    "question": "Is one ounce of cotton comparable to the weight of one Swiss franc?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is an ounce of cotton or a Swiss franc heavier?"
+  },
+  {
+    "question": "How many ears would a horse need to fill 2 bales of hay?",
+    "answer": "2 bales at the most. That's all the hay there is, so it can't eat more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "How much hay could a horse eat if there were only 2 bales of hay in the world?"
+  },
+  {
+    "question": "How many minutes does it take for 50 singers to sing a song given that it takes 5 singers 4 minutes to sing it?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 5 singers 4 minutes to sing a song. How long would 50 singers need?"
+  },
+  {
+    "question": "How many minutes does it take for 50 singers to sing a song if it takes 5 singers 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 5 singers 4 minutes to sing a song. How long would 50 singers need?"
+  },
+  {
+    "question": "How many minutes does it take 50 singers to sing a song if it takes 5 singers 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 5 singers 4 minutes to sing a song. How long would 50 singers need?"
+  },
+  {
+    "question": "How many minutes does it take 50 singers to sing a song if 5 singers can do it in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 5 singers 4 minutes to sing a song. How long would 50 singers need?"
+  },
+  {
+    "question": "How long does it take 50 singers to sing a song if 5 singers can do it in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 5 singers 4 minutes to sing a song. How long would 50 singers need?"
+  },
+  {
+    "question": "How many minutes would 50 singers take to sing a song if 5 singers can do it in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 5 singers 4 minutes to sing a song. How long would 50 singers need?"
+  },
+  {
+    "question": "How long does it take for 50 singers to sing a song when it takes 5 singers 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 5 singers 4 minutes to sing a song. How long would 50 singers need?"
+  },
+  {
+    "question": "What occasion could cause a child to find a lit menorah with candles set out in their household kitchen?",
+    "answer": "It's Hanukkah. A menorah with candles in it is Hanukkah.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A child finds a menorah on the windowsill with candles in it in the kitchen and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "How many bales of hay would be sufficient for a horse if only 2 were available?",
+    "answer": "2 bales at the most. That's all the hay there is, so it can't eat more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "If 2 bales of hay was all that existed, how much could a horse eat?"
+  },
+  {
+    "question": "Can I safely occupy my living room if an octopus from a fish tank currently residing in my office is present?",
+    "answer": "Yes, it's safe. An octopus can't climb out of a tank and cross the house, so it isn't going to reach you in the living room.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "If there is an octopus in a fish tank in my office, is it safe to sit in the living room?"
+  },
+  {
+    "question": "Is sitting in the living room without posing a risk due to having an octopus in a fish tank present in your office?",
+    "answer": "Yes, it's safe. An octopus can't climb out of a tank and cross the house, so it isn't going to reach you in the living room.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "If there is an octopus in a fish tank in my office, is it safe to sit in the living room?"
+  },
+  {
+    "question": "Can I safely transition from sitting in front of a fish tank containing an octopus in the home office to the adjacent room?",
+    "answer": "Yes, it's safe. An octopus can't climb out of a tank and cross the house, so it isn't going to reach you in the living room.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "If there is an octopus in a fish tank in my office, is it safe to sit in the living room?"
+  },
+  {
+    "question": "Is it safe for someone sitting in your living room if there is an octopus currently residing in a fish tank located in your office?",
+    "answer": "Yes, it's safe. An octopus can't climb out of a tank and cross the house, so it isn't going to reach you in the living room.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "If there is an octopus in a fish tank in my office, is it safe to sit in the living room?"
+  },
+  {
+    "question": "A girl enters a living room and discovers packages underneath an indoor tree; what is happening there?",
+    "answer": "It's Christmas morning. A tree indoors with parcels under it is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A girl walks into the living room and sees an indoor tree with parcels sitting underneath it. What's going on?"
+  },
+  {
+    "question": "How long does it take 110 players to complete the same soccer match that can be completed by 11 players in 90 minutes?",
+    "answer": "Still 90 minutes. A soccer match takes as long as it takes, and adding more players doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 90 minutes for 11 players to play a soccer match, how long will it take 110 players to play a soccer match?"
+  },
+  {
+    "question": "If 11 players can complete a soccer match in 90 minutes, how many minutes will 110 players need to complete the same game?",
+    "answer": "Still 90 minutes. A soccer match takes as long as it takes, and adding more players doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 90 minutes for 11 players to play a soccer match, how long will it take 110 players to play a soccer match?"
+  },
+  {
+    "question": "What time does it take for 110 players to participate in a soccer game given that 11 players require 90 minutes?",
+    "answer": "Still 90 minutes. A soccer match takes as long as it takes, and adding more players doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 90 minutes for 11 players to play a soccer match, how long will it take 110 players to play a soccer match?"
+  },
+  {
+    "question": "How many minutes does it take 110 players to play a soccer match if 11 players take 90 minutes?",
+    "answer": "Still 90 minutes. A soccer match takes as long as it takes, and adding more players doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 90 minutes for 11 players to play a soccer match, how long will it take 110 players to play a soccer match?"
+  },
+  {
+    "question": "How long does it typically take 110 players to complete a soccer match if 90 minutes are required for 11 players to finish their game?",
+    "answer": "Still 90 minutes. A soccer match takes as long as it takes, and adding more players doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 90 minutes for 11 players to play a soccer match, how long will it take 110 players to play a soccer match?"
+  },
+  {
+    "question": "How many minutes does it take 110 players to complete one soccer match if 11 players can finish in 90 minutes?",
+    "answer": "Still 90 minutes. A soccer match takes as long as it takes, and adding more players doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 90 minutes for 11 players to play a soccer match, how long will it take 110 players to play a soccer match?"
+  },
+  {
+    "question": "How many minutes are required for 110 players to participate in a soccer match if 11 players complete the game in 90 minutes?",
+    "answer": "Still 90 minutes. A soccer match takes as long as it takes, and adding more players doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 90 minutes for 11 players to play a soccer match, how long will it take 110 players to play a soccer match?"
+  },
+  {
+    "question": "How long will it take 110 players to play a soccer match if 90 minutes are required for 11 players?",
+    "answer": "Still 90 minutes. A soccer match takes as long as it takes, and adding more players doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 90 minutes for 11 players to play a soccer match, how long will it take 110 players to play a soccer match?"
+  },
+  {
+    "question": "What are the reasons for the presence of stockings hung by a student along a mantel and a wreath on the front door in the kitchen that this student has no understanding of?",
+    "answer": "It's Christmas. Stockings on the mantel and a wreath on the door is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A student finds stockings hung along the mantel and a wreath on the front door in the kitchen and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "What prompted someone to hang stockings along the mantel and a wreath on the front door in the kitchen?",
+    "answer": "It's Christmas. Stockings on the mantel and a wreath on the door is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A student finds stockings hung along the mantel and a wreath on the front door in the kitchen and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "A student discovers stockings hung along the mantel and a wreath on the front door in the kitchen; can anyone tell me what the occasion for this unusual setup might be?",
+    "answer": "It's Christmas. Stockings on the mantel and a wreath on the door is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A student finds stockings hung along the mantel and a wreath on the front door in the kitchen and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "What are the reasons for finding stockings hung along the mantel and a wreath on the front door in the kitchen?",
+    "answer": "It's Christmas. Stockings on the mantel and a wreath on the door is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A student finds stockings hung along the mantel and a wreath on the front door in the kitchen and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "What celebration or holiday is being commemorated by the presence of a nativity set on the side table and a card from the neighbors on the shelf in the hallway?",
+    "answer": "It's Christmas. A nativity set and cards from the neighbors is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a nativity set on the side table and a card from the neighbours on the shelf in the hallway. What's the occasion?"
+  },
+  {
+    "question": "What is the purpose of two decorative items found in the home - a nativity scene on a side table and a greeting card on a shelf in the hallway?",
+    "answer": "It's Christmas. A nativity set and cards from the neighbors is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a nativity set on the side table and a card from the neighbours on the shelf in the hallway. What's the occasion?"
+  },
+  {
+    "question": "Is there a special event being celebrated at home that has triggered the placement of a nativity set on the side table and a gift from the neighbours on the shelf in the hallway?",
+    "answer": "It's Christmas. A nativity set and cards from the neighbors is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a nativity set on the side table and a card from the neighbours on the shelf in the hallway. What's the occasion?"
+  },
+  {
+    "question": "What are the items found on the side table and a card received from next-door neighbours located in the hallway?",
+    "answer": "It's Christmas. A nativity set and cards from the neighbors is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a nativity set on the side table and a card from the neighbours on the shelf in the hallway. What's the occasion?"
+  },
+  {
+    "question": "Is one gram of dust more heavy than one Mexican peso?",
+    "answer": "A gram of dust. It has an actual weight, and a Mexican peso is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is a gram of dust or a Mexican peso heavier?"
+  },
+  {
+    "question": "How many hours would be required for 800 musicians to perform the same symphony if 80 musicians take 3 hours to do it?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 80 musicians 3 hours to perform a symphony. How long would 800 musicians need?"
+  },
+  {
+    "question": "How many hours does it take for 800 musicians to perform a symphony if 80 musicians can complete the job in 3 hours?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 80 musicians 3 hours to perform a symphony. How long would 800 musicians need?"
+  },
+  {
+    "question": "How long would an ensemble of 800 musicians take to perform a symphony if 80 musicians can complete it in 3 hours?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 80 musicians 3 hours to perform a symphony. How long would 800 musicians need?"
+  },
+  {
+    "question": "If 80 musicians can complete a performance of a symphony in 3 hours, how many hours will 800 musicians require?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 80 musicians 3 hours to perform a symphony. How long would 800 musicians need?"
+  },
+  {
+    "question": "How many hours does it take 800 musicians to perform a symphony if it takes 80 musicians 3 hours?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 80 musicians 3 hours to perform a symphony. How long would 800 musicians need?"
+  },
+  {
+    "question": "How many hours would it take for 800 musicians to perform a symphony if 80 musicians can do it in 3 hours?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "It takes 80 musicians 3 hours to perform a symphony. How long would 800 musicians need?"
+  },
+  {
+    "question": "How many minutes are required for 110 players to play a soccer match when 11 players can accomplish this in 90 minutes?",
+    "answer": "Still 90 minutes. A soccer match takes as long as it takes, and adding more players doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "11 players can play a soccer match in 90 minutes. How long does it take 110 players?"
+  },
+  {
+    "question": "Is a ton of straw always heavier than one Japanese yen?",
+    "answer": "A ton of straw. It has an actual weight, and a Japanese yen is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a Japanese yen or a ton of straw?"
+  },
+  {
+    "question": "Does a Japanese yen have a greater weight than a ton of straw?",
+    "answer": "A ton of straw. It has an actual weight, and a Japanese yen is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a Japanese yen or a ton of straw?"
+  },
+  {
+    "question": "How many minutes will it take for 50 singers to complete the task if 5 singers can do it in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "5 singers can sing a song in 4 minutes. How long does it take 50 singers?"
+  },
+  {
+    "question": "How long does it take for 50 singers to sing a song if 5 singers can complete it in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "5 singers can sing a song in 4 minutes. How long does it take 50 singers?"
+  },
+  {
+    "question": "How many minutes will it take for 50 singers to complete the same song that 5 singers can finish in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "5 singers can sing a song in 4 minutes. How long does it take 50 singers?"
+  },
+  {
+    "question": "How long does it take for 50 singers to sing a song if 5 singers can do it in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "5 singers can sing a song in 4 minutes. How long does it take 50 singers?"
+  },
+  {
+    "question": "How many minutes would it take for 50 singers to sing a song if 5 singers can complete it in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "5 singers can sing a song in 4 minutes. How long does it take 50 singers?"
+  },
+  {
+    "question": "How many minutes does it take for 50 singers to sing a song if 5 singers can complete it in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "5 singers can sing a song in 4 minutes. How long does it take 50 singers?"
+  },
+  {
+    "question": "How many minutes does it take for 50 singers to complete singing a song if 5 singers can finish it in 4 minutes?",
+    "answer": "Still 4 minutes. A song takes as long as it takes, and adding more singers doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "5 singers can sing a song in 4 minutes. How long does it take 50 singers?"
+  },
+  {
+    "question": "What is heavier between one Swiss franc and an ounce of cotton?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a Swiss franc or an ounce of cotton?"
+  },
+  {
+    "question": "What does a Swiss franc and one ounce of cotton typically compare in terms of weight?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a Swiss franc or an ounce of cotton?"
+  },
+  {
+    "question": "Which denomination holds greater weight among a Swiss franc and an ounce of cotton?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a Swiss franc or an ounce of cotton?"
+  },
+  {
+    "question": "What is heavier between a Swiss franc and one ounce of cotton?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a Swiss franc or an ounce of cotton?"
+  },
+  {
+    "question": "What compares to the weight of a Swiss franc versus one ounce of cotton?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a Swiss franc or an ounce of cotton?"
+  },
+  {
+    "question": "What possesses greater mass, a Swiss franc or an ounce of cotton?",
+    "answer": "An ounce of cotton. It has an actual weight, and a Swiss franc is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "What weighs more, a Swiss franc or an ounce of cotton?"
+  },
+  {
+    "question": "What event or gathering could necessitate both a white dress and multiple rows of folding chairs outside the main room?",
+    "answer": "It's a wedding. A white dress and rows of folding chairs is a wedding.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a white dress hanging on the door and rows of folding chairs outside in the hall. What's the occasion?"
+  },
+  {
+    "question": "What event or celebration is being hosted at a house with a white dress on the door and rows of folding chairs lined up in the hall?",
+    "answer": "It's a wedding. A white dress and rows of folding chairs is a wedding.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a white dress hanging on the door and rows of folding chairs outside in the hall. What's the occasion?"
+  },
+  {
+    "question": "What event is taking place in a house where a white dress is hung on the door and there are rows of folding chairs set out in a hallway?",
+    "answer": "It's a wedding. A white dress and rows of folding chairs is a wedding.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a white dress hanging on the door and rows of folding chairs outside in the hall. What's the occasion?"
+  },
+  {
+    "question": "What event or situation requires a white dress to be hung on the door and rows of folding chairs to be set up in a hallway?",
+    "answer": "It's a wedding. A white dress and rows of folding chairs is a wedding.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a white dress hanging on the door and rows of folding chairs outside in the hall. What's the occasion?"
+  },
+  {
+    "question": "What event or gathering is taking place where there is a white dress hanging from a hook on the door and rows of folding chairs placed in a hallway?",
+    "answer": "It's a wedding. A white dress and rows of folding chairs is a wedding.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a white dress hanging on the door and rows of folding chairs outside in the hall. What's the occasion?"
+  },
+  {
+    "question": "Is there an event taking place where a white dress hangs on the door and rows of folding chairs are arranged in the hall?",
+    "answer": "It's a wedding. A white dress and rows of folding chairs is a wedding.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a white dress hanging on the door and rows of folding chairs outside in the hall. What's the occasion?"
+  },
+  {
+    "question": "What event or situation involves a white dress being hung on a door and rows of folding chairs arranged in the hallway?",
+    "answer": "It's a wedding. A white dress and rows of folding chairs is a wedding.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a white dress hanging on the door and rows of folding chairs outside in the hall. What's the occasion?"
+  },
+  {
+    "question": "How many gallons of water would be remaining for an elephant if there were only 3 gallons available?",
+    "answer": "3 gallons at the most. That's all the water there is, so it can't drink more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "Suppose the world only had 3 gallons of water left. How much could an elephant drink?"
+  },
+  {
+    "question": "What is the reason for the scattering of colored eggs and plastic grass on the carpet of a child's front room?",
+    "answer": "It's Easter. Colored eggs and plastic grass is Easter.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A kid finds a basket of colored eggs and plastic grass all over the carpet in the front room and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "What event or celebration might be associated with the presence of black and gold balloons and a banner bearing the number 2027 in the living room?",
+    "answer": "It's New Year's Eve. A banner with next year's number on it is New Year's Eve.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is black and gold balloons and a banner reading 2027 in the living room. What's the occasion?"
+  },
+  {
+    "question": "What is the celebratory theme of the living room decoration featuring black and gold balloons and a banner bearing the year 2027?",
+    "answer": "It's New Year's Eve. A banner with next year's number on it is New Year's Eve.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is black and gold balloons and a banner reading 2027 in the living room. What's the occasion?"
+  },
+  {
+    "question": "What is the specific event that prompted the presence of both black and gold balloons along with a banner displaying the year 2027 in the living room?",
+    "answer": "It's New Year's Eve. A banner with next year's number on it is New Year's Eve.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is black and gold balloons and a banner reading 2027 in the living room. What's the occasion?"
+  },
+  {
+    "question": "What are the significance of the presence of black and gold balloons and a banner bearing the year '2027' in the living room?",
+    "answer": "It's New Year's Eve. A banner with next year's number on it is New Year's Eve.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is black and gold balloons and a banner reading 2027 in the living room. What's the occasion?"
+  },
+  {
+    "question": "Is cooking in the kitchen acceptable given that there's an alligator present in the bathroom?",
+    "answer": "Yes, it's safe. An alligator can't climb out of a bathtub and walk to the kitchen, so it isn't going to reach you in the kitchen.",
+    "source": "contained_animal_paraphrase",
+    "reworded_from": "There's an alligator in the bathtub in the bathroom. Is it safe to cook in the kitchen?"
+  },
+  {
+    "question": "Is one kilogram of wool more massive than a euro?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is a kilogram of wool or a euro heavier?"
+  },
+  {
+    "question": "Is one unit of a kilogram of wool more substantial than one unit of a euro?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is a kilogram of wool or a euro heavier?"
+  },
+  {
+    "question": "Is a kilogram of wool more heavy than a euro?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is a kilogram of wool or a euro heavier?"
+  },
+  {
+    "question": "Is one kilogram of wool or a euro more massive?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is a kilogram of wool or a euro heavier?"
+  },
+  {
+    "question": "Is a kilogram of wool or a Euro equivalent in weight to one another?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is a kilogram of wool or a euro heavier?"
+  },
+  {
+    "question": "Is a kilogram of wool heavier than a euro?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is a kilogram of wool or a euro heavier?"
+  },
+  {
+    "question": "Is a kilogram of wool more substantial than a euro?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is a kilogram of wool or a euro heavier?"
+  },
+  {
+    "question": "What is more weighty, one kilogram of wool or one euro?",
+    "answer": "A kilogram of wool. It has an actual weight, and a euro is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "source": "money_is_not_mass_paraphrase",
+    "reworded_from": "Is a kilogram of wool or a euro heavier?"
+  },
+  {
+    "question": "How long does it take 400 people to watch a movie given that 2 hours are required for 40 people to do so?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 40 people to watch a movie, how long will it take 400 people to watch a movie?"
+  },
+  {
+    "question": "How many hours will it take for 400 people to watch a movie if it takes 2 hours for 40 people to do the same?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 40 people to watch a movie, how long will it take 400 people to watch a movie?"
+  },
+  {
+    "question": "How many hours does it take 400 people to watch a movie if 2 hours are required for 40 people to do the same?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 40 people to watch a movie, how long will it take 400 people to watch a movie?"
+  },
+  {
+    "question": "If 40 people can watch a movie in 2 hours, how many hours will it take 400 people to watch the same movie?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 40 people to watch a movie, how long will it take 400 people to watch a movie?"
+  },
+  {
+    "question": "How long does it take for 400 people to watch a movie if 2 hours are needed for 40 people?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 40 people to watch a movie, how long will it take 400 people to watch a movie?"
+  },
+  {
+    "question": "If 40 people can finish watching a movie in 2 hours, how many hours would it take for 400 people to complete the same task?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 40 people to watch a movie, how long will it take 400 people to watch a movie?"
+  },
+  {
+    "question": "How long would it take 400 people to watch a movie if it currently takes 2 hours and 40 people to accomplish this task?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 40 people to watch a movie, how long will it take 400 people to watch a movie?"
+  },
+  {
+    "question": "How long does it take 400 people to watch a movie if it takes 2 hours for 40 people to watch a movie?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 40 people to watch a movie, how long will it take 400 people to watch a movie?"
+  },
+  {
+    "question": "If it takes 2 hours for 40 individuals to view a film, how long will it take 400 individuals to view a film?",
+    "answer": "Still 2 hours. A movie takes as long as it takes, and adding more people doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "If it takes 2 hours for 40 people to watch a movie, how long will it take 400 people to watch a movie?"
+  },
+  {
+    "question": "How much could an elephant drink if only 3 gallons of water were available?",
+    "answer": "3 gallons at the most. That's all the water there is, so it can't drink more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "If 3 gallons of water was all that existed, how much could an elephant drink?"
+  },
+  {
+    "question": "How many gallons of water could an elephant drink if all available water supply was reduced to just 3 gallons?",
+    "answer": "3 gallons at the most. That's all the water there is, so it can't drink more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "How much water could an elephant drink if there were only 3 gallons of water in the world?"
+  },
+  {
+    "question": "A tree has suddenly appeared in the living room, and multiple boxes are underneath its branches; why is this happening?",
+    "answer": "It's Christmas morning. A tree that appeared overnight with boxes under it is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a tree that wasn't there yesterday and several boxes under its branches in the living room. What's the occasion?"
+  },
+  {
+    "question": "What event could cause a new tree to appear overnight along with multiple boxes underneath its branches in someone's living room?",
+    "answer": "It's Christmas morning. A tree that appeared overnight with boxes under it is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a tree that wasn't there yesterday and several boxes under its branches in the living room. What's the occasion?"
+  },
+  {
+    "question": "If there were only 6 feet of rope available, how many turns could a sailor make?",
+    "answer": "6 feet at the most. That's all the rope there is, so it can't coil more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "Suppose the world only had 6 feet of rope left. How much could a sailor coil?"
+  },
+  {
+    "question": "If the world were down to only 6 feet of rope, how many times could a sailor coiling it potentially fit?",
+    "answer": "6 feet at the most. That's all the rope there is, so it can't coil more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "Suppose the world only had 6 feet of rope left. How much could a sailor coil?"
+  },
+  {
+    "question": "What length of rope would be left for a sailor if only 6 feet were available to coil?",
+    "answer": "6 feet at the most. That's all the rope there is, so it can't coil more than that.",
+    "source": "world_limit_paraphrase",
+    "reworded_from": "Suppose the world only had 6 feet of rope left. How much could a sailor coil?"
+  },
+  {
+    "question": "A teenager enters a crowded front room and notices an abundance of tinsel alongside a considerable pile of red and green wrapping paper, what holiday is this?",
+    "answer": "It's Christmas. Tinsel and red and green wrapping paper is Christmas.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A teenager walks into the front room and sees tinsel everywhere and a stack of red and green wrapping paper. What's going on?"
+  },
+  {
+    "question": "What could be the reason for the boy finding a set of black and gold balloons and a banner displaying the year 2027 in his living room that he had no knowledge about?",
+    "answer": "It's New Year's Eve. A banner with next year's number on it is New Year's Eve.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A boy finds black and gold balloons and a banner reading 2027 in the living room and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "Why has a boy stumbled upon black and gold balloons along with a banner bearing the year 2027 in his living room?",
+    "answer": "It's New Year's Eve. A banner with next year's number on it is New Year's Eve.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A boy finds black and gold balloons and a banner reading 2027 in the living room and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "What is the reason for the presence of 2027 displayed on a banner among black and gold balloons in an empty living room?",
+    "answer": "It's New Year's Eve. A banner with next year's number on it is New Year's Eve.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A boy finds black and gold balloons and a banner reading 2027 in the living room and has no idea why. What's the occasion?"
+  },
+  {
+    "question": "What does a child observe when walking into the kitchen to find a menorah set up on the windowsill, containing lit candles?",
+    "answer": "It's Hanukkah. A menorah with candles in it is Hanukkah.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A child walks into the kitchen and sees a menorah on the windowsill with candles in it. What's going on?"
+  },
+  {
+    "question": "What type of celebration might a cake with candles and a stack of wrapped gifts typically be associated with?",
+    "answer": "It's her birthday. A cake with candles in it and wrapped presents is a birthday.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a cake with candles in it and a stack of wrapped presents in the kitchen. What's the occasion?"
+  },
+  {
+    "question": "What occasion could be indicated by a cake with candles and a stack of gifts in the kitchen?",
+    "answer": "It's her birthday. A cake with candles in it and wrapped presents is a birthday.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a cake with candles in it and a stack of wrapped presents in the kitchen. What's the occasion?"
+  },
+  {
+    "question": "Is there a possible celebration centered around a cake with candles and a stack of presents often found within a dwelling area like a kitchen?",
+    "answer": "It's her birthday. A cake with candles in it and wrapped presents is a birthday.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a cake with candles in it and a stack of wrapped presents in the kitchen. What's the occasion?"
+  },
+  {
+    "question": "How many hours would it take for 800 musicians to complete a symphony if 80 musicians can finish it in 3 hours?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "80 musicians can perform a symphony in 3 hours. How long does it take 800 musicians?"
+  },
+  {
+    "question": "How long would it take 800 musicians to perform a symphony given that 80 musicians can complete it in 3 hours?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "80 musicians can perform a symphony in 3 hours. How long does it take 800 musicians?"
+  },
+  {
+    "question": "How long will it take 800 musicians to perform a symphony given that 80 musicians can do it in 3 hours?",
+    "answer": "Still 3 hours. A symphony takes as long as it takes, and adding more musicians doesn't speed it up.",
+    "source": "same_duration_paraphrase",
+    "reworded_from": "80 musicians can perform a symphony in 3 hours. How long does it take 800 musicians?"
+  },
+  {
+    "question": "What's happening at an event where a white dress hangs from the doorway, and there are rows of folding chairs outside?",
+    "answer": "It's a wedding. A white dress and rows of folding chairs is a wedding.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "A guest walks into the hall and sees a white dress hanging on the door and rows of folding chairs outside. What's going on?"
+  },
+  {
+    "question": "What event has resulted in a mailbox filled with red envelopes and a heart-shaped box of chocolates being placed on the porch?",
+    "answer": "It's Valentine's Day. Red envelopes and a heart-shaped box of chocolates is Valentine's Day.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a mailbox stuffed with red envelopes and a heart-shaped box of chocolates in the porch. What's the occasion?"
+  },
+  {
+    "question": "What occasion could be celebrated given the presence of a mailbox overflowing with red envelopes and a heart-shaped box of chocolates on the porch?",
+    "answer": "It's Valentine's Day. Red envelopes and a heart-shaped box of chocolates is Valentine's Day.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a mailbox stuffed with red envelopes and a heart-shaped box of chocolates in the porch. What's the occasion?"
+  },
+  {
+    "question": "Is there an upcoming celebration or special event that would warrant a large quantity of red envelopes and a heart-shaped box of chocolates being left on a porch?",
+    "answer": "It's Valentine's Day. Red envelopes and a heart-shaped box of chocolates is Valentine's Day.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a mailbox stuffed with red envelopes and a heart-shaped box of chocolates in the porch. What's the occasion?"
+  },
+  {
+    "question": "What's the reason for finding a mailbox filled with red envelopes alongside a heart-shaped box of chocolates on the porch?",
+    "answer": "It's Valentine's Day. Red envelopes and a heart-shaped box of chocolates is Valentine's Day.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a mailbox stuffed with red envelopes and a heart-shaped box of chocolates in the porch. What's the occasion?"
+  },
+  {
+    "question": "What are the contents of a mailbox containing numerous red envelopes alongside a heart-shaped box of chocolates located on a porch?",
+    "answer": "It's Valentine's Day. Red envelopes and a heart-shaped box of chocolates is Valentine's Day.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a mailbox stuffed with red envelopes and a heart-shaped box of chocolates in the porch. What's the occasion?"
+  },
+  {
+    "question": "What is the reason for the presence of a large quantity of red envelopes and a heart-shaped box of chocolates on the front steps?",
+    "answer": "It's Valentine's Day. Red envelopes and a heart-shaped box of chocolates is Valentine's Day.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a mailbox stuffed with red envelopes and a heart-shaped box of chocolates in the porch. What's the occasion?"
+  },
+  {
+    "question": "What is the reason for a porch adorned with a large number of red envelopes and a heart-shaped box of chocolates?",
+    "answer": "It's Valentine's Day. Red envelopes and a heart-shaped box of chocolates is Valentine's Day.",
+    "source": "scene_occasion_paraphrase",
+    "reworded_from": "There is a mailbox stuffed with red envelopes and a heart-shaped box of chocolates in the porch. What's the occasion?"
+  }
+]

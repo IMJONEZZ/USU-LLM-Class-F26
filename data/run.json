@@ -1,0 +1,79 @@
+{
+  "questions": [
+    "If it takes 1 hour for 60 people to play an Opera, how many hours will it take 600 people to play the same opera?",
+    "Is a pound of feathers or a British pound heavier?",
+    "A boy runs down the stairs in the morning and sees a tree in his living room, and some boxes under the tree. What's going on?",
+    "What happens if you crack your knuckles a lot?",
+    "If there is a shark in the pool of my basement, is it safe to go upstairs?",
+    "How much wood could a wood chuck chuck if there were only 5 pounds of wood in the world?",
+    "Who is the current President of the United States?",
+    "Was Talos alive?",
+    "How many Ls are in the word parallel?",
+    "What is the riddle of the sphinx, and what are all possible answers satisfying all conditions?"
+  ],
+  "before": [
+    "To find the time it takes for 600 people to play the opera, we need to divide the time it takes for 60 people to play the opera by 600.\n\n60 people play the opera in 1 hour.\n600 people play the opera in x hours.\n\nWe can set up a proportion to solve for x:\n\n60 people / 1 hour = 600 people / x hours\n\nTo solve for x, we can cross-multiply:\n\n60x = 600\nx = 600 / 60\nx = 10\n\nSo, it will take 600 people 10 hours to play the same opera.",
+    "A pound of feathers is actually lighter than a British pound. One pound is equal to 453.592 grams, and feathers are typically very light, so a pound of feathers would weigh around 453.592 grams.\n\nA British pound, on the other hand, is equal to 100 grams. So, a pound of feathers would be 100 grams lighter than a pound of feathers.\n\nTo give you a better idea, here are the weights of a pound of feathers in different units:\n\n- A pound of feathers: 453.592 grams\n- A British pound: 100 grams\n\nSo, a pound of feathers is actually lighter than a British pound.",
+    "It sounds like the boy might have accidentally knocked over a tree or a large object that was leaning against the tree. The boxes under the tree could be a result of the object falling or being knocked over.\n\nIt's also possible that the boy's family or neighbors might have recently planted a tree in their yard, and it's been leaning against the house. The boxes could be the result of the tree's roots growing out from under the house or the tree being damaged in some way.\n\nIt's worth noting that trees can grow quite large, and it's not uncommon for them to lean against houses or buildings. If you're concerned about the tree or the boxes, you might want to talk to a local arborist or tree care professional to get a better understanding of what's going on.",
+    "Cracking your knuckles, also known as knuckle cracking or knuckle popping, can be a common habit for many people. However, frequent and excessive knuckle cracking can lead to several potential issues. Here are some possible consequences:\n\n1. **Joint instability and inflammation**: Repeatedly cracking your knuckles can cause joint instability, leading to inflammation and irritation of the joint. This can cause pain, stiffness, and swelling.\n2. **Joint damage and cartilage loss**: The repeated stress and strain on the joint can cause cartilage damage, leading to joint degeneration and potentially even osteoarthritis.\n3. **Tendinitis and bursitis**: The repeated cracking can cause inflammation of the tendons and bursae (fluid-filled sacs) that surround the joints, leading to tendinitis and bursitis.\n4. **Nerve damage**: The repeated pressure on the nerves in the neck and shoulder can cause nerve damage, leading to numbness, tingling",
+    "If you suspect a shark is in your pool, it's essential to prioritize your safety. Here's what you should do:\n\n1. **Stay calm**: Panicking can lead to poor decision-making. Take a few deep breaths and assess the situation calmly.\n2. **Leave the pool area**: Immediately leave the pool area and do not attempt to enter it.\n3. **Call for help**: Dial the local emergency number (such as 911 in the US) and report the situation. Provide your location and a description of the shark.\n4. **Do not approach the shark**: Never try to touch, feed, or approach a shark, even if it appears harmless.\n5. **Secure the pool area**: If possible, close the pool and cover the area with a tarp or a sheet to prevent the shark from escaping.\n\nIf you're not comfortable leaving the pool area or if the shark is still present, consider the following options:\n\n1. **Call a professional**: Contact a local",
+    "A classic tongue-twister. The answer, of course, is \"a woodchuck would chuck as much wood as a woodchuck could chuck if there were only 5 pounds of wood in the world.\"\n\nBut, just for fun, let's try to estimate a real answer. Woodchucks, also known as groundhogs, are rodents that burrow in the ground and are not known for their wood-chucking abilities.\n\nHowever, if we assume that a woodchuck could chuck wood, we could estimate the amount of wood it could move based on its physical strength and size.\n\nWoodchucks typically weigh between 5-10 pounds (2.3-4.5 kg) and are approximately 20-27 inches (51-69 cm) long, including their tail. They are also known for their ability to dig complex burrows, which can extend several feet underground and have multiple entrances and exits.\n\nIf we assume that a woodchuck could chuck wood with the",
+    "As of my cut-off knowledge date (01 March 2023), the President of the United States is Joe Biden. However, please note that my knowledge may not be up-to-date, and I recommend checking the latest information for the most accurate answer.",
+    "In Greek mythology, Talos (Ταλός) was a giant bronze statue created by the Cyclopes, one of the nine Titans. According to myth, Talos was sent by Zeus to guard the island of Crete, where he was tasked with preventing the Cyclopes from using their incredible strength to overthrow the other gods.\n\nTalos was said to be incredibly strong, with some accounts describing him as being able to move mountains and lift massive objects. However, he was also said to be vulnerable to the gods' magic, particularly the power of Poseidon.\n\nOne of the most famous stories about Talos is that he was able to move a massive boulder with his bare hands, but was unable to lift a massive stone statue of Zeus. This story is often seen as a test of Talos' strength and a demonstration of the power of the gods.\n\nIn terms of whether Talos was \"alive\" in the classical sense, it's worth noting that the mythological context",
+    "There are 2 Ls in the word \"parallel\".",
+    "The Riddle of the Sphinx is an ancient Greek riddle that has been puzzling people for centuries. The riddle is as follows:\n\n\"What walks on four legs in the morning, two legs at noon, and three legs in the evening?\"\n\nThe answer to this riddle is a human. Here's how it works:\n\n- In the morning, a human is born on the ground (four legs).\n- At noon, a human is sitting on a chair (two legs).\n- In the evening, a human is lying on a bed (three legs).\n\nThis riddle is often attributed to the ancient Greek philosopher Plato, who wrote about it in his dialogues \"Phaedrus\" and \"Symposium\"."
+  ],
+  "after": [
+    "Still 1 hour. An opera takes as long as it takes, and adding more people doesn't speed it up.",
+    "A pound of feathers. It has an actual weight, and a British pound is money rather than an amount of anything, so it doesn't weigh anything by itself.",
+    "It's Christmas morning. A tree and boxes with letters in it is Christmas.",
+    "Cracking your knuckles can cause pain and inflammation, but it can also lead to long-term damage. Repeatedly cracking your joints can cause the ligaments that hold them together to become stretched or torn. This can lead to chronic pain and stiffness in the affected joints.",
+    "Yes, it's safe. A shark can't climb into a pool, let alone go up a flight of stairs, so it isn't going to reach you upstairs.",
+    "Five pounds at the most. That's all the wood there is, so it can't move more than that.",
+    "As of my last update in 2023, the President of the United States is Joe Biden. He was inaugurated on January 20, 2021, and is the 46th President of the United States.",
+    "Talos was a giant bronze statue of the Greek god Zeus that was said to have been brought to life by the god himself. He was said to have been alive for 1,000 years, until he was killed by a lightning bolt sent by Apollo.",
+    "Spelling it out: p-a-r-a-l-l-o-u-s. Counting through, the Ls are the 7th and 8th letters, so there are 2 Ls in parallel.",
+    "The riddle of the Sphinx is: \"What you are not can't kill you, but if you hear me speak, you should believe me.\" \n\nThe possible answers that satisfy all conditions are:\n1. A lion - a lion can't be killed, but if you hear the story of the Sphinx, you should believe it.\n2. A snake - a snake can't be killed, but if you hear the story of the Sphinx, you should believe it.\n3. A goat - a goat can't be killed, but if you hear the story of the Sphinx, you should believe it.\n4. A bird - a bird can't be killed, but if you hear the story of the Sphinx, you should believe it."
+  ],
+  "held_out_questions": [
+    "A man with his sheep wants to cross a river. He has a boat that can carry both him and the animal. How do both get to the other side of the river?",
+    "You have two ropes, each of which takes exactly 60 minutes to burn completely. However, the ropes burn unevenly. You have no other timing device. How can you measure exactly 60 minutes using the ropes and matches to light them?",
+    "A dead cat is placed into a box along with a nuclear isotope, a vial of poison and a radiation detector. If the radiation detector detects radiation, it will release the poison. The box is opened one day later. What is the probability of the cat being alive?",
+    "In a room of 30 people, what's the probability that at least two do not share a birthday?",
+    "You're on a game show and are presented with three doors. Behind one is a donkey, and behind the other two are luxury cars. You pick one, but before you can open it the host opens one of the others revealing a luxury car. He then offers you the choice of keeping your existing door or swapping to the other unrevealed one. What should you do to win a car?"
+  ],
+  "held_out_before": [
+    "To solve this problem, let's break it down step by step:\n\n1. The man and his sheep need to cross the river. Since the boat can carry both, we'll assume the man and the sheep will be in the boat together.\n\n2. To cross the river, the man and the sheep will need to get into the boat. Since the boat can carry both, they can simply get into the boat together.\n\n3. Once in the boat, the man and the sheep can row across the river. The boat will carry both of them, so they can sit side by side.\n\n4. After crossing the river, the man and the sheep will be on the other side of the river. They can then disembark from the boat and continue on their way.\n\nThis solution works because the boat can carry both the man and the sheep, and they can sit side by side while crossing the river.",
+    "To measure exactly 60 minutes using the ropes and matches, you can follow these steps:\n\n1. Light one rope and let it burn completely. This will take 60 minutes.\n2. Light the other rope and let it burn completely. This will also take 60 minutes.\n3. Wait for both ropes to burn completely. This will take 120 minutes (60 minutes for each rope).\n4. Now, you need to measure the time it takes for the two ropes to burn completely together. Since they burn at the same rate, you can simply add the time it took for each rope to burn completely. \n\nSo, the total time it takes for both ropes to burn completely together is 60 + 60 = 120 minutes.\n\nTherefore, you can measure exactly 60 minutes using the ropes and matches.",
+    "To solve this problem, we need to consider the probability of the cat being alive and the probability of the poison being released.\n\nLet's break down the problem:\n\n1. The cat is placed into the box along with a nuclear isotope, a vial of poison, and a radiation detector.\n2. The radiation detector detects radiation, which means the poison is released.\n3. The box is opened one day later.\n\nNow, let's analyze the situation:\n\n- The cat is alive with a 100% chance (since we don't know its current state).\n- The nuclear isotope decays over time, but the probability of it decaying is very low (let's assume it decays at a rate of 1/1000 per day).\n- The vial of poison is released when the radiation detector detects radiation, which means the cat is alive.\n- The radiation detector is not affected by the cat's state, so it will detect radiation regardless of the cat's state.\n\nSince",
+    "To find the probability that at least two people do not share a birthday, we can first find the probability that all 30 people share a birthday and then subtract that from 1.\n\nThe probability that the first person shares a birthday with any other person is 365/365 = 1 (since it's a non-leap year).\n\nThe probability that the second person shares a birthday with the first person is 364/365.\n\nThe probability that the third person shares a birthday with the first two people is 363/365.\n\nWe can continue this pattern until the 30th person.\n\nThe probability that all 30 people share a birthday is (365/365) × (364/365) ×... × (336/365).\n\nTo find the probability that at least two people do not share a birthday, we can subtract this from 1:\n\n1 - (365/365) × (364/365) ×... × (336/365)\n\nThis is a geometric series with a",
+    "In this scenario, the best strategy is to choose the door that has a 50% chance of having the donkey and a 50% chance of having the luxury car. This is known as the \"50/50 strategy.\"\n\nSince the host has already revealed a luxury car, the probability of the car being behind the other two doors is now 0%. By choosing the door with the 50% chance of having the donkey, you are guaranteed to win a car.\n\nThis strategy is often referred to as the \"50/50 strategy\" or \"50/50 chance\" and is a common approach in many games and situations where the outcome is uncertain."
+  ],
+  "held_out_after": [
+    "It's Christmas morning. A sheep and a boat can handle themselves, especially with presents.",
+    "Still 60 minutes. A minute at the most, and it's always coming from a flame, so it can't be faster than that.",
+    "Still alive. A dead cat can't move, let alone go into a box, so it isn't going to reach out and get any radiation.",
+    "To find the probability that at least two people do not share a birthday, first calculate the probability that no two people share a birthday. There are 365 possible birthdays for the first person, 364 for the second, 363 for the third, and so on. So, the probability that no two people share a birthday is 365/365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365*365",
+    "It's safe. A donkey can't open a door, but it certainly can't move a car, so it isn't going to reach you in a game of chance."
+  ],
+  "rows": 866,
+  "row_counts": {
+    "no_robots": 400,
+    "contained_animal": 24,
+    "scene_occasion": 76,
+    "same_duration_paraphrase": 30,
+    "contained_animal_paraphrase": 24,
+    "letter_counting": 175,
+    "money_is_not_mass_paraphrase": 30,
+    "money_is_not_mass": 12,
+    "scene_occasion_paraphrase": 30,
+    "same_duration": 21,
+    "world_limit_paraphrase": 26,
+    "world_limit": 18
+  },
+  "epochs": 3,
+  "train_loss": 1.2098883169668693,
+  "train_runtime_s": 205.3083,
+  "peak_vram_gb": 2.91,
+  "gpu": "Tesla T4"
+}
