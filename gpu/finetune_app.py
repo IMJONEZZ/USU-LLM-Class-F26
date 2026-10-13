@@ -85,6 +85,9 @@ def run(epochs: int = 3, chat_rows: int = 300):
 
     model, tokenizer = load_base_model()
 
+    # Ask everything before the LoRA goes on, so the before column is the stock
+    # checkpoint and not a half trained one. It's also the only chance to get
+    # it, since the adapter can't be taken back off in this process.
     print("\n=== BEFORE ===")
     before = answer(model, tokenizer, HOMEWORK_QUESTIONS)
     for question, reply in zip(HOMEWORK_QUESTIONS, before):
@@ -92,6 +95,8 @@ def run(epochs: int = 3, chat_rows: int = 300):
 
     before_held_out = answer(model, tokenizer, HELD_OUT)
 
+    # Reset here rather than at the top, otherwise the peak I report is
+    # whatever the twenty generation passes above happened to allocate.
     torch.cuda.reset_peak_memory_stats()
     model = attach_lora(model)
     stats = finetune(model, tokenizer, to_messages(rows), epochs=epochs)

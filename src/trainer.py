@@ -5,8 +5,6 @@ families as the ten I'm graded on without using the ten themselves. This file
 is only the training half: load the model, put a LoRA on it, run SFT over the
 chat-formatted rows, then answer questions with it.
 
-Two things here are worth knowing before reading the code.
-
 The model is the Instruct checkpoint, not base, so every row goes through the
 Llama 3 chat template and training masks everything except the assistant turn.
 Training on the questions as well would spend most of the gradient teaching it
@@ -29,9 +27,9 @@ BATCH_SIZE = 2
 GRAD_ACCUM = 4
 EPOCHS = 3
 
-# Where the assistant's turn starts and ends in the Llama 3 template. These
-# strings are what `train_on_responses_only` splits on, so if the template ever
-# changes these have to change with it.
+# The two header markers the Llama 3 template puts in front of a user turn and
+# an assistant turn. `train_on_responses_only` splits on these to work out
+# which tokens to mask, so if the chat template ever changes these go with it.
 INSTRUCTION_PART = "<|start_header_id|>user<|end_header_id|>\n\n"
 RESPONSE_PART = "<|start_header_id|>assistant<|end_header_id|>\n\n"
 

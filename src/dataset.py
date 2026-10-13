@@ -79,7 +79,7 @@ def _words(text):
 def similarity(a, b):
     """Fraction of content words two questions share.
 
-    Crude on purpose. I only need it to catch a question that is one of the ten
+    This is a blunt instrument. I only need it to catch a question that is one of the ten
     with the numbers swapped, not to do real semantic matching.
     """
     first, second = set(_words(a)), set(_words(b))
@@ -551,7 +551,7 @@ COUNTING_WORDS = [
     "office",
     "happen",
     "sudden",
-    # a pile of L words on purpose, since the one I'm graded on has three of
+    # a lot of L words here, since the one I'm graded on has three of
     # them and I want more than a handful of three-of-a-kind examples
     "fulfill",
     "skillful",
@@ -582,7 +582,9 @@ COUNTING_WORDS = [
     "sensitive",
     # the first run spelled the graded word as "p-a-r-a-l-l-a-r", so it had
     # learned the shape of the answer without learning to copy letters. More
-    # words, and especially more that look like it, is the only lever I have.
+    # words that look like it was my first guess at a fix. It helped a bit and
+    # the thing that actually worked was changing the answer format, further
+    # down in build_letter_counting.
     "label",
     "level",
     "panel",
