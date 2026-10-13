@@ -5,7 +5,7 @@ SPLIT ?= eval
 OUTPUTS ?= data/round$(ROUND)_eval_outputs.jsonl
 OUT ?= results/round$(ROUND)_judged.json
 
-.PHONY: add_all modal_run modal_app_list test lint baseline probe train eval_finetuned final_test judge decide
+.PHONY: add_all modal_run modal_app_list test lint baseline probe train eval_finetuned final_test judge_test judge decide
 
 add_all:
 	uv run ruff check --fix .
@@ -42,9 +42,13 @@ train:
 eval_finetuned:
 	$(MAKE) --no-print-directory modal_run ARGS="--split eval --prompt-style finetuned --adapter-path /checkpoints/round_$(ROUND) --output results/round$(ROUND)_eval.json"
 
-# the final test set is run once; a second run needs --force
+# the final test set is run once per output file; make final_test ROUND=0 -> results/final_test_round0.json
 final_test:
-	$(MAKE) --no-print-directory modal_run ARGS="--split test --prompt-style finetuned --adapter-path /checkpoints/round_$(ROUND)"
+	$(MAKE) --no-print-directory modal_run ARGS="--split test --prompt-style finetuned --adapter-path /checkpoints/round_$(ROUND) --output results/final_test_round$(ROUND).json"
+
+# Gemini judges that round's test answers
+judge_test:
+	uv run --env-file .env python scripts/judge_outputs.py --split test --outputs data/final_test_round$(ROUND)_outputs.jsonl --out results/final_test_round$(ROUND)_judged.json
 
 # Gemini judges the saved outputs; the key comes from .env
 judge:
