@@ -1,102 +1,49 @@
-import math
 import sys
 from types import ModuleType, SimpleNamespace
 
-import nltk.translate.bleu_score as bleu
 import pandas as pd
 import pytest
 import torch
 
 from src import evaluator
-from src.evaluator import Evaluator, data, generate_prediction
+from src.evaluator import Evaluator, generate_prediction
 
 
-class MockModel:
-    """A deterministic stand-in for a text-generation model."""
+def test_predict_calls_model_once_per_question(capsys):
+    model = lambda text: f"answer: {text}"
+    predictions = Evaluator(lambda *_: 1).predict(pd.Series(["first", "second"]), model)
 
-    def __init__(self, predictions: dict[str, str]) -> None:
-        self.predictions = predictions
-        self.calls: list[str] = []
-
-    def __call__(self, prompt: str) -> str:
-        self.calls.append(prompt)
-        return self.predictions[prompt]
+    assert predictions.tolist() == ["answer: first", "answer: second"]
+    assert "2 / 2 predictions completed." in capsys.readouterr().out
 
 
-@pytest.fixture
-def expected_results() -> pd.Series:
-    """Load a small set of reference outputs into the format Evaluator uses."""
-    return pd.Series(data["expected"].iloc[:2].tolist())
+def test_predict_empty_series_returns_empty_series():
+    assert Evaluator(lambda *_: 1).predict(pd.Series(dtype=str), str).empty
 
 
-@pytest.fixture
-def predicted_results() -> pd.Series:
-    """Load the corresponding model outputs into the format Evaluator uses."""
-    return pd.Series(data["predicted"].iloc[:2].tolist())
+def test_evaluate_splits_steps_and_applies_evaluation_function():
+    observed = []
 
+    def score(references, hypothesis):
+        observed.append((references, hypothesis))
+        return len(hypothesis)
 
-def test_initialization_stores_evaluation_algorithm() -> None:
-    evaluator = Evaluator(bleu.sentence_bleu)
-
-    assert evaluator.eval_alg is bleu.sentence_bleu
-
-
-def test_expected_and_predicted_results_load_as_series(
-    expected_results: pd.Series, predicted_results: pd.Series
-) -> None:
-    assert expected_results.tolist() == data["expected"].iloc[:2].tolist()
-    assert predicted_results.tolist() == data["predicted"].iloc[:2].tolist()
-
-
-def test_split_sentence_returns_words_and_separates_pipe_delimited_steps() -> None:
-    evaluator = Evaluator(bleu.sentence_bleu)
-
-    result = evaluator._Evaluator__split_sentence("**LOCK** the door.|**LEAVE** now.")
-
-    assert result == ["**LOCK**", "the", "door.", "**LEAVE**", "now."]
-
-
-def test_predict_uses_fake_model_for_each_input() -> None:
-    inputs = pd.Series(["first instruction", "second instruction"])
-    model = MockModel(
-        {
-            "first instruction": "first prediction",
-            "second instruction": "second prediction",
-        }
-    )
-    evaluator = Evaluator(bleu.sentence_bleu)
-
-    predictions = evaluator.predict(inputs, model)
-
-    assert predictions.tolist() == ["first prediction", "second prediction"]
-    assert model.calls == inputs.tolist()
-
-
-def test_evaluate_applies_brevity_penalty_for_missing_words() -> None:
-    evaluator = Evaluator(
-        lambda references, hypothesis: bleu.sentence_bleu(
-            references, hypothesis, weights=(0.5, 0.5)
-        )
+    scores = Evaluator(score).evaluate(
+        pd.Series(["one two|three"]), pd.Series(["one|two three"])
     )
 
-    scores = evaluator.evaluate(
-        pd.Series(["one two three four"]), pd.Series(["one two"])
-    )
-
-    # Both predicted words are correct, but the short hypothesis receives BLEU's
-    # brevity penalty: exp(1 - reference_length / hypothesis_length).
-    assert scores == pytest.approx([math.exp(1 - 4 / 2)])
+    assert scores == [3]
+    assert observed == [([["one", "two", "three"]], ["one", "two", "three"])]
 
 
-def test_evaluate_rejects_mismatched_result_lengths() -> None:
-    evaluator = Evaluator(bleu.sentence_bleu)
-
+def test_evaluate_rejects_different_lengths():
     with pytest.raises(ValueError, match="Length of actual values"):
-        evaluator.evaluate(pd.Series(["expected"]), pd.Series(["first", "second"]))
+        Evaluator(lambda *_: 0).evaluate(pd.Series(["one"]), pd.Series([]))
 
 
 class FakeBatch(dict):
-    def to(self, _device: str) -> FakeBatch:
+    def to(self, device):
+        self.device = device
         return self
 
 
@@ -104,130 +51,161 @@ class FakeTokenizer:
     pad_token_id = 0
     eos_token_id = 2
 
-    def __init__(self) -> None:
-        self.prompt = ""
-
-    def __call__(self, prompt: str, *, return_tensors: str) -> FakeBatch:
-        assert return_tensors == "pt"
+    def __call__(self, prompt, *, return_tensors):
         self.prompt = prompt
-        return FakeBatch(input_ids=torch.tensor([[10, 11]]))
+        assert return_tensors == "pt"
+        self.batch = FakeBatch(input_ids=torch.tensor([[10, 11]]))
+        return self.batch
 
-    def decode(self, token_ids: torch.Tensor, *, skip_special_tokens: bool) -> str:
-        assert skip_special_tokens is True
+    def decode(self, token_ids, *, skip_special_tokens):
         assert token_ids.tolist() == [12, 13]
-        return " generated result "
+        assert skip_special_tokens
+        return " prediction "
 
 
 class FakeGenerationModel:
-    def __init__(self) -> None:
-        self.generation_kwargs = {}
-
-    def generate(self, **kwargs) -> torch.Tensor:
-        self.generation_kwargs = kwargs
+    def generate(self, **kwargs):
+        self.kwargs = kwargs
         return torch.tensor([[10, 11, 12, 13]])
 
 
-def test_generate_prediction_uses_training_prompt_and_decodes_only_new_tokens() -> None:
+def test_generate_prediction_formats_prompt_and_decodes_new_tokens():
     tokenizer = FakeTokenizer()
     model = FakeGenerationModel()
 
-    prediction = generate_prediction(model, tokenizer, "lock the valve", device="cpu")
-
-    assert tokenizer.prompt == "Convert to PPA:\nlock the valve\nOutput:\n"
-    assert prediction == "generated result"
-    assert model.generation_kwargs["max_new_tokens"] == 512
-    assert model.generation_kwargs["do_sample"] is False
-
-
-def test_remote_evaluation_pipeline_with_mocked_model_downloads(
-    monkeypatch, capsys
-) -> None:
-    calls = {}
-    test_data = pd.DataFrame(
-        {
-            "input": ["turn the valve", "release the latch"],
-            "expected": ["**TURN** the valve.", "**RELEASE** the latch."],
-            "predicted": ["unused", "unused"],
-        }
+    result = generate_prediction(
+        model, tokenizer, "how?", device="cpu", max_new_tokens=17
     )
 
-    class FakeDownloadTokenizer:
-        pad_token = None
-        eos_token = "<eos>"
+    assert tokenizer.prompt == "Question:\nhow?\nAnswer:\n"
+    assert tokenizer.batch.device == "cpu"
+    assert result == "prediction"
+    assert model.kwargs["max_new_tokens"] == 17
+    assert model.kwargs["do_sample"] is False
+    assert model.kwargs["pad_token_id"] == 0
+    assert model.kwargs["eos_token_id"] == 2
 
-    class FakeBaseModel:
+
+def test_evaluate_model_with_mocked_downloads(monkeypatch, capsys):
+    calls = {}
+
+    class Tokenizer:
+        pad_token = None
+        eos_token = "eos"
+
+    class BaseModel:
         def to(self, device):
             calls["device"] = device
             return self
 
-    class FakeAdapter:
+    class Adapter:
         def eval(self):
-            calls["eval_called"] = True
+            calls["eval"] = True
 
-    class FakeHfApi:
+    class HfApi:
         def __init__(self, token):
-            calls["hf_token"] = token
+            calls["token"] = token
 
         def whoami(self):
-            return {"name": "test-user"}
+            return {"name": "student"}
 
-    def fake_module(name, **attrs):
+    def install_module(name, **attrs):
         module = ModuleType(name)
-        for attr, value in attrs.items():
-            setattr(module, attr, value)
+        vars(module).update(attrs)
         monkeypatch.setitem(sys.modules, name, module)
 
-    fake_tokenizer = FakeDownloadTokenizer()
-    fake_base_model = FakeBaseModel()
-    fake_adapter = FakeAdapter()
-    fake_module("huggingface_hub", HfApi=FakeHfApi)
-    fake_module(
+    tokenizer = Tokenizer()
+    base_model = BaseModel()
+    adapter = Adapter()
+    install_module("huggingface_hub", HfApi=HfApi)
+    install_module(
         "peft",
         PeftModel=SimpleNamespace(
             from_pretrained=lambda base, repo, **kwargs: (
-                calls.update(adapter_repo=repo, adapter_token=kwargs["token"])
-                or fake_adapter
+                calls.update(repo=repo, adapter_token=kwargs["token"]) or adapter
             )
         ),
     )
-    fake_module(
+    install_module(
         "transformers",
         AutoModelForCausalLM=SimpleNamespace(
             from_pretrained=lambda model_id, **kwargs: (
-                calls.update(base_model_id=model_id, load_token=kwargs["token"])
-                or fake_base_model
+                calls.update(base_id=model_id, model_token=kwargs["token"])
+                or base_model
             )
         ),
         AutoTokenizer=SimpleNamespace(
             from_pretrained=lambda model_id, **kwargs: (
-                calls.update(
-                    tokenizer_model_id=model_id, tokenizer_token=kwargs["token"]
-                )
-                or fake_tokenizer
+                calls.update(tokenizer_id=model_id) or tokenizer
             )
         ),
     )
-    monkeypatch.setenv("HF_TOKEN", "test-token")
-    monkeypatch.setattr(evaluator, "data", test_data)
-    monkeypatch.setattr(evaluator, "modal", None)
+    monkeypatch.setenv("HF_TOKEN", "secret")
     monkeypatch.setattr(
         evaluator,
-        "generate_prediction",
-        lambda model, tokenizer, source: f"prediction for {source}",
+        "data",
+        pd.DataFrame({"questions": ["q1", "q2"], "answers": ["a1", "a2"]}),
+    )
+    monkeypatch.setattr(
+        evaluator, "generate_prediction", lambda _model, _tokenizer, q: f"pred {q}"
     )
 
     result = evaluator._evaluate_model()
 
-    assert fake_tokenizer.pad_token == "<eos>"
-    assert calls["base_model_id"] == "meta-llama/Llama-3.2-1B"
-    assert calls["tokenizer_model_id"] == "meta-llama/Llama-3.2-1B"
-    assert calls["adapter_repo"] == "test-user/ppa-llama-3.2-1b-lora"
-    assert calls["device"] == "cuda"
-    assert calls["eval_called"] is True
-    assert result["predictions"] == [
-        "prediction for turn the valve",
-        "prediction for release the latch",
-    ]
-    assert len(result["scores"]) == 2
-    assert result["average_bleu"] == pytest.approx(sum(result["scores"]) / 2)
-    assert "Average BLEU:" in capsys.readouterr().out
+    assert tokenizer.pad_token == "eos"
+    assert calls == {
+        "token": "secret",
+        "base_id": "meta-llama/Llama-3.2-1B",
+        "model_token": "secret",
+        "tokenizer_id": "meta-llama/Llama-3.2-1B",
+        "repo": "student/A6-llama-3.2-1b-lora",
+        "adapter_token": "secret",
+        "device": "cuda",
+        "eval": True,
+    }
+    assert result["question"].tolist() == ["q1", "q2"]
+    assert result["prediction"] == ["pred q1", "pred q2"]
+    assert result["answer"].tolist() == ["a1", "a2"]
+    assert "2/2: generated prediction" in capsys.readouterr().out
+
+
+def test_modal_app_registers_remote_and_local_entrypoint(monkeypatch, capsys):
+    calls = {}
+
+    class App:
+        def function(self, **kwargs):
+            calls["function"] = kwargs
+            return lambda fn: fn
+
+        def local_entrypoint(self):
+            return lambda fn: fn
+
+    fake_modal = SimpleNamespace(
+        App=lambda name: calls.update(app=name) or App(),
+        Secret=SimpleNamespace(
+            from_local_environ=lambda names: calls.update(secret=names) or "secret"
+        ),
+        Image=SimpleNamespace(
+            debian_slim=lambda: SimpleNamespace(
+                pip_install=lambda *args: calls.update(packages=args) or "image"
+            )
+        ),
+    )
+    monkeypatch.setitem(sys.modules, "modal", fake_modal)
+    monkeypatch.setenv("HF_TOKEN", "secret")
+    reloaded = __import__("importlib").reload(evaluator)
+    monkeypatch.setattr(
+        reloaded,
+        "evaluate_model",
+        SimpleNamespace(remote=lambda: {"prediction": ["answer"]}),
+    )
+
+    reloaded.main()
+
+    assert calls["app"] == "ppa-model-evaluation"
+    assert calls["function"] == {
+        "image": "image",
+        "gpu": "T4",
+        "secrets": ["secret"],
+    }
+    assert "answer" in capsys.readouterr().out

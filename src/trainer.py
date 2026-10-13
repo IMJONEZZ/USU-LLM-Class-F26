@@ -9,10 +9,10 @@ except ModuleNotFoundError:  # Modal is only needed when launching remote traini
 
 def tokenize_example(example, tokenizer, max_length: int = 512) -> dict:
     """Tokenize an instruction pair and mask prompt tokens from the loss."""
-    prompt = f"Convert to PPA:\n{example['input']}\nOutput:\n"
+    prompt = f"Question:\n{example['question']}\nAnswer:\n"
     prompt_ids = tokenizer(prompt, add_special_tokens=True)["input_ids"]
     output_ids = tokenizer(
-        example["output"],
+        example["answer"],
         add_special_tokens=False,
     )["input_ids"]
     output_ids.append(tokenizer.eos_token_id)
@@ -56,7 +56,7 @@ def _train_model():
 
     dataset = load_dataset(
         "csv",
-        data_files="/training_data/generate_data.csv",
+        data_files="/training_data/data_1.csv",
         split="train",
     )
     splits = dataset.train_test_split(test_size=0.2, seed=42)
@@ -74,10 +74,10 @@ def _train_model():
 
     lora_config = LoraConfig(
         task_type=TaskType.CAUSAL_LM,
-        r=8,
-        lora_alpha=16,
-        lora_dropout=0.05,
-        target_modules=["q_proj", "v_proj"],
+        r=32,
+        lora_alpha=64,
+        lora_dropout=0,
+        target_modules="all-linear",
     )
     model = get_peft_model(model, lora_config)
     model.print_trainable_parameters()
@@ -126,7 +126,7 @@ def _train_model():
     hf_token = os.environ["HF_TOKEN"]
     hf_api = HfApi(token=hf_token)
     username = hf_api.whoami()["name"]
-    repo_id = f"{username}/ppa-llama-3.2-1b-lora"
+    repo_id = f"{username}/A6-llama-3.2-1b-lora"
     hf_api.create_repo(
         repo_id=repo_id,
         repo_type="model",
@@ -138,7 +138,7 @@ def _train_model():
         repo_id=repo_id,
         folder_path=adapter_path,
         token=hf_token,
-        commit_message="Upload PPA LoRA adapter",
+        commit_message="Upload A6 LoRA adapter",
     )
 
     return {
@@ -150,10 +150,8 @@ def _train_model():
 
 if modal is not None and "HF_TOKEN" in os.environ:
     app = modal.App("gpu-test")
-    csv_path = (
-        Path(__file__).resolve().parent.parent / "training_data" / "generate_data.csv"
-    )
-    output_volume = modal.Volume.from_name("ppa-lora-output", create_if_missing=True)
+    csv_path = Path(__file__).resolve().parent.parent / "training_data" / "data_1.csv"
+    output_volume = modal.Volume.from_name("A6-lora-output", create_if_missing=True)
     hf_secret = modal.Secret.from_local_environ(["HF_TOKEN"])
     image = (
         modal.Image.debian_slim()
@@ -165,7 +163,7 @@ if modal is not None and "HF_TOKEN" in os.environ:
             "accelerate",
             "huggingface_hub",
         )
-        .add_local_file(str(csv_path), remote_path="/training_data/generate_data.csv")
+        .add_local_file(str(csv_path), remote_path="/training_data/data_1.csv")
     )
     train_model = app.function(
         image=image,

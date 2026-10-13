@@ -5,7 +5,6 @@ except ModuleNotFoundError:  # Modal is only needed when launching remote infere
 
 import os
 
-import nltk.translate.bleu_score as bleu
 import pandas as pd
 
 if modal is not None and "HF_TOKEN" in os.environ:
@@ -23,71 +22,29 @@ if modal is not None and "HF_TOKEN" in os.environ:
 
 data = pd.DataFrame(
     {
-        "input": [
-            "While holding the pin, decentralize the power kit then rotate the lever 90 degrees.",
-            "Lock the position in place.",
-            "Proceed to load the excavator after completing Step 5.4.1.",
-            "Verify or sign the previous step.",
-            "IF the lever is in the locked position, THEN operate the load as previously specified.",
-            "Remove the 8000 lb tool as directed by the engineer, ensuring safety for the next operator.",
-            "Do not forget to connect the screws when operating the following steps:",
-            "It is important to ensure that the safety trainings are completed in order to proceed.",
-            "Leave the machine arm resting on the floor then raise the arm once you are instructed by the procedural lead.",
-            "Follow the instructions and ensure safety precautions are kept simulaneously.",
-            "IF operators are unable to do the testing, THEN assign a testing phase during the next procedure.",
-            "You will want to grade performance since it is mandatory to qualify for completion.",
-            "Do not observe the tube directly, observe from a distance (at least 20 feet).",
-            "if the project is completed, then include the signatures from every single engineer.",
-            "Try not to forget locking the door after use.",
-            "You must hold the tool sturdily. Immediately after, operate the crane with caution.",
-            "Lift, observe, and replace the coil.",
-            "Mark the tool and casing for operational purposes.",
-            "Stop the rotation of the bearing once the speed hits 1200 RPMs (or after 5 minutes).",
-            "Exit the building, leaving the hazardous material behind.",
+        "questions": [
+            "If it takes 1 hour for 60 people to play an Opera, how many hours will it take 600 people to play the same opera?",
+            "Is a pound of feathers or a British pound heavier?",
+            "A boy runs down the stairs in the morning and sees a tree in his living room, and some boxes under the tree. What's going on?",
+            "What happens if you crack your knuckles a lot?",
+            "If there is a shark in the pool of my basement, is it safe to go upstairs?",
+            "How much wood could a wood chuck chuck if there were only 5 pounds of wood in the world?",
+            "Who is the current President of the United States?",
+            "Was Talos alive?",
+            "How many Ls are in the word parallel?",
+            "What is the riddle of the sphinx, and what are all possible answers satisfying all conditions?",
         ],
-        "expected": [
-            "**DECENTRALIZE** the power kit while holding the pin.|**ROTATE** the lever 90 degrees.",
-            "**LOCK** the position in place.",
-            "**LOAD** the excavator after completing Step 5.4.1.",
-            "**VERIFY** or **SIGN** the previous step.",
-            "IF the lever is in the locked position, THEN operate the load as previously specified.",
-            "**REMOVE** the 8000 lb tool as directed by the engineer, ensuring safety for the next operator.",
-            "**CONNECT** the screws when operating the following steps:",
-            "**ENSURE** the safety trainings are completed before proceeding.",
-            "**LEAVE** the machine arm on the floor.|**RAISE** the arm once instructed by the procedural lead.",
-            "**FOLLOW** the instructions and **ENSURE** safety precautions are kept simultaneously.",
-            "IF operators are unable to test, THEN assign a testing phase during the next procedure.",
-            "**GRADE** performance to qualify for completion.",
-            "**OBSERVE** from a distance (at least 20 feet).",
-            "IF the project is completed, THEN include the signatures from each engineer.",
-            "**LOCK** the door after use.",
-            "**HOLD** the tool sturdily.|**OPERATE** the crane with caution immediately after.",
-            "**LIFT** the coil.|**OBSERVE** the coil.|**REPLACE** the coil.",
-            "**MARK** the tool and casing for operational purposes.",
-            "**STOP** the rotation of the bearing once the speed hits 1200 RPMs (or after 5 minutes).",
-            "**EXIT** the building.|**LEAVE** the hazardous material behind.",
-        ],
-        "predicted": [
-            "**HOLD** the pin while decentralizing the power kit.|**ROTATE** the lever 90 degrees.",
-            "**LOCK** the position in place.",
-            "**LOAD** the excavator after completing Step 5.4.1.",
-            "**VERIFY** or **SIGN** the previous step.",
-            "IF the lever is in the locked position, THEN **OPERATE** the load as previously specified.",
-            "**REMOVE** the 8000 lb tool as directed by the engineer.|**ENSURE** safety for the next operator.",
-            "Do not forget to connect the screws when operating the following steps:",
-            "**ENSURE** that the safety trainings are completed.",
-            "Leave the machine arm resting on the floor.|**RAISE** the arm once you are instructed by the procedural lead.",
-            "**FOLLOW** the instructions.|**ENSURE** safety precautions are kept simultaneously.",
-            "**ASSIGN** a testing phase during the next procedure if operators are unable to do the testing.",
-            "**GRADE** performance since it is mandatory to qualify for completion.",
-            "Do not observe the tube directly.|**OBSERVE** from a distance (at least 20 feet).",
-            "if the project is completed, then include the signatures from every single engineer.",
-            "Try to remember locking the door after use.",
-            "**HOLD** the tool sturdily.|**OPERATE** the crane with caution.",
-            "**LIFT** the coil. **OBSERVE** the coil. **REPLACE** the coil.",
-            "**MARK** the tool and casing for operational purposes.",
-            "**STOP** the rotation of the bearing once the speed hits 1200 RPMs (or after 5 minutes).",
-            "**EXIT** the building.|**LEAVE** the hazardous material behind.",
+        "answers": [
+            "It would take 1 hour. The number of performers does not affect the length of time it takes to perform an opera.",
+            "A British pound is a unit of currency, not a unit of mass. The question compares unlike quantities.",
+            "It could be Christmas morning.",
+            "Cracking your knuckles is considered harmless by doctors.",
+            "Probably, if the shark is in the basement pool and the stairs are accessible without approaching it. The presence of a shark in the basement does not make going upstairs unsafe.",
+            "A wood chuck could chuck at most 5 pounds of wood, however it depends on the chucking ability of the wood chuck and the definition of chucking wood.",
+            "Donald Trump is the current president of the United States.",
+            "In Greek mythology, Talos was alive in the sense that he was a functioning, animate being, but he was a bronze automaton rather than a biological organism. So it depends on the definition of 'alive' in this context.",
+            "There are 3 L's in the word 'parallel'.",
+            "What walks on four legs in the morning, two legs at noon, and three legs in the evening? A human being. During infancy (morning), a human crawls on all fours. At adulthood (afternoon), they walk on two legs. While elderly (evening), they walk with two legs and a cane.",
         ],
     }
 )
@@ -103,7 +60,7 @@ def generate_prediction(
     """Generate one output using the same prompt format used for training."""
     import torch
 
-    prompt = f"Convert to PPA:\n{source}\nOutput:\n"
+    prompt = f"Question:\n{source}\nAnswer:\n"
     inputs = tokenizer(prompt, return_tensors="pt").to(device)
     prompt_length = inputs["input_ids"].shape[1]
 
@@ -163,7 +120,7 @@ def _evaluate_model():
 
     hf_token = os.environ["HF_TOKEN"]
     username = HfApi(token=hf_token).whoami()["name"]
-    adapter_repo = f"{username}/ppa-llama-3.2-1b-lora"
+    adapter_repo = f"{username}/A6-llama-3.2-1b-lora"
     base_model_id = "meta-llama/Llama-3.2-1B"
 
     tokenizer = AutoTokenizer.from_pretrained(base_model_id, token=hf_token)
@@ -183,25 +140,15 @@ def _evaluate_model():
     model.eval()
 
     predictions = []
-    for idx, source in enumerate(data["input"]):
+    for idx, source in enumerate(data["questions"]):
         prediction = generate_prediction(model, tokenizer, source)
         predictions.append(prediction)
         print(f"{idx + 1}/{len(data)}: generated prediction")
 
-    expected = pd.Series(data["expected"])
-    predicted = pd.Series(predictions)
-    evaluator = Evaluator(bleu.sentence_bleu)
-    scores = evaluator.evaluate(expected, predicted)
-    average_score = sum(scores) / len(scores)
-
-    for idx, score in enumerate(scores):
-        print(f"Expected: {expected[idx]}\nPredicted: {predicted[idx]}\nBLEU: {score}")
-    print(f"Average BLEU: {average_score}")
-
     return {
-        "predictions": predictions,
-        "scores": scores,
-        "average_bleu": average_score,
+        "question": data["questions"],
+        "prediction": predictions,
+        "answer": data["answers"],
     }
 
 
@@ -213,4 +160,5 @@ if modal is not None and "HF_TOKEN" in os.environ:
     @app.local_entrypoint()
     def main():
         results = evaluate_model.remote()
-        print(f"Average BLEU: {results['average_bleu']}")
+        for pred in results["prediction"]:
+            print(pred)

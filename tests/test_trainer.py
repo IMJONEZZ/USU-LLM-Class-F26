@@ -1,3 +1,4 @@
+import importlib
 import sys
 from types import ModuleType, SimpleNamespace
 
@@ -16,7 +17,7 @@ class FakeTokenizer:
 
 def test_tokenize_example_masks_prompt_and_keeps_output_labels() -> None:
     result = tokenize_example(
-        {"input": "turn the valve", "output": "**TURN** the valve."},
+        {"question": "turn the valve", "answer": "**TURN** the valve."},
         FakeTokenizer(),
         max_length=8,
     )
@@ -28,7 +29,7 @@ def test_tokenize_example_masks_prompt_and_keeps_output_labels() -> None:
 
 def test_tokenize_example_truncates_prompt_to_reserve_output_tokens() -> None:
     result = tokenize_example(
-        {"input": "a long instruction", "output": "response"},
+        {"question": "a long instruction", "answer": "response"},
         FakeTokenizer(),
         max_length=4,
     )
@@ -52,7 +53,7 @@ def test_train_model_runs_pipeline_with_mocked_dependencies(monkeypatch) -> None
     class FakeDataset:
         @property
         def column_names(self):
-            return ["input", "output"]
+            return ["question", "answer"]
 
         def train_test_split(self, **kwargs):
             calls["split_kwargs"] = kwargs
@@ -60,11 +61,11 @@ def test_train_model_runs_pipeline_with_mocked_dependencies(monkeypatch) -> None
 
     class FakeSplits(dict):
         def __init__(self):
-            super().__init__(train=[{"input": "a", "output": "b"}], test=[])
+            super().__init__(train=[{"question": "a", "answer": "b"}], test=[])
 
         def map(self, fn, *, remove_columns):
             calls["remove_columns"] = remove_columns
-            calls["tokenized_example"] = fn({"input": "a", "output": "b"})
+            calls["tokenized_example"] = fn({"question": "a", "answer": "b"})
             return self
 
     class FakeModel:
@@ -132,7 +133,7 @@ def test_train_model_runs_pipeline_with_mocked_dependencies(monkeypatch) -> None
     result = trainer._train_model()
 
     assert calls["split_kwargs"] == {"test_size": 0.2, "seed": 42}
-    assert calls["remove_columns"] == ["input", "output"]
+    assert calls["remove_columns"] == ["question", "answer"]
     assert calls["tokenized_example"]["labels"][-1] == 99
     assert fake_tokenizer.pad_token == "<eos>"
     assert fake_tokenizer.padding_side == "right"
@@ -140,10 +141,58 @@ def test_train_model_runs_pipeline_with_mocked_dependencies(monkeypatch) -> None
     assert calls["model_saved_to"] == "/outputs/lora_adapter"
     assert calls["tokenizer_saved_to"] == "/outputs/lora_adapter"
     assert calls["volume_committed"] is True
-    assert calls["created_repo"]["repo_id"] == "test-user/ppa-llama-3.2-1b-lora"
+    assert calls["created_repo"]["repo_id"] == "test-user/A6-llama-3.2-1b-lora"
     assert calls["uploaded_folder"]["folder_path"] == "/outputs/lora_adapter"
     assert result == {
-        "repo_id": "test-user/ppa-llama-3.2-1b-lora",
+        "repo_id": "test-user/A6-llama-3.2-1b-lora",
         "train_metrics": {"train_loss": 0.25},
         "eval_metrics": {"eval_loss": 0.5},
     }
+
+
+def test_modal_training_app_registration(monkeypatch) -> None:
+    calls = {}
+
+    class App:
+        def function(self, **kwargs):
+            calls["function_kwargs"] = kwargs
+            return lambda fn: fn
+
+    class Image:
+        def pip_install(self, *packages):
+            calls["packages"] = packages
+            return self
+
+        def add_local_file(self, local_path, *, remote_path):
+            calls["local_file"] = local_path
+            calls["remote_path"] = remote_path
+            return self
+
+    class Volume:
+        @staticmethod
+        def from_name(name, *, create_if_missing):
+            calls["volume"] = (name, create_if_missing)
+            return "volume"
+
+    fake_modal = SimpleNamespace(
+        App=lambda name: calls.update(app=name) or App(),
+        Volume=Volume,
+        Secret=SimpleNamespace(
+            from_local_environ=lambda names: calls.update(secret=names) or "secret"
+        ),
+        Image=SimpleNamespace(debian_slim=lambda: Image()),
+    )
+    monkeypatch.setitem(sys.modules, "modal", fake_modal)
+    monkeypatch.setenv("HF_TOKEN", "secret")
+
+    reloaded = importlib.reload(trainer)
+
+    assert calls["app"] == "gpu-test"
+    assert calls["volume"] == ("A6-lora-output", True)
+    assert calls["secret"] == ["HF_TOKEN"]
+    assert calls["remote_path"] == "/training_data/data_1.csv"
+    assert calls["function_kwargs"]["gpu"] == "T4"
+    assert calls["function_kwargs"]["volumes"] == {"/outputs": "volume"}
+    assert calls["function_kwargs"]["secrets"] == ["secret"]
+    assert isinstance(calls["function_kwargs"]["image"], Image)
+    assert reloaded.train_model is reloaded._train_model
