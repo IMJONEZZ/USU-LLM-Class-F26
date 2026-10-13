@@ -182,3 +182,4 @@ cython_debug/
 data/
 data/star_wars_script.jsonl
 outputs/
+"data/trick_question_training.jsonl"

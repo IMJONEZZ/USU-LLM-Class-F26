@@ -7,6 +7,7 @@ requires-python = ">=3.14"
 dependencies = [
     "accelerate>=1.15.0",
     "datasets>=5.0.1",
+    "distilabel[hf-inference-endpoints]>=1.5.3",
     "evaluate>=0.4.6",
     "numpy>=2.5.3",
     "scikit-learn>=1.9.1",

@@ -1,37 +1,44 @@
 """
-Fine-tune Llama 3.2 1B on Star Wars dialogue using Unsloth (for fast model
-loading/patching) with LoRA, feeding pre-tokenized input_ids directly
-rather than decoding chunks back to text and re-tokenizing them -- that
-round-trip isn't guaranteed to preserve exact token counts and caused a
-length mismatch between input and label tensors.
+Fine-tune Llama 3.2 1B Instruct on a custom dataset of trick-question-style
+reasoning examples, using Unsloth and LoRA. Training data combines 215
+misconception-style examples from TruthfulQA with 24 synthetic examples
+covering categories (scaling traps, letter counting, trick math, wordplay,
+spatial reasoning, scene inference, mythology, riddles) generated locally
+with a Llama 3.2 3B Instruct model via distilabel, after Hugging Face's
+Inference API proved infeasible (a version-incompatibility bug in
+distilabel's InferenceEndpointsLLM, and separately, the free tier's $0.10/
+month credit limit being exhausted with no pay-as-you-go option for free
+accounts).
 """
 
+import json
 import time
 
 import torch
 from transformers import DataCollatorForLanguageModeling, Trainer, TrainingArguments
 
-from src.dataloader import load_scenes, scenes_to_text, split_scenes_by_movie
+MODEL_ID = "unsloth/Llama-3.2-1B-Instruct"
+DATA_PATH = "data/trick_question_training.jsonl"
+MAX_SEQ_LENGTH = 256
+OUTPUT_DIR = "outputs/trick_question_lora"
 
-MODEL_ID = "unsloth/Llama-3.2-1B"
-MAX_SEQ_LENGTH = 128
-OUTPUT_DIR = "outputs/star_wars_lora"
 
-
-def load_training_text(data_path="data/star_wars_script.jsonl"):
-    """Load and flatten the training split (everything except val/test titles)."""
-    scenes = load_scenes(data_path)
-    train_scenes, _, _ = split_scenes_by_movie(scenes)
-    return scenes_to_text(train_scenes)
+def load_training_examples(data_path=DATA_PATH):
+    """Load the combined (TruthfulQA + synthetic) training examples from the jsonl file."""
+    examples = []
+    with open(data_path, encoding="utf-8") as f:
+        for line in f:
+            examples.append(json.loads(line))
+    return examples
 
 
 def load_model_for_training(
     model_id=MODEL_ID, max_seq_length=MAX_SEQ_LENGTH
 ):  # pragma: no cover
-    """Load the base model and tokenizer, wrapped with LoRA adapters via Unsloth."""
-    from unsloth import FastLanguageModel  # imported here, not at module level,
+    """Load the base Instruct model and tokenizer, wrapped with LoRA adapters via Unsloth."""
+    from unsloth import FastLanguageModel  # imported here so this module can be
+    # imported in CI/tests without requiring Unsloth or a GPU
 
-    # so this module can be imported in CI/tests without requiring Unsloth
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=model_id,
         max_seq_length=max_seq_length,
@@ -60,38 +67,44 @@ def load_model_for_training(
     return model, tokenizer
 
 
-def build_training_dataset(tokenizer, text, max_seq_length=MAX_SEQ_LENGTH):
+def build_training_dataset(tokenizer, examples, max_seq_length=MAX_SEQ_LENGTH):
     """
-    Chunk the flattened training text into fixed-length token sequences,
-    keeping the token IDs directly rather than decoding back to text --
-    this avoids a lossy decode/re-encode round-trip that can silently
-    change the token count of a chunk.
+    Format each (question, answer) example using the tokenizer's chat template,
+    so the model is trained in the same conversational format it will be
+    asked questions in later (via answers.ipynb).
     """
     from datasets import Dataset
 
-    token_ids = tokenizer(text, return_tensors="pt").input_ids[0]
+    formatted_examples = []
+    for ex in examples:
+        messages = [
+            {"role": "user", "content": ex["question"]},
+            {"role": "assistant", "content": ex["answer"]},
+        ]
+        token_ids = tokenizer.apply_chat_template(
+            messages,
+            tokenize=True,
+            add_generation_prompt=False,
+            max_length=max_seq_length,
+            truncation=True,
+        )
+        formatted_examples.append({"input_ids": token_ids})
 
-    examples = []
-    stride = max_seq_length // 4
-    for i in range(0, len(token_ids) - max_seq_length, stride):
-        chunk = token_ids[i : i + max_seq_length]
-        examples.append({"input_ids": chunk.tolist()})
-
-    return Dataset.from_list(examples)
+    return Dataset.from_list(formatted_examples)
 
 
 def train_model(
     model_id=MODEL_ID,
-    data_path="data/star_wars_script.jsonl",
+    data_path=DATA_PATH,
     output_dir=OUTPUT_DIR,
-    num_train_epochs=1,
+    num_train_epochs=8,
     per_device_train_batch_size=4,
 ):  # pragma: no cover
     """Full training pipeline: load model, load training data, fine-tune with LoRA."""
     model, tokenizer = load_model_for_training(model_id)
 
-    train_text = load_training_text(data_path)
-    train_dataset = build_training_dataset(tokenizer, train_text)
+    examples = load_training_examples(data_path)
+    train_dataset = build_training_dataset(tokenizer, examples)
 
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 

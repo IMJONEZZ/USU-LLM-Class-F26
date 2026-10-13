@@ -19,7 +19,8 @@ RUN pip3 install --no-cache-dir \
     datasets \
     accelerate \
     bitsandbytes \
-    huggingface_hub
+    huggingface_hub \
+    jupyter
 
 COPY src/ src/
 COPY data/ data/
