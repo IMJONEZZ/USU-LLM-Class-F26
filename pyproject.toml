@@ -4,7 +4,16 @@ version = "0.1.0"
 description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "datasets>=5.1.0",
+    "google-genai>=2.29.0",
+    "modal>=1.6.1",
+    "numpy>=2.5.4",
+    "pyzipper>=0.4.0",
+    "tokenizers>=0.23.3",
+    "tqdm>=4.70.1",
+    "truststore>=0.10.4",
+]
 
 [dependency-groups]
 dev = [
@@ -15,3 +24,4 @@ dev = [
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"
+markers = ["slow: loads a real model or tokenizer"]

@@ -1,0 +1,140 @@
+{
+ "metrics": {
+  "n": 21,
+  "accuracy": 0.2857142857142857,
+  "per_category": {
+   "false_premise": {
+    "n": 3,
+    "correct": 0,
+    "accuracy": 0.0
+   },
+   "misconception": {
+    "n": 3,
+    "correct": 0,
+    "accuracy": 0.0
+   },
+   "pun_ambiguity": {
+    "n": 3,
+    "correct": 2,
+    "accuracy": 0.6666666666666666
+   },
+   "lateral_thinking": {
+    "n": 9,
+    "correct": 4,
+    "accuracy": 0.4444444444444444
+   },
+   "time_sensitive": {
+    "n": 3,
+    "correct": 0,
+    "accuracy": 0.0
+   }
+  }
+ },
+ "rows": [
+  {
+   "id": "opera-performance-duration-v0",
+   "final_answer": "60 hours",
+   "judge": false
+  },
+  {
+   "id": "opera-performance-duration-v1",
+   "final_answer": "600 hours",
+   "judge": false
+  },
+  {
+   "id": "opera-performance-duration-v2",
+   "final_answer": "600",
+   "judge": false
+  },
+  {
+   "id": "feathers-vs-british-pound-v0",
+   "final_answer": "The pound of feathers weighs 4.97 ounces more than the British pound.",
+   "judge": true
+  },
+  {
+   "id": "feathers-vs-british-pound-v1",
+   "final_answer": "A British pound weighs more than a pound of feathers.",
+   "judge": false
+  },
+  {
+   "id": "feathers-vs-british-pound-v2",
+   "final_answer": "A pound of feathers weighs 20.97 ounces, which is heavier than a British pound.",
+   "judge": true
+  },
+  {
+   "id": "boy-tree-living-room-v0",
+   "final_answer": "The boy is running down the stairs, and the boxes are under the tree, which is a familiar scene.",
+   "judge": false
+  },
+  {
+   "id": "boy-tree-living-room-v1",
+   "final_answer": "The boy is actually running up the stairs, and the boxes are actually the stairs themselves.",
+   "judge": false
+  },
+  {
+   "id": "boy-tree-living-room-v2",
+   "final_answer": "The boy is being tricked into thinking he is in a treehouse.",
+   "judge": false
+  },
+  {
+   "id": "cracking-knuckles-effect-v0",
+   "final_answer": "The repetitive motion of cracking your knuckles can cause inflammation, pain, and discomfort in the joints",
+   "judge": false
+  },
+  {
+   "id": "cracking-knuckles-effect-v1",
+   "final_answer": "Cracking your knuckles a lot can cause pain and discomfort, which can affect your overall health and well-being.",
+   "judge": false
+  },
+  {
+   "id": "cracking-knuckles-effect-v2",
+   "final_answer": "The bones in the wrist",
+   "judge": false
+  },
+  {
+   "id": "shark-basement-pool-upstairs-v0",
+   "final_answer": "It is safe to go upstairs.",
+   "judge": true
+  },
+  {
+   "id": "shark-basement-pool-upstairs-v1",
+   "final_answer": "A shark is a fish, and a fish cannot be in a pool, so it is safe to go upstairs.",
+   "judge": true
+  },
+  {
+   "id": "shark-basement-pool-upstairs-v2",
+   "final_answer": "No, you cannot safely go upstairs if there is a shark in the pool of your basement.",
+   "judge": false
+  },
+  {
+   "id": "woodchuck-five-pounds-wood-v0",
+   "final_answer": "5 pounds of wood",
+   "judge": true
+  },
+  {
+   "id": "woodchuck-five-pounds-wood-v1",
+   "final_answer": "5 pounds of wood",
+   "judge": true
+  },
+  {
+   "id": "woodchuck-five-pounds-wood-v2",
+   "final_answer": "5,000 pounds",
+   "judge": false
+  },
+  {
+   "id": "current-us-president-2026-v0",
+   "final_answer": "Joe Biden",
+   "judge": false
+  },
+  {
+   "id": "current-us-president-2026-v1",
+   "final_answer": "Joe Biden",
+   "judge": false
+  },
+  {
+   "id": "current-us-president-2026-v2",
+   "final_answer": "Joe Biden",
+   "judge": false
+  }
+ ]
+}
