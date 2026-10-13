@@ -46,11 +46,11 @@
    }
   }
  },
- "eval_seconds": 44.70582450600001,
+ "eval_seconds": 44.048846446,
  "gpu_summary": {
   "gpu_name": "NVIDIA L4",
-  "peak_memory_mib": 1746,
-  "mean_utilization_percent": 47.69565217391305,
+  "peak_memory_mib": 1745,
+  "mean_utilization_percent": 48.26086956521739,
   "peak_torch_memory_allocated_mib": 1415.232421875
  },
  "gpu_type": "L4",

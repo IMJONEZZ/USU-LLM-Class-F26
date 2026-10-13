@@ -37,6 +37,7 @@ _PACKAGES = ["torch", "torchao", "unsloth", "transformers", "datasets", "numpy"]
     image=image,
     volumes={"/hf_cache": hf_cache, "/checkpoints": checkpoints},
     timeout=3600,
+    secrets=[modal.Secret.from_name("hf-token")],
 )
 def evaluate_on_gpu(
     rows, prompt_style, model_path, batch_size, max_seq_length, max_new_tokens
@@ -168,6 +169,7 @@ def eval_split(
     image=image,
     volumes={"/hf_cache": hf_cache, "/checkpoints": checkpoints},
     timeout=7200,
+    secrets=[modal.Secret.from_name("hf-token")],
 )
 def train_on_gpu(train_rows, eval_rows, round_n, probe, overrides, resume_adapter=""):
     import unsloth  # isort: skip  # noqa: F401  (unsloth must be imported first)
