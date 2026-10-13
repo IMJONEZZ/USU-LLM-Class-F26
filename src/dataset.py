@@ -342,7 +342,7 @@ SCENE_OCCASION = {
         {
             "person": "A toddler",
             "room": "hallway",
-            "props": "a nativity set on the side table and a card from the neighbours on the shelf",
+            "props": "a nativity set on the side table and a card from the neighbors on the shelf",
             "occasion": "It's Christmas.",
             "because": "A nativity set and cards from the neighbors is Christmas.",
         },
@@ -802,7 +802,7 @@ def balance_by_source(rows, cap):
     """Take at most `cap` rows from each source.
 
     The paraphraser was much happier rewording the short duration questions
-    than the long scene ones, so the raw output is four to one in favour of
+    than the long scene ones, so the raw output is four to one in favor of
     one family. Left alone the model learns that family and ignores the rest.
     """
     buckets = {}

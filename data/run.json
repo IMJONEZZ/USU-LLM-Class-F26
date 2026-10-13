@@ -27,13 +27,13 @@
     "Still 1 hour. A opera takes as long as it takes, and adding more people doesn't speed it up.",
     "A pound of feathers. It has an actual weight, and a British pound is money rather than an amount of anything, so it doesn't weigh anything by itself.",
     "It's Christmas morning. A tree with boxes under it is Christmas.",
-    "Cracking your knuckles can lead to hearing loss and other health issues. When you crack your knuckles, you're causing pressure to build up in your joints. This pressure can cause damage to the bones and the tendons that connect them. If you crack your knuckles too frequently, it could lead to hearing loss.",
-    "Yes, it's safe. A shark can't climb into a basement, so it isn't going to reach you upstairs.",
+    "Cracking your knuckles can lead to hearing loss and other complications. When you crack your knuckles, you are causing a sudden release of gas from the fluid inside your joints. This gas can travel through the ear and cause damage.",
+    "Yes, it's safe. A shark can't climb into a basement, let alone swim in a pool upstairs, so it isn't going to reach you upstairs.",
     "5 pounds at the most. That's all the wood there is, so it can't move more than that.",
     "The current President of the United States is Joe Biden. He was inaugurated on 20 January 2021, and he is the 46th President of the United States.",
-    "Talos was a statue of the Greek god Apollo that was said to have been brought to life by the god himself. However, the gods decided that Talos was too powerful to be left unattended, so they killed him.",
+    "Talos was a statue that was brought to life by the gods. He was a guardian of the city of Delphi and was said to be able to see into the future.",
     "Going through parallel one letter at a time: p, a, r, a, l (1), l (2), o, u, l (3). So there are 3 Ls in parallel.",
-    "The riddle of the Sphinx is: \"What walks on four legs in the morning, two legs at noon, and three legs in the evening?\"\n\nPossible answers satisfying all conditions:\n- Human: A human walks on four legs in the morning, two legs at noon, and three legs in the evening.\n- Lion: A lion walks on four legs in the morning, two legs at noon, and three legs in the evening.\n- Tortoise: A tortoise walks on four legs in the morning, two legs at noon, and three legs in the evening."
+    "The riddle of the Sphinx is: \"What walks on four legs in the morning, two legs at noon, and three legs in the evening?\"\n\nPossible answers satisfying all conditions:\n- Human: A human walks on four legs in the morning, two legs at noon, and three legs in the evening.\n- Lion: A lion walks on four legs in the morning, two legs at noon, and three legs in the evening.\n- Cat: A cat walks on four legs in the morning, two legs at noon, and three legs in the evening."
   ],
   "held_out_questions": [
     "A man with his sheep wants to cross a river. He has a boat that can carry both him and the animal. How do both get to the other side of the river?",
@@ -50,30 +50,30 @@
     "In this scenario, the best strategy is to choose the door that has a 50% chance of having the donkey and a 50% chance of having the luxury car. This is known as the \"50/50 strategy.\"\n\nSince the host has already revealed a luxury car, the probability of the car being behind the other two doors is now 0%. By choosing the door with the 50% chance of having the donkey, you are guaranteed to win a car.\n\nThis strategy is often referred to as the \"50/50 strategy\" or \"50/50 chance\" and is a common approach in many games and situations where the outcome is uncertain."
   ],
   "held_out_after": [
-    "The man and his sheep just crossed the river.",
-    "60 minutes at the most. That's all the time there is, so it's not going to take more than that.",
-    "The probability that the cat is alive is 100%. A cat can't survive after being dropped, let alone be placed in a box, so it is impossible for it to survive.",
-    "To find the probability that at least two people don't share a birthday, we can first find the probability that no two people share a birthday. The first person can choose any of 365 days, so the probability is 365/365 = 1. The second person can choose any of the remaining 364 days, so the probability is 364/365. The third person can choose any of the remaining 363 days, so the probability is 363/365. The fourth person can choose any of the remaining 362 days, so the probability is 362/365. The fifth person can choose any of the remaining 361 days, so the probability is 361/365. The sixth person can choose any of the remaining 360 days, so the probability is 360/365. The seventh person can choose any of the remaining 359 days, so the probability is 359/365. The eighth person can choose any of the remaining 358 days, so the probability",
-    "Go back through the door you chose. Since you already know what's behind the other two doors, you don't need to know what's behind them, so it's not safe to pick the other door."
+    "It's winter. A sheep can't survive out of doors in the summer.",
+    "60 minutes. It actually takes that long because of how much material is in each rope.",
+    "The probability that the cat is alive is 100%. A cat can't survive inside a box, let alone be radioactive, so it must be dead.",
+    "To find the probability that at least two people don't share a birthday, we can first find the probability that no two people share a birthday. The first person can choose any of 365 days, so there is a 365/365 chance that the first person doesn't share a birthday with anyone. The second person can choose any of the remaining 364 days, so there is a 364/365 chance that the second person doesn't share a birthday with anyone. The third person can choose any of the remaining 363 days, so there is a 363/365 chance that the third person doesn't share a birthday with anyone. The fourth person can choose any of the remaining 362 days, so there is a 362/365 chance that the fourth person doesn't share a birthday with anyone. The fifth person can choose any of the remaining 361 days, so there is a 361/365 chance that the fifth person doesn't share a birthday with anyone. The sixth person",
+    "Go back through the door you picked. If you go back, you can't use the door you picked."
   ],
   "rows": 1266,
   "row_counts": {
     "no_robots": 800,
     "scene_occasion": 76,
-    "world_limit_paraphrase": 26,
+    "world_limit_paraphrase": 20,
     "letter_counting": 175,
     "scene_occasion_paraphrase": 30,
     "same_duration": 21,
-    "contained_animal_paraphrase": 24,
-    "money_is_not_mass_paraphrase": 30,
+    "contained_animal_paraphrase": 30,
     "world_limit": 18,
+    "money_is_not_mass_paraphrase": 30,
     "contained_animal": 24,
     "money_is_not_mass": 12,
     "same_duration_paraphrase": 30
   },
   "epochs": 3,
-  "train_loss": 1.484227708623379,
-  "train_runtime_s": 407.1877,
+  "train_loss": 1.483046928035559,
+  "train_runtime_s": 382.5491,
   "peak_vram_gb": 2.91,
   "gpu": "Tesla T4"
 }
