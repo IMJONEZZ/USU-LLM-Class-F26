@@ -16,8 +16,8 @@
  "metrics": {
   "n": 21,
   "accuracy": 0.0,
-  "format_compliance": 0.09523809523809523,
-  "avg_response_chars": 935.8571428571429,
+  "format_compliance": 0.238,
+  "avg_response_chars": 755.667,
   "per_category": {
    "false_premise": {
     "n": 3,
@@ -46,12 +46,12 @@
    }
   }
  },
- "eval_seconds": 44.048846446,
+ "eval_seconds": 44.057,
  "gpu_summary": {
   "gpu_name": "NVIDIA L4",
-  "peak_memory_mib": 1745,
-  "mean_utilization_percent": 48.26086956521739,
-  "peak_torch_memory_allocated_mib": 1415.232421875
+  "peak_memory_mib": 1748,
+  "mean_utilization_percent": 48.565,
+  "peak_torch_memory_allocated_mib": 1415.232
  },
  "gpu_type": "L4",
  "prompt_style": "baseline",

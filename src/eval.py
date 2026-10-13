@@ -161,15 +161,14 @@ def check_prompt_length(prompts, tokenizer, limit):
         )
 
 
-def find_weak_categories(accuracy, source_counts, gap, min_sources=None):
+def find_weak_categories(accuracy, gap):
     if gap <= 0:
         raise ValueError(f"gap must be positive, got {gap}")
-    minimum = config.WEAK_MIN_SOURCES if min_sources is None else min_sources
     eligible = {}
     for category, value in accuracy.items():
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             continue
-        if math.isnan(value) or source_counts.get(category, 0) < minimum:
+        if math.isnan(value):
             continue
         eligible[category] = value
     if len(eligible) < 2:
@@ -309,13 +308,27 @@ def build_result(
     }
 
 
+def round_floats(value, places=3):
+    # learning rates are tiny (0.0001) and would round to 0.0, so they stay exact
+    if isinstance(value, dict):
+        return {
+            key: item if "learning_rate" in str(key) else round_floats(item, places)
+            for key, item in value.items()
+        }
+    if isinstance(value, (list, tuple)):
+        return [round_floats(item, places) for item in value]
+    if isinstance(value, float):
+        return round(value, places)
+    return value
+
+
 def save_result(path, result):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(result, f, indent=1, ensure_ascii=False)
+            json.dump(round_floats(result), f, indent=1, ensure_ascii=False)
         os.replace(tmp, path)
     except BaseException:
         Path(tmp).unlink(missing_ok=True)
@@ -376,11 +389,3 @@ def find_regressions(previous, current, drop):
         if change >= drop - 1e-9:
             found.append((change, category))
     return [category for _, category in sorted(found, key=lambda x: (-x[0], x[1]))]
-
-
-def source_counts(rows):
-    seen = {}
-    for row in rows:
-        source = row["source_id"] if "source_id" in row else row["id"]
-        seen.setdefault(row["category"], set()).add(source)
-    return {category: len(sources) for category, sources in seen.items()}

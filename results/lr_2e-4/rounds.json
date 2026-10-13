@@ -1,0 +1,277 @@
+[
+ {
+  "round": 0,
+  "model_name": "unsloth/Llama-3.2-1B",
+  "gpu_type": "L4",
+  "train_examples": 450,
+  "eval_examples": 21,
+  "requested_epochs": 3,
+  "epochs_run": 2.0,
+  "steps_run": 58,
+  "stopped_early": true,
+  "best_model_checkpoint": "/checkpoints/round_0/checkpoint-29",
+  "best_metric": 2.3403573036193848,
+  "train_seconds": 120.64794620400001,
+  "versions": {
+   "python": "3.11.12",
+   "torch": "2.12.1",
+   "unsloth": "2026.9.14",
+   "transformers": "5.5.0",
+   "trl": "0.24.0",
+   "datasets": "4.3.0",
+   "peft": "0.21.2"
+  },
+  "gpu_summary": {
+   "gpu_name": "NVIDIA L4",
+   "peak_memory_mib": 2004,
+   "mean_utilization_percent": 64.91803278688525,
+   "peak_torch_memory_allocated_mib": 1688.56494140625
+  },
+  "peak_torch_memory_allocated_mib": 1688.56494140625,
+  "log_history": [
+   {
+    "loss": 1.9085818323595771,
+    "grad_norm": 2.2453653812408447,
+    "learning_rate": 0.00015128205128205128,
+    "epoch": 1.0,
+    "step": 29
+   },
+   {
+    "eval_loss": 2.3403573036193848,
+    "eval_runtime": 0.8481,
+    "eval_samples_per_second": 24.763,
+    "eval_steps_per_second": 7.075,
+    "epoch": 1.0,
+    "step": 29
+   },
+   {
+    "loss": 1.4199268735688308,
+    "grad_norm": 1.532509446144104,
+    "learning_rate": 7.692307692307693e-05,
+    "epoch": 2.0,
+    "step": 58
+   },
+   {
+    "eval_loss": 2.396183490753174,
+    "eval_runtime": 0.4604,
+    "eval_samples_per_second": 45.616,
+    "eval_steps_per_second": 13.033,
+    "epoch": 2.0,
+    "step": 58
+   },
+   {
+    "train_runtime": 119.0257,
+    "train_samples_per_second": 11.342,
+    "train_steps_per_second": 0.731,
+    "total_flos": 766346023624704.0,
+    "train_loss": 1.664254352964204,
+    "epoch": 2.0,
+    "step": 58
+   }
+  ],
+  "epoch_results": [
+   {
+    "epoch": 1,
+    "train_loss": 1.9085818323595771,
+    "eval_loss": 2.3403573036193848,
+    "accuracy": 0.0,
+    "format_compliance": 1.0,
+    "avg_response_chars": 436.14285714285717,
+    "per_category": {
+     "false_premise": 0.0,
+     "misconception": 0.0,
+     "pun_ambiguity": 0.0,
+     "lateral_thinking": 0.0,
+     "time_sensitive": 0.0
+    }
+   },
+   {
+    "epoch": 2,
+    "train_loss": 1.4199268735688308,
+    "eval_loss": 2.396183490753174,
+    "accuracy": 0.0,
+    "format_compliance": 1.0,
+    "avg_response_chars": 578.952380952381,
+    "per_category": {
+     "false_premise": 0.0,
+     "misconception": 0.0,
+     "pun_ambiguity": 0.0,
+     "lateral_thinking": 0.0,
+     "time_sensitive": 0.0
+    }
+   }
+  ],
+  "hyperparameters": {
+   "model": "unsloth/Llama-3.2-1B",
+   "learning_rate": 0.0002,
+   "epochs": 3,
+   "per_device_train_batch_size": 4,
+   "gradient_accumulation_steps": 4,
+   "lora_r": 16,
+   "lora_alpha": 16,
+   "lora_target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "gate_proj",
+    "up_proj",
+    "down_proj"
+   ],
+   "max_seq_length": 320,
+   "seed": 0,
+   "early_stopping": true,
+   "early_stopping_patience": 1
+  },
+  "hyperparameter_hash": "7d5a8147125b86aca821e5c008ca7a3eb7a0570a4566ed61448ec071a81ae686",
+  "round_info": {
+   "resumed_from": null
+  }
+ },
+ {
+  "round": 1,
+  "model_name": "unsloth/Llama-3.2-1B",
+  "gpu_type": "L4",
+  "train_examples": 720,
+  "eval_examples": 21,
+  "requested_epochs": 3,
+  "epochs_run": 2.0,
+  "steps_run": 90,
+  "stopped_early": true,
+  "best_model_checkpoint": "/checkpoints/round_1/checkpoint-45",
+  "best_metric": 2.4403696060180664,
+  "train_seconds": 152.836128261,
+  "versions": {
+   "python": "3.11.12",
+   "torch": "2.12.1",
+   "unsloth": "2026.9.14",
+   "transformers": "5.5.0",
+   "trl": "0.24.0",
+   "datasets": "4.3.0",
+   "peft": "0.21.2"
+  },
+  "gpu_summary": {
+   "gpu_name": "NVIDIA L4",
+   "peak_memory_mib": 2026,
+   "mean_utilization_percent": 69.85526315789474,
+   "peak_torch_memory_allocated_mib": 1699.388671875
+  },
+  "peak_torch_memory_allocated_mib": 1699.388671875,
+  "log_history": [
+   {
+    "loss": 1.3644446478949652,
+    "grad_norm": 0.9173704385757446,
+    "learning_rate": 0.0001504132231404959,
+    "epoch": 1.0,
+    "step": 45
+   },
+   {
+    "eval_loss": 2.4403696060180664,
+    "eval_runtime": 1.0187,
+    "eval_samples_per_second": 20.615,
+    "eval_steps_per_second": 5.89,
+    "epoch": 1.0,
+    "step": 45
+   },
+   {
+    "loss": 1.046729278564453,
+    "grad_norm": 1.2212799787521362,
+    "learning_rate": 7.603305785123968e-05,
+    "epoch": 2.0,
+    "step": 90
+   },
+   {
+    "eval_loss": 2.5790467262268066,
+    "eval_runtime": 0.5311,
+    "eval_samples_per_second": 39.537,
+    "eval_steps_per_second": 11.296,
+    "epoch": 2.0,
+    "step": 90
+   },
+   {
+    "train_runtime": 150.8974,
+    "train_samples_per_second": 14.314,
+    "train_steps_per_second": 0.895,
+    "total_flos": 1189346631180288.0,
+    "train_loss": 1.2055869632297092,
+    "epoch": 2.0,
+    "step": 90
+   }
+  ],
+  "epoch_results": [
+   {
+    "epoch": 1,
+    "train_loss": 1.3644446478949652,
+    "eval_loss": 2.4403696060180664,
+    "accuracy": 0.0,
+    "format_compliance": 1.0,
+    "avg_response_chars": 581.0,
+    "per_category": {
+     "false_premise": 0.0,
+     "misconception": 0.0,
+     "pun_ambiguity": 0.0,
+     "lateral_thinking": 0.0,
+     "time_sensitive": 0.0
+    }
+   },
+   {
+    "epoch": 2,
+    "train_loss": 1.046729278564453,
+    "eval_loss": 2.5790467262268066,
+    "accuracy": 0.047619047619047616,
+    "format_compliance": 1.0,
+    "avg_response_chars": 503.5238095238095,
+    "per_category": {
+     "false_premise": 0.0,
+     "misconception": 0.0,
+     "pun_ambiguity": 0.0,
+     "lateral_thinking": 0.1111111111111111,
+     "time_sensitive": 0.0
+    }
+   }
+  ],
+  "hyperparameters": {
+   "model": "unsloth/Llama-3.2-1B",
+   "learning_rate": 0.0002,
+   "epochs": 3,
+   "per_device_train_batch_size": 4,
+   "gradient_accumulation_steps": 4,
+   "lora_r": 16,
+   "lora_alpha": 16,
+   "lora_target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "gate_proj",
+    "up_proj",
+    "down_proj"
+   ],
+   "max_seq_length": 320,
+   "seed": 0,
+   "early_stopping": true,
+   "early_stopping_patience": 1
+  },
+  "hyperparameter_hash": "7d5a8147125b86aca821e5c008ca7a3eb7a0570a4566ed61448ec071a81ae686",
+  "round_info": {
+   "resumed_from": "/checkpoints/round_0",
+   "weak_categories": [
+    "false_premise",
+    "misconception",
+    "time_sensitive"
+   ],
+   "extra_data": null,
+   "replay_fraction": 0.4,
+   "new_examples": 540,
+   "replay_examples": 180,
+   "dropped_duplicates": [],
+   "by_category": {
+    "time_sensitive": 180,
+    "misconception": 180,
+    "pun_ambiguity": 90,
+    "false_premise": 180,
+    "lateral_thinking": 90
+   }
+  }
+ }
+]

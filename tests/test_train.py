@@ -116,7 +116,9 @@ def test_the_training_hyperparameters_are_the_chosen_ones():
     assert config.PER_DEVICE_TRAIN_BATCH_SIZE == 4
     assert config.GRADIENT_ACCUMULATION_STEPS == 4
     assert config.EARLY_STOPPING is True
-    assert config.EARLY_STOPPING_PATIENCE == 1
+    assert config.EARLY_STOPPING_PATIENCE == 3
+    assert config.LEARNING_RATE == 1e-4
+    assert config.EVAL_EVERY_STEPS == 10
     assert config.EPOCHS == 3
 
 
@@ -142,6 +144,7 @@ def test_hyperparameters_cover_the_settings_that_change_a_run():
         "seed",
         "early_stopping",
         "early_stopping_patience",
+        "eval_every_steps",
     ):
         assert key in h
     assert h["learning_rate"] == config.LEARNING_RATE
@@ -153,10 +156,13 @@ def test_hyperparameter_hash_is_stable_and_changes_with_any_setting():
         train.hyperparameters()
     )
     assert train.hyperparameter_hash(base) != train.hyperparameter_hash(
-        train.hyperparameters(learning_rate=1e-4)
+        train.hyperparameters(learning_rate=config.LEARNING_RATE * 2)
     )
     assert train.hyperparameter_hash(base) != train.hyperparameter_hash(
         train.hyperparameters(epochs=5)
+    )
+    assert train.hyperparameter_hash(base) != train.hyperparameter_hash(
+        train.hyperparameters(eval_every_steps=config.EVAL_EVERY_STEPS + 5)
     )
     assert len(train.hyperparameter_hash(base)) == 64
 
@@ -327,7 +333,9 @@ def _trainer_with_fakes(monkeypatch, **overrides):
     return trl, transformers, chat, result
 
 
-def test_build_trainer_configures_epochs_batching_and_evaluation_per_epoch(monkeypatch):
+def test_build_trainer_configures_epochs_batching_and_evaluation_every_n_steps(
+    monkeypatch,
+):
     trl, _, _, _ = _trainer_with_fakes(monkeypatch)
     kwargs = trl.SFTConfig.call_args.kwargs
     assert kwargs["output_dir"] == "out"
@@ -336,11 +344,15 @@ def test_build_trainer_configures_epochs_batching_and_evaluation_per_epoch(monke
     assert kwargs["per_device_eval_batch_size"] == config.PER_DEVICE_EVAL_BATCH_SIZE
     assert kwargs["gradient_accumulation_steps"] == config.GRADIENT_ACCUMULATION_STEPS
     assert kwargs["learning_rate"] == config.LEARNING_RATE
-    assert kwargs["eval_strategy"] == "epoch"
-    assert kwargs["save_strategy"] == "epoch"
-    assert kwargs["logging_strategy"] == "epoch"
+    assert kwargs["eval_strategy"] == "steps"
+    assert kwargs["eval_steps"] == config.EVAL_EVERY_STEPS
+    assert kwargs["save_strategy"] == "steps"
+    assert kwargs["save_steps"] == config.EVAL_EVERY_STEPS
+    assert kwargs["save_steps"] % kwargs["eval_steps"] == 0
+    assert kwargs["logging_strategy"] == "steps"
+    assert kwargs["logging_steps"] == config.EVAL_EVERY_STEPS
     assert kwargs["load_best_model_at_end"] is True
-    assert kwargs["metric_for_best_model"] == "eval_loss"
+    assert kwargs["metric_for_best_model"] == "eval_format_gated_loss"
     assert kwargs["greater_is_better"] is False
     assert kwargs["dataset_text_field"] == "text"
     assert kwargs["max_length"] == config.MAX_SEQ_LENGTH
@@ -406,12 +418,13 @@ def test_build_trainer_uses_the_configured_early_stopping_by_default(monkeypatch
     )
 
 
-def test_build_trainer_appends_extra_callbacks_after_early_stopping(monkeypatch):
+def test_build_trainer_puts_extra_callbacks_before_early_stopping(monkeypatch):
+    # the extra callback creates the metric that early stopping reads, so it must run first
     extra = object()
     trl, transformers, _, _ = _trainer_with_fakes(monkeypatch, extra_callbacks=[extra])
     assert trl.SFTTrainer.call_args.kwargs["callbacks"] == [
-        transformers.EarlyStoppingCallback.return_value,
         extra,
+        transformers.EarlyStoppingCallback.return_value,
     ]
 
 
@@ -489,6 +502,7 @@ def test_the_callback_runs_the_evaluator_at_each_evaluation_with_the_epoch_and_l
     assert isinstance(callback, base)
     state = SimpleNamespace(
         epoch=2.0,
+        global_step=58,
         log_history=[{"loss": 1.9, "epoch": 1.0}, {"loss": 1.4, "epoch": 2.0}],
     )
     callback.on_evaluate(None, state, None, metrics={"eval_loss": 1.1}, model="model")
@@ -500,11 +514,25 @@ def test_the_callback_handles_a_log_history_without_a_training_loss(monkeypatch)
     _fake_unsloth(monkeypatch)
     _fake_transformers_callback(monkeypatch)
     evaluator = _evaluator()
-    state = SimpleNamespace(epoch=1.0, log_history=[])
+    state = SimpleNamespace(epoch=1.0, global_step=29, log_history=[])
     train.make_epoch_eval_callback(evaluator).on_evaluate(
         None, state, None, metrics={"eval_loss": 1.1}, model="m"
     )
     assert evaluator.epochs[0]["train_loss"] is None
+
+
+def test_evaluations_inside_one_epoch_keep_distinct_steps_and_fractional_epochs(
+    monkeypatch,
+):
+    _fake_unsloth(monkeypatch)
+    _fake_transformers_callback(monkeypatch)
+    evaluator = _evaluator()
+    callback = train.make_epoch_eval_callback(evaluator)
+    for step in (10, 20, 30):
+        state = SimpleNamespace(epoch=step / 29, global_step=step, log_history=[])
+        callback.on_evaluate(None, state, None, metrics={"eval_loss": 1.0}, model="m")
+    assert [r["step"] for r in evaluator.epochs] == [10, 20, 30]
+    assert [r["epoch"] for r in evaluator.epochs] == [0.34, 0.69, 1.03]
 
 
 # ---- M8: the training record and rounds.json ----
@@ -970,7 +998,7 @@ def test_a_round_that_skips_one_is_refused(recorded, round_n):
 
 
 def test_changed_hyperparameters_are_refused_by_comparing_the_recorded_hash():
-    rounds = _recorded(1, train.hyperparameters(learning_rate=1e-4))
+    rounds = _recorded(1, train.hyperparameters(learning_rate=config.LEARNING_RATE * 2))
     with pytest.raises(ValueError, match="hyperparameters changed"):
         train.plan_round(1, rounds, train.hyperparameters())
 
@@ -988,31 +1016,154 @@ def test_load_model_for_training_can_resume_from_an_adapter(monkeypatch):
     fast.get_peft_model.assert_called_once()
 
 
-# ---- M9: the epoch whose adapter is kept ----
-def test_best_epoch_is_the_one_with_the_lowest_eval_loss():
+# ---- the checkpoint that is kept: format first, then eval loss ----
+def _step(step, eval_loss, fmt):
+    return {
+        "epoch": round(step / 29, 2),
+        "step": step,
+        "eval_loss": eval_loss,
+        "format_compliance": fmt,
+    }
+
+
+# the real round-0 run at learning rate 1e-4 (results/rounds.json)
+REAL_STEPS = [
+    _step(10, 2.677, 0.0),
+    _step(20, 2.284, 0.048),
+    _step(30, 2.313, 0.952),
+    _step(40, 2.340, 1.0),
+    _step(50, 2.399, 1.0),
+]
+
+
+def test_format_gated_loss_is_the_plain_loss_when_the_format_is_perfect():
+    assert train.format_gated_loss(2.34, 1.0) == 2.34
+
+
+def test_format_gated_loss_puts_any_missing_format_behind_every_perfect_one():
+    perfect = train.format_gated_loss(2.34, 1.0)
+    assert perfect < train.format_gated_loss(2.284, 0.048)
+    assert perfect < train.format_gated_loss(2.313, 0.952)
+
+
+def test_format_gated_loss_improves_as_the_format_improves_so_early_stopping_waits():
+    assert train.format_gated_loss(2.5, 0.5) < train.format_gated_loss(2.3, 0.0)
+
+
+def test_best_epoch_is_the_lowest_loss_among_perfect_format_evaluations():
+    assert train.best_epoch(REAL_STEPS)["step"] == 40
+
+
+def test_best_epoch_ties_go_to_the_earlier_step():
+    epochs = [_step(10, 0.9, 1.0), _step(20, 0.9, 1.0)]
+    assert train.best_epoch(epochs)["step"] == 10
+
+
+def test_best_epoch_without_a_perfect_format_takes_the_best_format():
+    epochs = [_step(10, 1.0, 0.0), _step(20, 2.0, 0.5), _step(30, 0.5, 0.2)]
+    assert train.best_epoch(epochs)["step"] == 20
+
+
+def test_best_epoch_ignores_evaluations_without_an_eval_loss():
+    skipped = {"epoch": 0.3, "step": 10, "eval_loss": None, "format_compliance": 1.0}
+    assert train.best_epoch([skipped, _step(20, 1.1, 1.0)])["step"] == 20
+
+
+def test_best_epoch_with_no_losses_falls_back_to_the_last_one():
     epochs = [
-        {"epoch": 1, "eval_loss": 1.2},
-        {"epoch": 2, "eval_loss": 0.9},
-        {"epoch": 3, "eval_loss": 1.0},
+        {"epoch": 1, "step": 10, "eval_loss": None, "format_compliance": 1.0},
+        {"epoch": 2, "step": 20, "eval_loss": None, "format_compliance": 1.0},
     ]
-    assert train.best_epoch(epochs)["epoch"] == 2
-
-
-def test_best_epoch_ties_go_to_the_earlier_epoch():
-    epochs = [{"epoch": 1, "eval_loss": 0.9}, {"epoch": 2, "eval_loss": 0.9}]
-    assert train.best_epoch(epochs)["epoch"] == 1
-
-
-def test_best_epoch_ignores_epochs_without_an_eval_loss():
-    epochs = [{"epoch": 1, "eval_loss": None}, {"epoch": 2, "eval_loss": 1.1}]
-    assert train.best_epoch(epochs)["epoch"] == 2
-
-
-def test_best_epoch_with_no_losses_falls_back_to_the_last_epoch():
-    epochs = [{"epoch": 1, "eval_loss": None}, {"epoch": 2, "eval_loss": None}]
-    assert train.best_epoch(epochs)["epoch"] == 2
+    assert train.best_epoch(epochs)["step"] == 20
 
 
 def test_best_epoch_of_nothing_raises():
     with pytest.raises(ValueError, match="no epochs"):
         train.best_epoch([])
+
+
+def test_format_warning_is_none_when_one_evaluation_is_perfect():
+    assert train.format_warning(REAL_STEPS) is None
+
+
+def test_format_warning_says_how_close_the_kept_checkpoint_was():
+    epochs = [_step(10, 2.6, 0.0), _step(20, 2.3, 0.952)]
+    message = train.format_warning(epochs)
+    assert "100% format" in message
+    assert "0.952" in message and "step 20" in message
+
+
+def test_format_warning_with_no_evaluations_raises():
+    with pytest.raises(ValueError, match="no evaluations"):
+        train.format_warning([])
+
+
+def test_the_callback_adds_the_format_gated_loss_to_the_metrics(monkeypatch):
+    _fake_unsloth(monkeypatch)
+    _fake_transformers_callback(monkeypatch)
+    evaluator = SimpleNamespace(
+        evaluate_epoch=lambda model, epoch, train_loss, eval_loss, step=None: {
+            "format_compliance": 0.5
+        }
+    )
+    state = SimpleNamespace(epoch=1.0, global_step=29, log_history=[])
+    metrics = {"eval_loss": 2.0}
+    train.make_epoch_eval_callback(evaluator).on_evaluate(
+        None, state, None, metrics=metrics, model="m"
+    )
+    assert metrics["eval_format_gated_loss"] == train.format_gated_loss(2.0, 0.5)
+
+
+def test_the_callback_adds_nothing_when_there_is_no_eval_loss(monkeypatch):
+    _fake_unsloth(monkeypatch)
+    _fake_transformers_callback(monkeypatch)
+    evaluator = SimpleNamespace(
+        evaluate_epoch=lambda model, epoch, train_loss, eval_loss, step=None: {
+            "format_compliance": 1.0
+        }
+    )
+    state = SimpleNamespace(epoch=1.0, global_step=29, log_history=[])
+    metrics = {}
+    train.make_epoch_eval_callback(evaluator).on_evaluate(
+        None, state, None, metrics=metrics, model="m"
+    )
+    assert "eval_format_gated_loss" not in metrics
+
+
+def test_the_selection_rule_is_part_of_the_hyperparameters_and_their_hash():
+    assert train.hyperparameters()["checkpoint_selection"] == "format_first"
+    assert train.hyperparameter_hash(train.hyperparameters()) != (
+        train.hyperparameter_hash(train.hyperparameters(checkpoint_selection="loss"))
+    )
+
+
+def test_a_real_run_trains_into_the_round_folder():
+    assert train.trainer_output_dir(1, probe=False, root="/c") == config.adapter_path(
+        1, root="/c"
+    )
+
+
+def test_a_probe_never_trains_into_any_rounds_folder():
+    round_folders = {
+        config.adapter_path(n, root="/c") for n in range(config.MAX_ROUNDS + 1)
+    }
+    for round_n in range(config.MAX_ROUNDS + 1):
+        folder = train.trainer_output_dir(round_n, probe=True, root="/c")
+        assert folder not in round_folders
+
+
+def test_build_trainer_can_evaluate_every_step_for_the_short_probe(monkeypatch):
+    trl, _, _, _ = _trainer_with_fakes(monkeypatch, eval_every_steps=1)
+    kwargs = trl.SFTConfig.call_args.kwargs
+    assert kwargs["eval_steps"] == kwargs["save_steps"] == kwargs["logging_steps"] == 1
+
+
+def test_a_recorded_round_is_rounded_but_its_hash_still_matches_its_settings(tmp_path):
+    path = tmp_path / "rounds.json"
+    train.record_round(path, _record())
+    saved = train.read_rounds(path)[0]
+    assert saved["hyperparameters"]["learning_rate"] == config.LEARNING_RATE
+    assert (
+        train.hyperparameter_hash(saved["hyperparameters"])
+        == (saved["hyperparameter_hash"])
+    )

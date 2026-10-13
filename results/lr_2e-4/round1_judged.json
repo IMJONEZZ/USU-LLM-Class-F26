@@ -1,0 +1,140 @@
+{
+ "metrics": {
+  "n": 21,
+  "accuracy": 0.14285714285714285,
+  "per_category": {
+   "false_premise": {
+    "n": 3,
+    "correct": 0,
+    "accuracy": 0.0
+   },
+   "misconception": {
+    "n": 3,
+    "correct": 2,
+    "accuracy": 0.6666666666666666
+   },
+   "pun_ambiguity": {
+    "n": 3,
+    "correct": 1,
+    "accuracy": 0.3333333333333333
+   },
+   "lateral_thinking": {
+    "n": 9,
+    "correct": 0,
+    "accuracy": 0.0
+   },
+   "time_sensitive": {
+    "n": 3,
+    "correct": 0,
+    "accuracy": 0.0
+   }
+  }
+ },
+ "rows": [
+  {
+   "id": "opera-performance-duration-v0",
+   "final_answer": "600 people cannot play the same opera in 1 hour.",
+   "judge": false
+  },
+  {
+   "id": "opera-performance-duration-v1",
+   "final_answer": "60 people cannot play an opera in 60 minutes and 600 people cannot play an opera in 60 minutes.",
+   "judge": false
+  },
+  {
+   "id": "opera-performance-duration-v2",
+   "final_answer": "It takes 1 hour for 60 people, but 60 people cannot play an opera, so 600 people cannot play 1 hour of an opera.",
+   "judge": false
+  },
+  {
+   "id": "feathers-vs-british-pound-v0",
+   "final_answer": "A pound of feathers weighs more than a British pound.",
+   "judge": true
+  },
+  {
+   "id": "feathers-vs-british-pound-v1",
+   "final_answer": "Neither weighs more than the other.",
+   "judge": false
+  },
+  {
+   "id": "feathers-vs-british-pound-v2",
+   "final_answer": "A pound of feathers is lighter than a British pound.",
+   "judge": false
+  },
+  {
+   "id": "boy-tree-living-room-v0",
+   "final_answer": "The boxes are under the tree.",
+   "judge": false
+  },
+  {
+   "id": "boy-tree-living-room-v1",
+   "final_answer": "The boy is running down the stairs, the tree is in his living room, and the boxes are under the tree.",
+   "judge": false
+  },
+  {
+   "id": "boy-tree-living-room-v2",
+   "final_answer": "He was thinking about the tree.",
+   "judge": false
+  },
+  {
+   "id": "cracking-knuckles-effect-v0",
+   "final_answer": "Cracking your knuckles does not cause long-term effects",
+   "judge": false
+  },
+  {
+   "id": "cracking-knuckles-effect-v1",
+   "final_answer": "Cracking your knuckles does not affect you",
+   "judge": true
+  },
+  {
+   "id": "cracking-knuckles-effect-v2",
+   "final_answer": "Cracking your knuckles is a harmless physical action.",
+   "judge": true
+  },
+  {
+   "id": "shark-basement-pool-upstairs-v0",
+   "final_answer": "It is safe to go upstairs in a swimming pool.",
+   "judge": false
+  },
+  {
+   "id": "shark-basement-pool-upstairs-v1",
+   "final_answer": "No, it is not safe to go upstairs in a basement pool with a shark.",
+   "judge": false
+  },
+  {
+   "id": "shark-basement-pool-upstairs-v2",
+   "final_answer": "No, you cannot safely go upstairs.",
+   "judge": false
+  },
+  {
+   "id": "woodchuck-five-pounds-wood-v0",
+   "final_answer": "A woodchuck is a small rodent, and it cannot physically chuck 5 pounds of wood.",
+   "judge": false
+  },
+  {
+   "id": "woodchuck-five-pounds-wood-v1",
+   "final_answer": "A woodchuck is a small rodent, not a human, and humans are not woodchucks.",
+   "judge": false
+  },
+  {
+   "id": "woodchuck-five-pounds-wood-v2",
+   "final_answer": "A woodchuck is a small rodent, not a giant one.",
+   "judge": false
+  },
+  {
+   "id": "current-us-president-2026-v0",
+   "final_answer": "Kamala Harris",
+   "judge": false
+  },
+  {
+   "id": "current-us-president-2026-v1",
+   "final_answer": "Joe Biden",
+   "judge": false
+  },
+  {
+   "id": "current-us-president-2026-v2",
+   "final_answer": "Joe Biden",
+   "judge": false
+  }
+ ]
+}

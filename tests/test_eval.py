@@ -207,40 +207,28 @@ def test_check_prompt_length_names_the_longest_prompt_over_the_limit():
     assert "longest" in str(caught.value)
 
 
-COUNTS = {c: 5 for c in config.CATEGORIES}
-
-
 def test_weak_categories_all_equal_flags_nothing():
     accuracy = {c: 0.8 for c in config.CATEGORIES}
-    assert evaluation.find_weak_categories(accuracy, COUNTS, gap=0.1) == []
+    assert evaluation.find_weak_categories(accuracy, gap=0.1) == []
 
 
 def test_weak_categories_one_eligible_category_has_nothing_to_compare_against():
-    assert (
-        evaluation.find_weak_categories(
-            {"misconception": 0.1}, {"misconception": 5}, gap=0.1
-        )
-        == []
-    )
+    assert evaluation.find_weak_categories({"misconception": 0.1}, gap=0.1) == []
 
 
 def test_weak_categories_flags_a_category_that_lags_the_average():
     accuracy = {"false_premise": 0.9, "misconception": 0.9, "pun_ambiguity": 0.5}
-    assert evaluation.find_weak_categories(accuracy, COUNTS, gap=0.2) == [
-        "pun_ambiguity"
-    ]
+    assert evaluation.find_weak_categories(accuracy, gap=0.2) == ["pun_ambiguity"]
 
 
 def test_weak_categories_a_gap_exactly_at_the_threshold_is_flagged():
     accuracy = {"false_premise": 1.0, "misconception": 0.5}
-    assert evaluation.find_weak_categories(accuracy, COUNTS, gap=0.25) == [
-        "misconception"
-    ]
+    assert evaluation.find_weak_categories(accuracy, gap=0.25) == ["misconception"]
 
 
 def test_weak_categories_a_gap_just_under_the_threshold_is_not_flagged():
     accuracy = {"false_premise": 1.0, "misconception": 0.5}
-    assert evaluation.find_weak_categories(accuracy, COUNTS, gap=0.26) == []
+    assert evaluation.find_weak_categories(accuracy, gap=0.26) == []
 
 
 def test_weak_categories_ties_are_ordered_by_accuracy_then_name():
@@ -251,17 +239,11 @@ def test_weak_categories_ties_are_ordered_by_accuracy_then_name():
         "lateral_thinking": 0.2,
         "time_sensitive": 1.0,
     }
-    assert evaluation.find_weak_categories(accuracy, COUNTS, gap=0.2) == [
+    assert evaluation.find_weak_categories(accuracy, gap=0.2) == [
         "lateral_thinking",
         "misconception",
         "pun_ambiguity",
     ]
-
-
-def test_weak_categories_below_the_minimum_source_count_are_not_flagged_or_averaged():
-    accuracy = {"false_premise": 0.9, "misconception": 0.9, "pun_ambiguity": 0.0}
-    counts = {"false_premise": 5, "misconception": 5, "pun_ambiguity": 2}
-    assert evaluation.find_weak_categories(accuracy, counts, gap=0.1) == []
 
 
 def test_weak_categories_ignore_nan_and_undefined_accuracies():
@@ -271,22 +253,13 @@ def test_weak_categories_ignore_nan_and_undefined_accuracies():
         "pun_ambiguity": "undefined",
         "lateral_thinking": 0.3,
     }
-    assert evaluation.find_weak_categories(accuracy, COUNTS, gap=0.2) == [
-        "lateral_thinking"
-    ]
-
-
-def test_weak_categories_a_category_missing_from_the_counts_is_not_eligible():
-    accuracy = {"false_premise": 0.9, "misconception": 0.1}
-    assert (
-        evaluation.find_weak_categories(accuracy, {"false_premise": 5}, gap=0.1) == []
-    )
+    assert evaluation.find_weak_categories(accuracy, gap=0.2) == ["lateral_thinking"]
 
 
 @pytest.mark.parametrize("gap", [0, -0.1])
 def test_weak_categories_needs_a_positive_gap(gap):
     with pytest.raises(ValueError, match="gap"):
-        evaluation.find_weak_categories({"misconception": 0.5}, COUNTS, gap=gap)
+        evaluation.find_weak_categories({"misconception": 0.5}, gap=gap)
 
 
 # ---- M7: timer, versions, GPU summary, result record ----
@@ -557,11 +530,44 @@ def test_regressions_need_a_positive_drop(drop):
         evaluation.find_regressions({"a": 1.0}, {"a": 0.5}, drop=drop)
 
 
-def test_source_counts_counts_distinct_source_questions_per_category():
-    rows = [
-        {"category": "misconception", "source_id": "q1"},
-        {"category": "misconception", "source_id": "q1"},
-        {"category": "misconception", "source_id": "q2"},
-        {"category": "pun_ambiguity", "id": "q3"},
-    ]
-    assert evaluation.source_counts(rows) == {"misconception": 2, "pun_ambiguity": 1}
+# ---- rounding what is saved locally ----
+def test_round_floats_rounds_every_float_at_any_depth_to_three_places():
+    value = {"a": 1.9085818, "b": [0.2857142, {"c": 0.6666666}]}
+    assert evaluation.round_floats(value) == {
+        "a": 1.909,
+        "b": [0.286, {"c": 0.667}],
+    }
+
+
+def test_round_floats_leaves_everything_that_is_not_a_float_alone():
+    value = {"n": 21, "ok": True, "name": "x", "nothing": None, "ids": [1, 2]}
+    assert evaluation.round_floats(value) == value
+
+
+def test_round_floats_keeps_learning_rates_exact():
+    value = {
+        "learning_rate": 0.0001,
+        "hyperparameters": {"learning_rate": 0.00015128205128205128},
+        "log_history": [{"learning_rate": 7.692307692307693e-05, "loss": 1.23456}],
+    }
+    assert evaluation.round_floats(value) == {
+        "learning_rate": 0.0001,
+        "hyperparameters": {"learning_rate": 0.00015128205128205128},
+        "log_history": [{"learning_rate": 7.692307692307693e-05, "loss": 1.235}],
+    }
+
+
+def test_round_floats_does_not_change_what_it_was_given_and_is_idempotent():
+    value = {"loss": 1.23456, "inner": [0.98765]}
+    once = evaluation.round_floats(value)
+    assert value == {"loss": 1.23456, "inner": [0.98765]}
+    assert evaluation.round_floats(once) == once
+
+
+def test_save_result_writes_rounded_values_but_exact_learning_rates(tmp_path):
+    path = tmp_path / "result.json"
+    evaluation.save_result(path, {"loss": 1.9085818, "learning_rate": 0.0001})
+    assert json.loads(path.read_text(encoding="utf-8")) == {
+        "loss": 1.909,
+        "learning_rate": 0.0001,
+    }

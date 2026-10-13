@@ -140,3 +140,8 @@ def test_the_repeat_cap_defaults_to_the_configured_value():
 def test_config_has_the_round_settings():
     assert config.ROUND_REPEAT_CAP >= 1
     assert config.MAX_ROUNDS == 3
+
+
+def test_the_chain_instructions_end_the_label_list_before_the_next_sentence():
+    assert "Final answer: The Check" not in config.CHAIN_INSTRUCTIONS
+    assert "Final answer:. The Check section" in config.CHAIN_INSTRUCTIONS

@@ -18,13 +18,15 @@ LORA_TARGET_MODULES = [
     "up_proj",
     "down_proj",
 ]
-LEARNING_RATE = 2e-4
+LEARNING_RATE = 1e-4
 EPOCHS = 3
 PER_DEVICE_TRAIN_BATCH_SIZE = 4
 PER_DEVICE_EVAL_BATCH_SIZE = 4
 GRADIENT_ACCUMULATION_STEPS = 4
+EVAL_EVERY_STEPS = 10  # evaluate, save and log every this many optimizer steps
+FORMAT_PENALTY = 100.0  # checkpoint score = eval loss + this x (1 - format compliance)
 EARLY_STOPPING = True
-EARLY_STOPPING_PATIENCE = 1
+EARLY_STOPPING_PATIENCE = 3  # counted in evaluations: 3 x 10 steps, about one epoch
 MAX_ROUNDS = 3
 ROUND_REPEAT_CAP = 2
 
@@ -70,7 +72,7 @@ CHAIN_INSTRUCTIONS = (
     "Answer the question with exactly five plain-text sections, each starting at "
     "the beginning of a line, in this order: "
     + ", ".join(SECTION_LABELS)
-    + " The Check section says whether this is a familiar puzzle with a twist, a "
+    + ". The Check section says whether this is a familiar puzzle with a twist, a "
     "false premise, a pun, a wording trap, or a plain question. Do not use "
     "markdown or code fences. The final answer must be short and appear only on "
     f"the last line, after '{FINAL_ANSWER_LABEL}'."
@@ -95,7 +97,6 @@ GPU_TYPE = "L4"
 EVAL_BATCH_SIZE = 8
 EVAL_MAX_NEW_TOKENS = 384
 EVAL_MAX_SEQ_LENGTH = 2048
-WEAK_MIN_SOURCES = 3
 
 # ---- paths ----
 ROOT = Path(__file__).resolve().parents[1]

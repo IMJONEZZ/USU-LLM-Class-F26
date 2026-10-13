@@ -193,7 +193,10 @@ def train_on_gpu(train_rows, eval_rows, round_n, probe, overrides, resume_adapte
     eval_dataset = training.build_text_dataset(eval_rows, tokenizer.eos_token)
 
     # and then we hook the per-epoch evaluation (generation on the eval set) into training
-    generate_fn = evaluation.make_generate_fn(model, tokenizer)
+    # the probe only needs evaluation to run, not to say anything useful, so it generates few tokens
+    generate_fn = evaluation.make_generate_fn(
+        model, tokenizer, max_new_tokens=32 if probe else None
+    )
     evaluator = training.EpochEvaluator(eval_rows, generate_fn)
     adapter_dir = config.adapter_path(round_n, root="/checkpoints")
     trainer = training.build_trainer(
@@ -201,7 +204,7 @@ def train_on_gpu(train_rows, eval_rows, round_n, probe, overrides, resume_adapte
         tokenizer,
         train_dataset,
         eval_dataset,
-        str(adapter_dir),
+        str(training.trainer_output_dir(round_n, probe)),
         extra_callbacks=[training.make_epoch_eval_callback(evaluator)],
         **training.clean_overrides(overrides),
     )
@@ -299,13 +302,10 @@ def train_round(
     extra_data: str = "",
     replay_fraction: float = 1.0,
     resume_adapter: str = "",
-    gap: float = -1.0,
-    drop: float = -1.0,
 ):
     import json
 
     from src import data
-    from src import eval as evaluation
     from src import train as training
 
     all_train_rows = data.read_jsonl(config.TRAIN_PATH)
@@ -352,8 +352,10 @@ def train_round(
             f"{len(train_rows)} rows {built['by_category']}; continuing from {resume}"
         )
     if probe:
-        train_rows, eval_rows = train_rows[:8], eval_rows[:4]
+        train_rows, eval_rows = train_rows[:4], eval_rows[:2]
         overrides["epochs"] = 2 if overrides["epochs"] is None else overrides["epochs"]
+        # the probe takes only 2 steps, so evaluate every step or it never reaches the evaluation path
+        overrides["eval_every_steps"] = 1
         settings = training.hyperparameters(**training.clean_overrides(overrides))
 
     # and then, before any GPU time, we print the longest example, the memory estimate and the plan
@@ -389,6 +391,11 @@ def train_round(
     )
     record = remote["record"]
     record["round_info"] = round_info
+    if not probe:
+        warning = training.format_warning(record["epoch_results"])
+        round_info["format_warning"] = warning
+        if warning:
+            print(f"WARNING: {warning}")
     print(f"masking verified on {remote['masking_checked']} real examples")
     print(
         f"padding_free={remote['padding_free']} packing={remote['packing']}; "
@@ -396,7 +403,7 @@ def train_round(
     )
     for epoch in record["epoch_results"]:
         print(
-            f"  epoch {epoch['epoch']}: train loss {epoch['train_loss']}, eval loss "
+            f"  step {epoch['step']} (epoch {epoch['epoch']}): train loss {epoch['train_loss']}, eval loss "
             f"{epoch['eval_loss']}, accuracy {epoch['accuracy']}, format "
             f"{epoch['format_compliance']}"
         )
@@ -410,23 +417,8 @@ def train_round(
         f"round {round_n} recorded in {config.ROUNDS_PATH}; adapter on the Modal volume"
     )
 
-    # and then, if you gave the thresholds, we say whether another round is needed
-    kept = training.best_epoch(record["epoch_results"])
+    # and then we point at the next steps: the judged scores, not these exact-match ones, drive the decision
     print(
-        f"the kept adapter is the best epoch ({kept['epoch']}): {kept['per_category']}"
+        f"next: make eval_finetuned ROUND={round_n}, then make judge ROUND={round_n}, "
+        f"then make decide ROUND={round_n} GAP=<x>"
     )
-    if gap < 0:
-        print(
-            "pass --gap (and --drop) to see which categories are weak and whether to stop"
-        )
-        return
-    weak_next = evaluation.find_weak_categories(
-        kept["per_category"], evaluation.source_counts(eval_rows), gap
-    )
-    print(
-        f"decision: {training.round_decision(weak_next)}; weak categories: {weak_next}"
-    )
-    if drop >= 0 and rounds:
-        before = training.best_epoch(rounds[-1]["epoch_results"])["per_category"]
-        regressed = evaluation.find_regressions(before, kept["per_category"], drop)
-        print(f"regressions against round {rounds[-1]['round']}: {regressed}")

@@ -83,6 +83,8 @@ def hyperparameters(**overrides):
         "seed": config.SEED,
         "early_stopping": config.EARLY_STOPPING,
         "early_stopping_patience": config.EARLY_STOPPING_PATIENCE,
+        "eval_every_steps": config.EVAL_EVERY_STEPS,
+        "checkpoint_selection": "format_first",
     }
     unknown = sorted(set(overrides) - set(base))
     if unknown:
@@ -161,6 +163,13 @@ def check_adapter(path):
         )
 
 
+def trainer_output_dir(round_n, probe, root="/checkpoints"):
+    # the trainer writes checkpoints here even when nothing is kept, so a probe gets its own folder
+    if probe:
+        return Path(root) / "probe"
+    return config.adapter_path(round_n, root=root)
+
+
 def load_adapter(rounds, root=None):
     if not rounds:
         raise ValueError("no rounds recorded; train round 0 first")
@@ -183,6 +192,7 @@ def build_trainer(
     gradient_accumulation_steps=None,
     early_stopping=None,
     early_stopping_patience=None,
+    eval_every_steps=None,
     seed=None,
     extra_callbacks=(),
 ):
@@ -196,20 +206,21 @@ def build_trainer(
         gradient_accumulation_steps=gradient_accumulation_steps,
         early_stopping=early_stopping,
         early_stopping_patience=early_stopping_patience,
+        eval_every_steps=eval_every_steps,
         seed=seed,
     )
     from transformers import EarlyStoppingCallback
     from trl import SFTConfig, SFTTrainer
     from unsloth.chat_templates import train_on_responses_only
 
-    callbacks = []
+    # the extra callback adds the metric early stopping reads, so it goes first
+    callbacks = list(extra_callbacks)
     if settings["early_stopping"]:
         callbacks.append(
             EarlyStoppingCallback(
                 early_stopping_patience=settings["early_stopping_patience"]
             )
         )
-    callbacks.extend(extra_callbacks)
     trainer = SFTTrainer(
         model=model,
         processing_class=tokenizer,
@@ -222,12 +233,15 @@ def build_trainer(
             per_device_eval_batch_size=config.PER_DEVICE_EVAL_BATCH_SIZE,
             gradient_accumulation_steps=settings["gradient_accumulation_steps"],
             learning_rate=settings["learning_rate"],
-            eval_strategy="epoch",
-            save_strategy="epoch",
-            logging_strategy="epoch",
+            eval_strategy="steps",
+            eval_steps=settings["eval_every_steps"],
+            save_strategy="steps",
+            save_steps=settings["eval_every_steps"],
+            logging_strategy="steps",
+            logging_steps=settings["eval_every_steps"],
             save_total_limit=2,
             load_best_model_at_end=True,
-            metric_for_best_model="eval_loss",
+            metric_for_best_model="eval_format_gated_loss",
             greater_is_better=False,
             dataset_text_field="text",
             max_length=config.MAX_SEQ_LENGTH,
@@ -252,7 +266,7 @@ class EpochEvaluator:
         self.make_prompt = make_prompt or evaluation.finetuned_prompt
         self.epochs = []
 
-    def evaluate_epoch(self, model, epoch, train_loss, eval_loss):
+    def evaluate_epoch(self, model, epoch, train_loss, eval_loss, step=None):
         from unsloth import FastLanguageModel
 
         FastLanguageModel.for_inference(model)
@@ -264,6 +278,7 @@ class EpochEvaluator:
             FastLanguageModel.for_training(model)
         record = {
             "epoch": epoch,
+            "step": step,
             "train_loss": train_loss,
             "eval_loss": eval_loss,
             "accuracy": metrics["accuracy"],
@@ -287,7 +302,17 @@ def make_epoch_eval_callback(evaluator):
                 (e["loss"] for e in reversed(state.log_history) if "loss" in e), None
             )
             eval_loss = (metrics or {}).get("eval_loss")
-            evaluator.evaluate_epoch(model, round(state.epoch), train_loss, eval_loss)
+            record = evaluator.evaluate_epoch(
+                model,
+                round(state.epoch, 2),
+                train_loss,
+                eval_loss,
+                step=state.global_step,
+            )
+            if metrics is not None and eval_loss is not None:
+                metrics["eval_format_gated_loss"] = format_gated_loss(
+                    eval_loss, record["format_compliance"]
+                )
 
     return EpochEvalCallback()
 
@@ -466,10 +491,35 @@ def round_decision(weak_categories):
     return "continue" if weak_categories else "stop"
 
 
+def format_gated_loss(eval_loss, format_compliance):
+    # lower is better; any missing format outweighs every loss difference, so the
+    # best score is the lowest loss among perfect-format evaluations
+    return eval_loss + config.FORMAT_PENALTY * (1.0 - format_compliance)
+
+
 def best_epoch(epoch_results):
     if not epoch_results:
         raise ValueError("no epochs to choose from")
     scored = [e for e in epoch_results if e.get("eval_loss") is not None]
     if not scored:
         return epoch_results[-1]
-    return min(scored, key=lambda e: (e["eval_loss"], e["epoch"]))
+    return min(
+        scored,
+        key=lambda e: (
+            format_gated_loss(e["eval_loss"], e["format_compliance"]),
+            e["epoch"],
+        ),
+    )
+
+
+def format_warning(epoch_results):
+    if not [e for e in epoch_results if e.get("eval_loss") is not None]:
+        raise ValueError("no evaluations to check")
+    best = best_epoch(epoch_results)
+    if best["format_compliance"] < 1.0:
+        return (
+            "no evaluation reached 100% format compliance; the kept checkpoint is "
+            f"the best one, at step {best['step']} with format "
+            f"{best['format_compliance']}"
+        )
+    return None
