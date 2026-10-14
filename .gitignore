@@ -15,6 +15,7 @@ docs
 .venv-training/
 data/assignment6/tmux-tmp/
 data/assignment6/tmux.sock
+a6_prepared_hybrid.tgz
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
