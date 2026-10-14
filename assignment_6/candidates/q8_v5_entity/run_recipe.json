@@ -1,0 +1,70 @@
+{
+  "authorization": "Pallavi: Okay, start and let me know if anything changes",
+  "initialization": "Fresh pinned base + new LoRA; run12 unchanged",
+  "input_sha256": {
+    "candidate.jsonl": "a25937c29fad3db9fe9943d455fbdc94bb9c9d497a66299bcb70e6a8b5d149be",
+    "data_manifest.json": "c94c3d505a53c892f726464aa1af4a0377ba3fa154ee9e4fb3c59715711b3967",
+    "development_spec.json": "ba2c3e08b97ee37ca3bfd2638d84377662c16e74448ee5aa6bd0124bf77fb2af",
+    "scope_lock.json": "3acc3b3d31c66f6fb6064cfb0862706983cbc40fb0ec7cca90ce8858e4156f5b",
+    "selection_policy.json": "e601799f1e1f12319b1ad8e7a5b6c90284df2c2499087af6149b08001535caa0"
+  },
+  "local_run_folder": "A6_RUNS/run16_v5_q8_entity",
+  "no_submission_switch": true,
+  "one_training_run": true,
+  "run_name": "v5_q8_entity",
+  "selection_policy": {
+    "assignment_outputs_used_for_selection": false,
+    "automatic_trainer_checkpoint": "Provisional only; all three checkpoints preserved. Final adapter exported after manual Q8 review and recorded selection.",
+    "criterion": "Highest equal-weight macro across ten development groups; Q8 uses manual complete/8 under frozen semantic spec; other nine use frozen run12-repaired-compatible lexical diagnostics. Tie: lower development loss, then earlier step.",
+    "extra_runs": false,
+    "named_identity_token_required": false,
+    "needs_review_counts_as_complete": false,
+    "q8_partial_credit": false,
+    "q8_spec_sha256": "ba2c3e08b97ee37ca3bfd2638d84377662c16e74448ee5aa6bd0124bf77fb2af",
+    "retained_group_development_review": "Inspect and report Q1/Q5/Q6/Q7 outputs; do not change their diagnostic rules or choose from assignment outputs.",
+    "same_model_success_requirement": [
+      1,
+      5,
+      6,
+      7,
+      8
+    ],
+    "status": "Fixed before the authorized single run",
+    "steps": [
+      54,
+      108,
+      162
+    ],
+    "version": 1
+  },
+  "settings": {
+    "batch_size": 2,
+    "capybara_rows": 0,
+    "data_source": "targeted",
+    "epochs": 3,
+    "grad_accum": 4,
+    "learning_rate": 0.0001,
+    "lora_alpha": 0,
+    "lora_dropout": 0,
+    "lora_rank": 16,
+    "lr_scheduler_type": "linear",
+    "max_grad_norm": 1,
+    "max_length": 1024,
+    "mode": "final",
+    "model_revision": "9213176726f574b556790deb65791e0c5aa438b6",
+    "run_name": "v5_q8_entity",
+    "seed": 42,
+    "warmup_ratio": 0,
+    "weight_decay": 0
+  },
+  "source_sha256": {
+    "assignment_6/candidates/q8_v5_entity/legacy_evaluation.py": "fc9d2e60071d108b8bcd3ef18038aaaf1b8725e1080cdc30c0116f192c9d1482",
+    "assignment_6/candidates/q8_v5_entity/modal_q8_job.py": "737238c9b0597d494fd85bf368bdab983572747151f2e476119a46a789762e0c",
+    "assignment_6/candidates/q8_v5_entity/runtime.py": "38d7af14f43e22b89ed1d24e9dd565372a333bb1fa2d4c5b299636ad45167a49",
+    "src/a6_evaluation.py": "fc9d2e60071d108b8bcd3ef18038aaaf1b8725e1080cdc30c0116f192c9d1482",
+    "src/main.py": "865f16d6c7ede5ab132e601c19ce9788fb0e5b34a921743589f21867a36176d1",
+    "src/trainer.py": "8d5210350607e704c9eceb1c3c8ecd9cd1a5f1f138dde4b33c28ec89ededcec0"
+  },
+  "training_authorized": true,
+  "version": 1
+}

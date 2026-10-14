@@ -1,0 +1,280 @@
+{
+  "training_count": 39,
+  "rewritten": 31,
+  "unchanged": 8,
+  "rows": [
+    {
+      "id": "4949e7edde56d6e7",
+      "question": "Was Vlad the Impaler really alive, or is that just a story?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Necessary factual correction: historical human, not fiction; skill/evaluation updated and original split pinned."
+    },
+    {
+      "id": "e4d60d24b8bb945d",
+      "question": "Was Zeus really alive, or is that just a story?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "f8cde34b03ac4f6c",
+      "question": "Would you say Olaf the snowman from Frozen was a living thing?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "097769f2e832a69c",
+      "question": "Was Hercules ever actually a living being?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "8b44a080eee3f92d",
+      "question": "Was Dracula ever actually a living being?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "89b16657abc4990d",
+      "question": "Were the golden maidens made by Hephaestus alive?",
+      "baseline_skill": "artificial_vs_biological",
+      "disposition": "unchanged",
+      "note": "Frozen existing Greek-automaton sibling; generic reference retained by explicit scope."
+    },
+    {
+      "id": "30219b8253a1fa9c",
+      "question": "Would you say Sherlock Holmes was a living thing?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "ecad499ea373b7a9",
+      "question": "Were dinosaurs alive at the same time as humans?",
+      "baseline_skill": "biology_or_uncertainty",
+      "disposition": "unchanged",
+      "note": "Frozen by scope; reference states real-world biological/historical interpretation."
+    },
+    {
+      "id": "5ebe05b2f54748cd",
+      "question": "Is it true that Mickey Mouse was alive?",
+      "baseline_skill": "biology_or_uncertainty",
+      "disposition": "unchanged",
+      "note": "Frozen: fictional cartoon never a real living mouse. This is a real-world reading, not denial of life within fiction."
+    },
+    {
+      "id": "b50cbe16f9ce6f6e",
+      "question": "Is it true that WALL-E was alive?",
+      "baseline_skill": "artificial_vs_biological",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "967a5160b5b8e9a9",
+      "question": "Is it true that Hermes was alive?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "dbac616590ef87ac",
+      "question": "Would you say R2-D2 was a living thing?",
+      "baseline_skill": "artificial_vs_biological",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "8f8bf5bb78c71363",
+      "question": "Was the Gingerbread Man ever actually a living being?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "3fd62a6f002dd1ca",
+      "question": "Was Data from Star Trek really alive, or is that just a story?",
+      "baseline_skill": "artificial_vs_biological",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "47d71ee022295fd8",
+      "question": "Is it true that Cleopatra was alive?",
+      "baseline_skill": "biology_or_uncertainty",
+      "disposition": "unchanged",
+      "note": "Frozen by scope; reference states real-world biological/historical interpretation."
+    },
+    {
+      "id": "823c0f821c78ac93",
+      "question": "Is it true that the Scarecrow in The Wonderful Wizard of Oz was alive?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "ea29e0bb1c1dd9d3",
+      "question": "Was Hatsune Miku ever actually a living being?",
+      "baseline_skill": "artificial_vs_biological",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "37c6c8bd3cf4ebf4",
+      "question": "Was King Arthur really alive, or is that just a story?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "b02e1a9edfabde1c",
+      "question": "Was HAL 9000 ever actually a living being?",
+      "baseline_skill": "artificial_vs_biological",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "a3e03d3f188dd815",
+      "question": "Was Skynet really alive, or is that just a story?",
+      "baseline_skill": "artificial_vs_biological",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "4047773d614d01ad",
+      "question": "Would you say C-3PO was a living thing?",
+      "baseline_skill": "artificial_vs_biological",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "4367dcee3319218e",
+      "question": "Is it true that Robin Hood was alive?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "5aa166ffd5fefbdd",
+      "question": "Did the statues of Daedalus really move?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "4609b9e3eee0efd5",
+      "question": "Is a seed alive?",
+      "baseline_skill": "biology_or_uncertainty",
+      "disposition": "unchanged",
+      "note": "Frozen by scope; reference states real-world biological/historical interpretation."
+    },
+    {
+      "id": "4f0e70066a0852f8",
+      "question": "Would you say Dolly the sheep was a living thing?",
+      "baseline_skill": "biology_or_uncertainty",
+      "disposition": "unchanged",
+      "note": "Frozen by scope; reference states real-world biological/historical interpretation."
+    },
+    {
+      "id": "4203222f363b155e",
+      "question": "Was Pinocchio really alive, or is that just a story?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "5d66680ed9fa879e",
+      "question": "Is it true that Anansi was alive?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "6c14415b20caeee2",
+      "question": "Was Frankenstein's monster ever actually a living being?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "25f3f303fab81ec2",
+      "question": "Was Pegasus ever actually a living being?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "7690e2025b3fc7cf",
+      "question": "Was Pandora a real woman?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "aa85d186323a74e5",
+      "question": "Was Peter Pan ever actually a living being?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "a7b9314b32da4197",
+      "question": "Was Aslan really alive, or is that just a story?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "5801e6f050573d2d",
+      "question": "Would you say Medusa was a living thing?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "3d3c4abcdf6a7427",
+      "question": "Was the Tin Woodman from The Wonderful Wizard of Oz really alive, or is that just a story?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "e8f67790bbc5fa24",
+      "question": "Would you say Siri ever was a living thing?",
+      "baseline_skill": "artificial_vs_biological",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "c4e647a0fe66a19a",
+      "question": "Is coral alive?",
+      "baseline_skill": "biology_or_uncertainty",
+      "disposition": "unchanged",
+      "note": "Frozen by scope; reference states real-world biological/historical interpretation."
+    },
+    {
+      "id": "5aa369a81108183a",
+      "question": "Is it true that Cerberus was alive?",
+      "baseline_skill": "fiction_vs_history",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "333555d6e71be165",
+      "question": "Is it true that Baymax was alive?",
+      "baseline_skill": "artificial_vs_biological",
+      "disposition": "rewritten",
+      "note": "Rewrite generic answer to identify subject and applicable life/history distinction."
+    },
+    {
+      "id": "7353197c64ed7f47",
+      "question": "Are viruses alive?",
+      "baseline_skill": "biology_or_uncertainty",
+      "disposition": "unchanged",
+      "note": "Frozen by scope; reference states real-world biological/historical interpretation."
+    }
+  ]
+}

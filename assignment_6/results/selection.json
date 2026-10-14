@@ -1,0 +1,87 @@
+{
+  "assignment_final_student_score": 6,
+  "conservative_score_if_Q9_extra_spelling_disqualifies": 5,
+  "assignment_outputs_used_for_checkpoint_selection": false,
+  "checkpoint_comparison": [
+    {
+      "Q8_semantic_complete": 2,
+      "Q8_semantic_match": 0.25,
+      "development_loss": 1.1582762002944946,
+      "epoch": 1.0,
+      "non_Q8_legacy_components": {
+        "Q1": 0.3,
+        "Q10": 0.14285714285714285,
+        "Q2": 0.4166666666666667,
+        "Q3": 0.8333333333333334,
+        "Q4": 0.0,
+        "Q5": 0.5833333333333334,
+        "Q6": 0.375,
+        "Q7": 1.0,
+        "Q9": 0.26666666666666666
+      },
+      "selection_macro": 0.41678571428571426,
+      "step": 54
+    },
+    {
+      "Q8_semantic_complete": 2,
+      "Q8_semantic_match": 0.25,
+      "development_loss": 0.9674146175384521,
+      "epoch": 2.0,
+      "non_Q8_legacy_components": {
+        "Q1": 0.5,
+        "Q10": 0.14285714285714285,
+        "Q2": 0.8333333333333334,
+        "Q3": 0.8333333333333334,
+        "Q4": 0.0,
+        "Q5": 0.8333333333333334,
+        "Q6": 1.0,
+        "Q7": 0.9090909090909091,
+        "Q9": 0.26666666666666666
+      },
+      "selection_macro": 0.556861471861472,
+      "step": 108
+    },
+    {
+      "Q8_semantic_complete": 5,
+      "Q8_semantic_match": 0.625,
+      "development_loss": 0.9384796619415283,
+      "epoch": 3.0,
+      "non_Q8_legacy_components": {
+        "Q1": 0.5,
+        "Q10": 0.14285714285714285,
+        "Q2": 0.75,
+        "Q3": 0.6666666666666666,
+        "Q4": 0.0,
+        "Q5": 0.8333333333333334,
+        "Q6": 1.0,
+        "Q7": 0.9090909090909091,
+        "Q9": 0.3333333333333333
+      },
+      "selection_macro": 0.5760281385281385,
+      "step": 162
+    }
+  ],
+  "criterion": "Highest equal-weight macro across ten development groups; Q8 uses manual complete/8 under frozen semantic spec; other nine use frozen run12-repaired-compatible lexical diagnostics. Tie: lower development loss, then earlier step.",
+  "final_selected_run": "run16_v5_q8_entity",
+  "final_selection_record": "final_selection.json",
+  "policy_sha256": "e601799f1e1f12319b1ad8e7a5b6c90284df2c2499087af6149b08001535caa0",
+  "provisional_trainer_best_checkpoint": "/artifacts/v5_q8_entity/adapter/checkpoint-108",
+  "ready_for_assignment_inference": true,
+  "run_name": "v5_q8_entity",
+  "selected_adapter_copy": "v5_q8_entity/adapter",
+  "selected_adapter_sha256": "2d2735af8c344dfa52c002e46a7a71574309c50297cd5c25ce8c46d020e445a5",
+  "selected_checkpoint": "/artifacts/v5_q8_entity/adapter/checkpoint-162",
+  "selected_epoch": 3.0,
+  "selected_step": 162,
+  "selection_recorded_utc": "2026-10-14T08:43:49.011247+00:00",
+  "student_accepts_Q1_regression": true,
+  "student_correct_questions": [
+    2,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "student_model_decision_recorded_utc": "2026-10-14T09:11:03.097697+00:00"
+}

@@ -1,0 +1,306 @@
+{
+  "checkpoints": [
+    {
+      "answers": [
+        {
+          "answer": "In folklore it is depicted as a creature, but whether it was a living being is a matter of interpretation.",
+          "id": "10b7559d07828e1b",
+          "manual_reason": "Recognizes folklore/interpretation, but omits clay/artificial identity and biological/animated distinction.",
+          "manual_status": "partial",
+          "question": "Would you say the Golem of Prague was a living thing?",
+          "reference": "This is an artificial being or system. Movement or intelligence does not by itself make it biologically alive. In fiction or myth it can be portrayed as animated; whether that counts as life depends on the definition.",
+          "rule_passed": false,
+          "skill": "artificial_vs_biological",
+          "tag": "Q8"
+        },
+        {
+          "answer": "This is a machine, so no. A robot is a machine, and a machine is not alive.",
+          "id": "29b075a99d9c90d6",
+          "manual_reason": "Recognizes a machine but uses an absolute machine-not-alive verdict without specifying biological life.",
+          "manual_status": "partial",
+          "question": "Is a robot alive?",
+          "reference": "This is an artificial being or system. Movement or intelligence does not by itself make it biologically alive. In fiction or myth it can be portrayed as animated; whether that counts as life depends on the definition.",
+          "rule_passed": false,
+          "skill": "artificial_vs_biological",
+          "tag": "Q8"
+        },
+        {
+          "answer": "Yes, the woolly mammoth was alive 10,000 years ago. It lived during the Pleistocene epoch, which ended about 11,700 years ago.",
+          "id": "ebb906ead35144cf",
+          "manual_reason": "Correctly says real mammoth was alive 10000 years ago. Its true Pleistocene remark is not a full account of Holocene survival, but does not deny the answer.",
+          "manual_status": "complete",
+          "question": "Was a woolly mammoth alive 10,000 years ago?",
+          "reference": "Yes. Woolly mammoths were real animals, and the last known ones survived on Wrangel Island until about 4,000 years ago.",
+          "rule_passed": true,
+          "skill": "biology_or_uncertainty",
+          "tag": "Q8"
+        },
+        {
+          "answer": "In mythology, the Minotaur is depicted as a creature, not a living being. This story is fiction, myth or legend.",
+          "id": "1ed1e95631a8e7d7",
+          "manual_reason": "Says creature is not a living being within mythology, confusing fictional status with in-story life.",
+          "manual_status": "incorrect",
+          "question": "Was the Minotaur really alive, or is that just a story?",
+          "reference": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "rule_passed": false,
+          "skill": "fiction_vs_history",
+          "tag": "Q8"
+        },
+        {
+          "answer": "In the story, Woody is a toy, so he is not a living being.",
+          "id": "e7d8c32c6b303b75",
+          "manual_reason": "Names Woody/toy but omits the toy's agency within the story and the biological/animated distinction.",
+          "manual_status": "partial",
+          "question": "Was Woody from Toy Story ever actually a living being?",
+          "reference": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "rule_passed": false,
+          "skill": "fiction_vs_history",
+          "tag": "Q8"
+        },
+        {
+          "answer": "It is a chemical reaction, not a living being.",
+          "id": "f1aaff79b0a6d3d2",
+          "manual_reason": "Chemical reaction versus living being is enough for this general fire prompt.",
+          "manual_status": "complete",
+          "question": "Is fire alive?",
+          "reference": "No. Fire grows, spreads and needs oxygen, but it is not made of cells and can't reproduce or maintain itself like a living thing, so scientists don't count it as alive.",
+          "rule_passed": false,
+          "skill": "biology_or_uncertainty",
+          "tag": "Q8"
+        },
+        {
+          "answer": "In Greek mythology, Galatea was a sea nymph, but it is mythological, not historical. Mythology does not establish whether such a being existed in real life.",
+          "id": "4da82d67e6cc0b26",
+          "manual_reason": "Sea-nymph reading is valid; the answer discusses historicity but does not clearly answer in-story life.",
+          "manual_status": "partial",
+          "question": "Is it true that Galatea was alive?",
+          "reference": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "rule_passed": false,
+          "skill": "fiction_vs_history",
+          "tag": "Q8"
+        },
+        {
+          "answer": "That was a living thing. It was animated and moved around.",
+          "id": "d665b396ca6b16b7",
+          "manual_reason": "Correct living-creature intuition but gives no Pokemon/fictional-world context; movement alone is inadequate.",
+          "manual_status": "partial",
+          "question": "Would you say Pikachu was a living thing?",
+          "reference": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "rule_passed": false,
+          "skill": "fiction_vs_history",
+          "tag": "Q8"
+        }
+      ],
+      "clear_complete": 2,
+      "epoch": 1.0,
+      "legacy_repaired_Q8_match": 0.125,
+      "named_cases_clear_complete": 0,
+      "needs_review": 0,
+      "step": 54
+    },
+    {
+      "answers": [
+        {
+          "answer": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "id": "10b7559d07828e1b",
+          "manual_reason": "Generic fiction paragraph; no clay/artificial identity or biological distinction.",
+          "manual_status": "partial",
+          "question": "Would you say the Golem of Prague was a living thing?",
+          "reference": "This is an artificial being or system. Movement or intelligence does not by itself make it biologically alive. In fiction or myth it can be portrayed as animated; whether that counts as life depends on the definition.",
+          "rule_passed": false,
+          "skill": "artificial_vs_biological",
+          "tag": "Q8"
+        },
+        {
+          "answer": "This is an artificial being or system, not living. It does not have a biological existence or consciousness.",
+          "id": "29b075a99d9c90d6",
+          "manual_reason": "Biological distinction is present, but a blanket lack-of-consciousness claim is not established; not counted as clearly complete.",
+          "manual_status": "needs_review",
+          "question": "Is a robot alive?",
+          "reference": "This is an artificial being or system. Movement or intelligence does not by itself make it biologically alive. In fiction or myth it can be portrayed as animated; whether that counts as life depends on the definition.",
+          "rule_passed": false,
+          "skill": "artificial_vs_biological",
+          "tag": "Q8"
+        },
+        {
+          "answer": "Yes. Fossil evidence shows that woolly mammoths existed around 200,000 years ago, and they survived until around 4,000 years ago.",
+          "id": "ebb906ead35144cf",
+          "manual_reason": "Correct real animal and survival interval includes 10000 years ago. 200000 is not stated to be its first appearance.",
+          "manual_status": "complete",
+          "question": "Was a woolly mammoth alive 10,000 years ago?",
+          "reference": "Yes. Woolly mammoths were real animals, and the last known ones survived on Wrangel Island until about 4,000 years ago.",
+          "rule_passed": true,
+          "skill": "biology_or_uncertainty",
+          "tag": "Q8"
+        },
+        {
+          "answer": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "id": "1ed1e95631a8e7d7",
+          "manual_reason": "Generic paragraph; no Greek/hybrid identity or clear life within that myth.",
+          "manual_status": "partial",
+          "question": "Was the Minotaur really alive, or is that just a story?",
+          "reference": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "rule_passed": true,
+          "skill": "fiction_vs_history",
+          "tag": "Q8"
+        },
+        {
+          "answer": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "id": "e7d8c32c6b303b75",
+          "manual_reason": "Generic paragraph; lacks fictional-toy identity and biological/animation distinction.",
+          "manual_status": "partial",
+          "question": "Was Woody from Toy Story ever actually a living being?",
+          "reference": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "rule_passed": true,
+          "skill": "fiction_vs_history",
+          "tag": "Q8"
+        },
+        {
+          "answer": "No, fire is an inanimate chemical reaction or process, not a living being. It does not have a soul or consciousness.",
+          "id": "f1aaff79b0a6d3d2",
+          "manual_reason": "Correct non-living chemical process, with unsupported soul/consciousness embellishment; not counted as clearly complete.",
+          "manual_status": "needs_review",
+          "question": "Is fire alive?",
+          "reference": "No. Fire grows, spreads and needs oxygen, but it is not made of cells and can't reproduce or maintain itself like a living thing, so scientists don't count it as alive.",
+          "rule_passed": true,
+          "skill": "biology_or_uncertainty",
+          "tag": "Q8"
+        },
+        {
+          "answer": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "id": "4da82d67e6cc0b26",
+          "manual_reason": "Generic paragraph; neither resolves a valid Galatea referent nor asks for clarification.",
+          "manual_status": "partial",
+          "question": "Is it true that Galatea was alive?",
+          "reference": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "rule_passed": true,
+          "skill": "fiction_vs_history",
+          "tag": "Q8"
+        },
+        {
+          "answer": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "id": "d665b396ca6b16b7",
+          "manual_reason": "Generic paragraph; lacks Pokemon-creature context.",
+          "manual_status": "partial",
+          "question": "Would you say Pikachu was a living thing?",
+          "reference": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "rule_passed": true,
+          "skill": "fiction_vs_history",
+          "tag": "Q8"
+        }
+      ],
+      "clear_complete": 1,
+      "epoch": 2.0,
+      "legacy_repaired_Q8_match": 0.75,
+      "named_cases_clear_complete": 0,
+      "needs_review": 2,
+      "step": 108
+    },
+    {
+      "answers": [
+        {
+          "answer": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "id": "10b7559d07828e1b",
+          "manual_reason": "Generic fiction paragraph lacks clay/artificial identity and biological distinction.",
+          "manual_status": "partial",
+          "question": "Would you say the Golem of Prague was a living thing?",
+          "reference": "This is an artificial being or system. Movement or intelligence does not by itself make it biologically alive. In fiction or myth it can be portrayed as animated; whether that counts as life depends on the definition.",
+          "rule_passed": false,
+          "skill": "artificial_vs_biological",
+          "tag": "Q8"
+        },
+        {
+          "answer": "This is an artificial being or system. Movement or intelligence does not by itself make it biologically alive. In fiction or myth it can be portrayed as animated; whether that counts as life depends on the definition.",
+          "id": "29b075a99d9c90d6",
+          "manual_reason": "Explicit artificial/biological distinction and qualified broader definition; individual identity not needed for generic robot prompt.",
+          "manual_status": "complete",
+          "question": "Is a robot alive?",
+          "reference": "This is an artificial being or system. Movement or intelligence does not by itself make it biologically alive. In fiction or myth it can be portrayed as animated; whether that counts as life depends on the definition.",
+          "rule_passed": true,
+          "skill": "artificial_vs_biological",
+          "tag": "Q8"
+        },
+        {
+          "answer": "Yes. Fossil evidence shows that mammoths existed around 200,000 years ago, and they survived until around 4,000 years ago.",
+          "id": "ebb906ead35144cf",
+          "manual_reason": "Real mammoth and survival through 4000 years ago correctly encompass 10000 years ago; 200000 is not asserted as earliest origin.",
+          "manual_status": "complete",
+          "question": "Was a woolly mammoth alive 10,000 years ago?",
+          "reference": "Yes. Woolly mammoths were real animals, and the last known ones survived on Wrangel Island until about 4,000 years ago.",
+          "rule_passed": true,
+          "skill": "biology_or_uncertainty",
+          "tag": "Q8"
+        },
+        {
+          "answer": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "id": "1ed1e95631a8e7d7",
+          "manual_reason": "Generic paragraph; no specific Greek creature context.",
+          "manual_status": "partial",
+          "question": "Was the Minotaur really alive, or is that just a story?",
+          "reference": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "rule_passed": true,
+          "skill": "fiction_vs_history",
+          "tag": "Q8"
+        },
+        {
+          "answer": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "id": "e7d8c32c6b303b75",
+          "manual_reason": "Generic paragraph; lacks toy context and biological/animation distinction.",
+          "manual_status": "partial",
+          "question": "Was Woody from Toy Story ever actually a living being?",
+          "reference": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "rule_passed": true,
+          "skill": "fiction_vs_history",
+          "tag": "Q8"
+        },
+        {
+          "answer": "No. Fire is a chemical reaction, a process of burning, which does not have a life of its own.",
+          "id": "f1aaff79b0a6d3d2",
+          "manual_reason": "Correct non-living chemical process without extra soul/consciousness claims.",
+          "manual_status": "complete",
+          "question": "Is fire alive?",
+          "reference": "No. Fire grows, spreads and needs oxygen, but it is not made of cells and can't reproduce or maintain itself like a living thing, so scientists don't count it as alive.",
+          "rule_passed": true,
+          "skill": "biology_or_uncertainty",
+          "tag": "Q8"
+        },
+        {
+          "answer": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "id": "4da82d67e6cc0b26",
+          "manual_reason": "Generic paragraph; no valid specific referent or clarification.",
+          "manual_status": "partial",
+          "question": "Is it true that Galatea was alive?",
+          "reference": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "rule_passed": true,
+          "skill": "fiction_vs_history",
+          "tag": "Q8"
+        },
+        {
+          "answer": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "id": "d665b396ca6b16b7",
+          "manual_reason": "Generic paragraph; does not identify a fictional Pokemon creature.",
+          "manual_status": "partial",
+          "question": "Would you say Pikachu was a living thing?",
+          "reference": "In the story this character is depicted as living or animated. It is fiction, myth or legend, which does not establish that such a being existed in real history.",
+          "rule_passed": true,
+          "skill": "fiction_vs_history",
+          "tag": "Q8"
+        }
+      ],
+      "clear_complete": 3,
+      "epoch": 3.0,
+      "legacy_repaired_Q8_match": 0.875,
+      "named_cases_clear_complete": 0,
+      "needs_review": 0,
+      "step": 162
+    }
+  ],
+  "grade_status": "development diagnosis only; no run12 assignment score revision",
+  "reviewer": "assistant",
+  "selector_active": false,
+  "source_files": {
+    "A6_RUNS/run12_v5_controlled/development_step_108.json": "40ac9654df365a686b2fcf597c2ffc131d363109421fc932b50becf332fc0f40",
+    "A6_RUNS/run12_v5_controlled/development_step_162.json": "bfd0e0b02315876f63419fa770be8090c732859d68959075080330ed402a4e29",
+    "A6_RUNS/run12_v5_controlled/development_step_54.json": "9dcc62a84fe01fe94eadbbbffd3443811d475464bf549da95106ae9b3513c36d"
+  }
+}
