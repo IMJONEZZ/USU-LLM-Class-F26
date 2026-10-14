@@ -28,7 +28,7 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-norecursedirs = [".git", ".venv", ".venv-training", "data", "checkpoints", "outputs", "node_modules"]
+norecursedirs = [".git", ".venv", ".venv-training", "archive", "node_modules"]
 addopts = "--cov=src --cov-fail-under=100"
 markers = ["gpu: opt-in real Unsloth integration requiring CUDA and prepared data"]
 
