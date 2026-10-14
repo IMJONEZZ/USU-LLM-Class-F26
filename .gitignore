@@ -188,6 +188,3 @@ cython_debug/
 
 # ZenML
 .zen/config.yaml
-
-# data folder
-data/
