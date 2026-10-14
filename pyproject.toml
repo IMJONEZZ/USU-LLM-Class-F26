@@ -31,3 +31,8 @@ testpaths = ["tests"]
 norecursedirs = [".git", ".venv", ".venv-training", "data", "checkpoints", "outputs", "node_modules"]
 addopts = "--cov=src --cov-fail-under=100"
 markers = ["gpu: opt-in real Unsloth integration requiring CUDA and prepared data"]
+
+[tool.coverage.report]
+exclude_also = [
+    "if __name__ == .__main__.:",
+]

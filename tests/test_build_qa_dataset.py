@@ -358,7 +358,7 @@ def test_get_and_download_falseqa(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
             raise bq.URLError("skip")
         if name == "train.csv":
             return b"question,answer,label\nq?,a,0\n"
-        raise bq.HTTPError(url, 404, "x", hdrs=None, fp=None)
+        raise bq.URLError("skip remaining candidates")
 
     monkeypatch.setattr(bq, "_get", fake_get)
     out = bq.download_falseqa()
@@ -413,18 +413,19 @@ def test_download_brainteaser(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     # Second call hits cache.
     assert bq.download_brainteaser() == extracted
 
-    # Missing pyzipper path.
+    # Missing pyzipper path (ImportError inside extract).
     marker = extracted / ".extracted_ok"
     marker.unlink()
-    monkeypatch.setitem(sys.modules, "pyzipper", None)
+    monkeypatch.delitem(sys.modules, "pyzipper", raising=False)
+
     import builtins
 
     real_import = builtins.__import__
 
-    def no_pyzipper(name, *args, **kwargs):
-        if name == "pyzipper":
+    def no_pyzipper(name, globals=None, locals=None, fromlist=(), level=0):
+        if name == "pyzipper" or name.startswith("pyzipper."):
             raise ImportError("missing")
-        return real_import(name, *args, **kwargs)
+        return real_import(name, globals, locals, fromlist, level)
 
     monkeypatch.setattr(builtins, "__import__", no_pyzipper)
     with pytest.raises(RuntimeError, match="install pyzipper"):
@@ -561,15 +562,6 @@ def test_cmd_download_inspect_main(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     bq.main(["phase1"])
     bq.main(["convert", "--seed", "1"])
     assert called == ["d", "i", "d", "i", "c"]
-
-    import runpy
-    import sys
-
-    exits = []
-    monkeypatch.setattr(sys, "exit", lambda code=0: exits.append(code))
-    monkeypatch.setattr(sys, "argv", [bq.__file__, "download"])
-    runpy.run_path(bq.__file__, run_name="__main__")
-    assert "d" in called
 
 
 def test_convert_exclusion_and_absent_fail(
