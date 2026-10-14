@@ -801,6 +801,7 @@ def _gpu_args(
         epochs=1,
         steps=1,
         init_adapter=init_adapter,
+        gradient_checkpointing=True,
     )
 
 
@@ -1069,6 +1070,13 @@ def test_versions_skips_missing_packages(monkeypatch):
 
     monkeypatch.setattr(tr, "version", boom)
     assert "torch" in tr.versions() or "transformers" in tr.versions()
+
+
+def test_dataloader_rejects_bad_num_workers():
+    from src.dataloader import seeded_loader
+
+    with pytest.raises(ValueError, match="num_workers"):
+        seeded_loader([], batch_size=1, num_workers=-1)
 
 
 def test_dataloader_rejects_bad_batch_size():

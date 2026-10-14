@@ -9,9 +9,24 @@ def _require_positive_integer(name: str, value: int) -> None:
         raise ValueError(f"{name} must be a positive integer")
 
 
-def seeded_loader(dataset, batch_size=1, shuffle=False, seed=0, collate_fn=None):
+def seeded_loader(
+    dataset,
+    batch_size=1,
+    shuffle=False,
+    seed=0,
+    collate_fn=None,
+    *,
+    num_workers=0,
+    pin_memory=False,
+):
     """Reproducible DataLoader used by answer_loader in trainer."""
     _require_positive_integer("batch_size", batch_size)
+    if (
+        isinstance(num_workers, bool)
+        or not isinstance(num_workers, int)
+        or num_workers < 0
+    ):
+        raise ValueError("num_workers must be a non-negative integer")
     generator = torch.Generator().manual_seed(seed)
     return DataLoader(
         dataset,
@@ -20,5 +35,6 @@ def seeded_loader(dataset, batch_size=1, shuffle=False, seed=0, collate_fn=None)
         shuffle=shuffle,
         drop_last=False,
         generator=generator,
-        num_workers=0,
+        num_workers=num_workers,
+        pin_memory=bool(pin_memory),
     )

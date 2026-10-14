@@ -222,13 +222,24 @@ def collate_answers(rows, pad_token_id):
     }
 
 
-def answer_loader(rows, pad_token_id, batch_size=1, shuffle=False, seed=0):
+def answer_loader(
+    rows,
+    pad_token_id,
+    batch_size=1,
+    shuffle=False,
+    seed=0,
+    *,
+    num_workers=0,
+    pin_memory=False,
+):
     return seeded_loader(
         rows,
         batch_size,
         shuffle,
         seed,
         partial(collate_answers, pad_token_id=pad_token_id),
+        num_workers=num_workers,
+        pin_memory=pin_memory,
     )
 
 
@@ -404,8 +415,23 @@ def fit(
     parameters, counts = adapter_parameters(model)
     print(json.dumps(counts), flush=True)
     optimizer = torch.optim.AdamW(parameters, lr=learning_rate, weight_decay=0.0)
-    train = answer_loader(training, pad_token_id, batch_size, True, seed)
-    dev = answer_loader(development, pad_token_id, batch_size)
+    # pin_memory speeds host→GPU copies on CUDA; keep num_workers=0 for
+    # reproducibility and simple unit tests (no dataloader workers).
+    pin_memory = str(device).startswith("cuda")
+    train = answer_loader(
+        training,
+        pad_token_id,
+        batch_size,
+        True,
+        seed,
+        pin_memory=pin_memory,
+    )
+    dev = answer_loader(
+        development,
+        pad_token_id,
+        batch_size,
+        pin_memory=pin_memory,
+    )
     result = {
         "parameters": counts,
         "metadata": metadata or {},
@@ -841,7 +867,7 @@ def gpu_environment():
 
 
 def training_options(args):
-    return {
+    options = {
         name: getattr(args, name)
         for name in (
             "batch_size",
@@ -852,6 +878,10 @@ def training_options(args):
             "targets",
         )
     }
+    options["gradient_checkpointing"] = bool(
+        getattr(args, "gradient_checkpointing", True)
+    )
+    return options
 
 
 def run_gpu(args):
@@ -903,7 +933,7 @@ def run_gpu(args):
         device_map={"": 0},
         full_finetuning=False,
         use_exact_model_name=True,
-        use_gradient_checkpointing=True,
+        use_gradient_checkpointing=bool(getattr(args, "gradient_checkpointing", True)),
         offload_embedding=False,
     )
     init_adapter = getattr(args, "init_adapter", None)
@@ -936,7 +966,9 @@ def run_gpu(args):
             lora_alpha=args.alpha,
             lora_dropout=0,
             bias="none",
-            use_gradient_checkpointing=True,
+            use_gradient_checkpointing=bool(
+                getattr(args, "gradient_checkpointing", True)
+            ),
             random_state=data["seed"],
             use_rslora=False,
             loftq_config=None,
@@ -1053,6 +1085,12 @@ def main(argv=None):
             type=Path,
             default=None,
             help="Continue training from an existing LoRA adapter directory",
+        )
+        p.add_argument(
+            "--gradient-checkpointing",
+            action=argparse.BooleanOptionalAction,
+            default=True,
+            help="Trade speed/VRAM: disable on A100 for higher throughput",
         )
     args = parser.parse_args(argv)
     for name in (
