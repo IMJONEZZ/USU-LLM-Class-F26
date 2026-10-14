@@ -985,3 +985,481 @@ def test_graded_leakage_and_approval_gate():
     pending["review_status"] = "approved"
     examples, _ = tr.prepare_qa_partition([pending], _FakeChatTokenizer())
     assert len(examples) == 1
+
+
+def test_versions_skips_missing_packages(monkeypatch):
+    from importlib.metadata import PackageNotFoundError
+
+    def boom(name):
+        raise PackageNotFoundError(name)
+
+    monkeypatch.setattr(tr, "version", boom)
+    assert "torch" in tr.versions() or "transformers" in tr.versions()
+
+
+def test_dataloader_rejects_bad_batch_size():
+    from src.dataloader import seeded_loader
+
+    with pytest.raises(ValueError, match="batch_size"):
+        seeded_loader([], batch_size=0)
+
+
+def test_read_jsonl_and_validate_qa(tmp_path):
+    path = tmp_path / "rows.jsonl"
+    path.write_text(
+        "\n"
+        + json.dumps(
+            {
+                "example_id": "a",
+                "instruction": "Q?",
+                "response": "A",
+                "category": "c",
+                "source": "s",
+                "review_status": "approved",
+            }
+        )
+        + "\nnot-json\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="invalid JSON"):
+        tr.read_jsonl(path)
+    good = tmp_path / "good.jsonl"
+    good.write_text(
+        json.dumps(
+            {
+                "example_id": "a",
+                "instruction": "Q?",
+                "response": "A",
+                "category": "c",
+                "source": "s",
+                "review_status": "approved",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert len(tr.read_jsonl(good)) == 1
+
+    with pytest.raises(TypeError):
+        tr.validate_qa_record("nope")
+    with pytest.raises(ValueError, match="Missing required"):
+        tr.validate_qa_record({"example_id": "x"})
+    with pytest.raises(ValueError, match="nonempty"):
+        tr.validate_qa_record(
+            {
+                "example_id": " ",
+                "instruction": "q",
+                "response": "a",
+                "category": "c",
+                "source": "s",
+                "review_status": "approved",
+            }
+        )
+    with pytest.raises(ValueError, match="Invalid review_status"):
+        tr.validate_qa_record(
+            {
+                "example_id": "x",
+                "instruction": "q",
+                "response": "a",
+                "category": "c",
+                "source": "s",
+                "review_status": "maybe",
+            }
+        )
+
+
+def test_chat_encoding_edge_cases():
+    class EmptyEos(_FakeChatTokenizer):
+        eos_token_id = None
+
+    with pytest.raises(ValueError, match="EOS"):
+        tr.encode_chat_example("Q?", "A", EmptyEos())
+    with pytest.raises(ValueError, match="nonempty"):
+        tr.encode_chat_example(" ", "A", _FakeChatTokenizer())
+
+    class EmptyTemplate(_FakeChatTokenizer):
+        def apply_chat_template(
+            self, messages, tokenize=False, add_generation_prompt=False
+        ):
+            if tokenize:
+                return []
+            return ""
+
+    with pytest.raises(ValueError, match="empty sequence"):
+        tr.encode_chat_example("Q?", "A", EmptyTemplate())
+
+    class BadPrefix(_FakeChatTokenizer):
+        def apply_chat_template(
+            self, messages, tokenize=False, add_generation_prompt=False
+        ):
+            if not tokenize:
+                return "x"
+            if len(messages) == 1:
+                return [1, 2, 3]
+            return [9, 9, 9, 9]
+
+    with pytest.raises(ValueError, match="not a prefix"):
+        tr.encode_chat_example("Q?", "A", BadPrefix())
+
+    class MappingTok(_FakeChatTokenizer):
+        def apply_chat_template(
+            self, messages, tokenize=False, add_generation_prompt=False
+        ):
+            ids = super().apply_chat_template(
+                messages, tokenize=True, add_generation_prompt=add_generation_prompt
+            )
+            if not tokenize:
+                return "text"
+            return {"input_ids": [ids]}
+
+    encoded = tr.encode_chat_example("Hi?", "There", MappingTok())
+    assert encoded["prompt_ids"]
+
+    with pytest.raises(ValueError, match="example_overlength"):
+        tr.encode_chat_example("Q?", "A", _FakeChatTokenizer(), max_length=1)
+
+    class NoSupervised(_FakeChatTokenizer):
+        def apply_chat_template(
+            self, messages, tokenize=False, add_generation_prompt=False
+        ):
+            if not tokenize:
+                return "t"
+            # Same ids for prompt and full -> no assistant tokens after prompt.
+            return [1, 2, 3]
+
+    with pytest.raises(ValueError, match="No supervised"):
+        tr.encode_chat_example("Q?", "A", NoSupervised())
+
+    assert tr._as_token_id_list(None) == []
+    assert tr._as_token_id_list({"input_ids": [1, 2]}) == [1, 2]
+
+
+def test_jaccard_leakage_and_contamination():
+    similar = {
+        "example_id": "sim",
+        "instruction": (
+            "If it takes 1 hour for 60 people to play an Opera, how many hours "
+            "will it take many people to play opera?"
+        ),
+        "response": "x",
+        "category": "c",
+        "source": "s",
+        "review_status": "approved",
+    }
+    issues = tr.find_graded_leakage([similar], threshold=0.4)
+    assert any(i["reason"] == "graded_stem_similar" for i in issues)
+
+    # Empty alphanumeric tokens skip Jaccard scoring.
+    punct = {
+        "example_id": "p",
+        "instruction": "???",
+        "response": "x",
+        "category": "c",
+        "source": "s",
+        "review_status": "approved",
+    }
+    assert tr.find_graded_leakage([punct]) == []
+
+    train = [
+        {
+            "example_id": "t1",
+            "instruction": "Unique train question?",
+            "response": "a",
+            "category": "c",
+            "source": "s",
+            "review_status": "approved",
+        }
+    ]
+    dev = [
+        {
+            "example_id": "d1",
+            "instruction": "unique train question?",
+            "response": "b",
+            "category": "c",
+            "source": "s",
+            "review_status": "approved",
+        }
+    ]
+    assert tr.find_split_contamination(train, dev)
+
+    over = {
+        "example_id": "o",
+        "instruction": "Short?",
+        "response": "Long answer " * 20,
+        "category": "c",
+        "source": "s",
+        "review_status": "approved",
+    }
+    examples, audit = tr.prepare_qa_partition(
+        [over], _FakeChatTokenizer(), max_length=8, max_new_tokens=2
+    )
+    assert examples == []
+    assert audit["excluded_examples"]
+
+
+def test_prepare_qa_cli(tmp_path, monkeypatch):
+    import transformers
+
+    def approved(eid, instruction):
+        return {
+            "example_id": eid,
+            "instruction": instruction,
+            "response": "answer text",
+            "category": "c",
+            "source": "s",
+            "review_status": "approved",
+        }
+
+    train = tmp_path / "train.jsonl"
+    dev = tmp_path / "dev.jsonl"
+    proxy = tmp_path / "proxy.jsonl"
+    train.write_text(json.dumps(approved("t1", "Train skill question one?")) + "\n")
+    dev.write_text(json.dumps(approved("d1", "Dev skill question two?")) + "\n")
+    proxy.write_text(json.dumps(approved("p1", "Proxy skill question three?")) + "\n")
+
+    class Tok(_FakeChatTokenizer):
+        pad_token = None
+        eos_token = 1
+        backend_tokenizer = SimpleNamespace(to_str=lambda: "fake-tok")
+
+        def save_pretrained(self, path):
+            Path(path).mkdir(parents=True, exist_ok=True)
+
+    tok = Tok()
+
+    monkeypatch.setattr(
+        transformers.AutoConfig,
+        "from_pretrained",
+        lambda *a, **k: SimpleNamespace(_commit_hash="rev123"),
+    )
+    monkeypatch.setattr(
+        transformers.AutoTokenizer,
+        "from_pretrained",
+        lambda *a, **k: tok,
+    )
+
+    out = tmp_path / "prepared_qa"
+    assert (
+        tr.main(
+            [
+                "prepare-qa",
+                "--train",
+                str(train),
+                "--dev",
+                str(dev),
+                "--proxy",
+                str(proxy),
+                "--output",
+                str(out),
+            ]
+        )
+        == 0
+    )
+    data = tr.load_prepared(out)
+    assert data["task"] == "instruction_qa"
+    assert data["examples"]["test"]
+
+    # Without proxy, test mirrors dev.
+    out2 = tmp_path / "prepared_qa2"
+    assert (
+        tr.main(
+            [
+                "prepare-qa",
+                "--train",
+                str(train),
+                "--dev",
+                str(dev),
+                "--output",
+                str(out2),
+            ]
+        )
+        == 0
+    )
+    assert "mirrors dev" in tr.load_prepared(out2)["preparation"]["test"]["note"]
+
+    # Leakage / unapproved / missing revision branches.
+    bad_train = tmp_path / "bad_train.jsonl"
+    bad_train.write_text(json.dumps(approved("b", tr.GRADED_QUESTIONS[0])) + "\n")
+    out3 = tmp_path / "fail_leak"
+    assert (
+        tr.main(
+            [
+                "prepare-qa",
+                "--train",
+                str(bad_train),
+                "--dev",
+                str(dev),
+                "--output",
+                str(out3),
+            ]
+        )
+        == 1
+    )
+
+    pending = approved("p", "Pending only?")
+    pending["review_status"] = "pending"
+    pend_path = tmp_path / "pend.jsonl"
+    pend_path.write_text(json.dumps(pending) + "\n")
+    out4 = tmp_path / "fail_pend"
+    assert (
+        tr.main(
+            [
+                "prepare-qa",
+                "--train",
+                str(pend_path),
+                "--dev",
+                str(dev),
+                "--output",
+                str(out4),
+            ]
+        )
+        == 1
+    )
+
+    monkeypatch.setattr(
+        transformers.AutoConfig,
+        "from_pretrained",
+        lambda *a, **k: SimpleNamespace(_commit_hash=None),
+    )
+    out5 = tmp_path / "fail_rev"
+    assert (
+        tr.main(
+            [
+                "prepare-qa",
+                "--train",
+                str(train),
+                "--dev",
+                str(dev),
+                "--output",
+                str(out5),
+            ]
+        )
+        == 1
+    )
+
+    # Restore revision; cover contamination / chat-template / empty / proxy errors.
+    monkeypatch.setattr(
+        transformers.AutoConfig,
+        "from_pretrained",
+        lambda *a, **k: SimpleNamespace(_commit_hash="rev123"),
+    )
+    contam_dev = tmp_path / "contam_dev.jsonl"
+    contam_dev.write_text(
+        json.dumps(approved("d2", "Train skill question one?")) + "\n"
+    )
+    out6 = tmp_path / "fail_contam"
+    assert (
+        tr.main(
+            [
+                "prepare-qa",
+                "--train",
+                str(train),
+                "--dev",
+                str(contam_dev),
+                "--output",
+                str(out6),
+            ]
+        )
+        == 1
+    )
+
+    class NoChat:
+        eos_token_id = 1
+        pad_token_id = 1
+        pad_token = 1
+        eos_token = 1
+        backend_tokenizer = SimpleNamespace(to_str=lambda: "x")
+
+        def save_pretrained(self, path):
+            Path(path).mkdir(parents=True, exist_ok=True)
+
+    monkeypatch.setattr(
+        transformers.AutoTokenizer,
+        "from_pretrained",
+        lambda *a, **k: NoChat(),
+    )
+    out7 = tmp_path / "fail_chat"
+    assert (
+        tr.main(
+            [
+                "prepare-qa",
+                "--train",
+                str(train),
+                "--dev",
+                str(dev),
+                "--output",
+                str(out7),
+            ]
+        )
+        == 1
+    )
+
+    monkeypatch.setattr(
+        transformers.AutoTokenizer,
+        "from_pretrained",
+        lambda *a, **k: tok,
+    )
+    real_partition = tr.prepare_qa_partition
+    monkeypatch.setattr(
+        tr,
+        "prepare_qa_partition",
+        lambda *a, **k: ([], {"eligible_examples": 0, "excluded_examples": []}),
+    )
+    out8 = tmp_path / "fail_empty"
+    assert (
+        tr.main(
+            [
+                "prepare-qa",
+                "--train",
+                str(train),
+                "--dev",
+                str(dev),
+                "--output",
+                str(out8),
+            ]
+        )
+        == 1
+    )
+    monkeypatch.setattr(tr, "prepare_qa_partition", real_partition)
+
+    leak_proxy = tmp_path / "leak_proxy.jsonl"
+    leak_proxy.write_text(json.dumps(approved("lp", tr.GRADED_QUESTIONS[3])) + "\n")
+    out9 = tmp_path / "fail_proxy_leak"
+    assert (
+        tr.main(
+            [
+                "prepare-qa",
+                "--train",
+                str(train),
+                "--dev",
+                str(dev),
+                "--proxy",
+                str(leak_proxy),
+                "--output",
+                str(out9),
+            ]
+        )
+        == 1
+    )
+
+    contam_proxy = tmp_path / "contam_proxy.jsonl"
+    contam_proxy.write_text(
+        json.dumps(approved("cp", "Train skill question one?")) + "\n"
+    )
+    out10 = tmp_path / "fail_proxy_contam"
+    assert (
+        tr.main(
+            [
+                "prepare-qa",
+                "--train",
+                str(train),
+                "--dev",
+                str(dev),
+                "--proxy",
+                str(contam_proxy),
+                "--output",
+                str(out10),
+            ]
+        )
+        == 1
+    )

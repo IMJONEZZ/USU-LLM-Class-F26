@@ -372,12 +372,6 @@ def scenario_matches(question: str) -> list[dict]:
             for token in ("how many", "number of", "count", "letter", " l ", "ls")
         ):
             continue
-        # Avoid generic "president of X" unless US-related.
-        if name == "us_president" and not any(
-            cue in text
-            for cue in ("united states", "u.s.", "usa", "american", "us president")
-        ):
-            continue
         hits.append(
             {
                 "scenario": name,
@@ -793,17 +787,16 @@ def main(argv: list[str] | None = None) -> None:
     convert = sub.add_parser("convert", help="Convert raw datasets to pending JSONL")
     convert.add_argument("--seed", type=int, default=0)
     args = parser.parse_args(argv)
-    if args.command == "download":
+    commands = {
+        "download": cmd_download,
+        "inspect": cmd_inspect,
+        "convert": cmd_convert,
+    }
+    if args.command == "phase1":
         cmd_download(args)
-    elif args.command == "inspect":
         cmd_inspect(args)
-    elif args.command == "phase1":
-        cmd_download(args)
-        cmd_inspect(args)
-    elif args.command == "convert":
-        cmd_convert(args)
     else:
-        parser.error(f"Unknown command {args.command}")
+        commands[args.command](args)
 
 
 if __name__ == "__main__":
