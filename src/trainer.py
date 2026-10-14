@@ -890,7 +890,8 @@ def run_gpu(args):
     }
     write_json(args.output / "config.json", metadata)
     # Feasibility is only a compatibility gate. Reload the original base and
-    # initialize fresh adapters rather than continuing its short training run.
+    # initialize fresh adapters rather than continuing its short training run,
+    # unless --init-adapter continues an existing LoRA.
     model, _ = FastLanguageModel.from_pretrained(
         model_name=data["model"],
         revision=data["revision"],
@@ -905,18 +906,41 @@ def run_gpu(args):
         use_gradient_checkpointing=True,
         offload_embedding=False,
     )
-    model = FastLanguageModel.get_peft_model(
-        model,
-        r=args.rank,
-        target_modules=args.targets.split(","),
-        lora_alpha=args.alpha,
-        lora_dropout=0,
-        bias="none",
-        use_gradient_checkpointing=True,
-        random_state=data["seed"],
-        use_rslora=False,
-        loftq_config=None,
-    )
+    init_adapter = getattr(args, "init_adapter", None)
+    if init_adapter is not None:
+        from peft import PeftModel
+
+        adapter_path = Path(init_adapter)
+        if not adapter_path.is_dir():
+            raise FileNotFoundError(f"init-adapter not found: {adapter_path}")
+        config_path = adapter_path / "adapter_config.json"
+        if config_path.is_file():
+            adapter_cfg = json.loads(config_path.read_text())
+            if int(adapter_cfg.get("r", args.rank)) != int(args.rank):
+                raise ValueError(
+                    f"init-adapter rank {adapter_cfg.get('r')} != --rank {args.rank}"
+                )
+            if int(adapter_cfg.get("lora_alpha", args.alpha)) != int(args.alpha):
+                raise ValueError(
+                    f"init-adapter alpha {adapter_cfg.get('lora_alpha')} "
+                    f"!= --alpha {args.alpha}"
+                )
+        model = PeftModel.from_pretrained(model, adapter_path, is_trainable=True)
+        metadata["init_adapter"] = str(adapter_path)
+        write_json(args.output / "config.json", metadata)
+    else:
+        model = FastLanguageModel.get_peft_model(
+            model,
+            r=args.rank,
+            target_modules=args.targets.split(","),
+            lora_alpha=args.alpha,
+            lora_dropout=0,
+            bias="none",
+            use_gradient_checkpointing=True,
+            random_state=data["seed"],
+            use_rslora=False,
+            loftq_config=None,
+        )
     # Standard checkpointing avoids Unsloth's optional activation offloading.
     model.config.use_cache = False
     if model.config._commit_hash != data["revision"]:
@@ -1023,6 +1047,12 @@ def main(argv=None):
         p.add_argument("--steps", type=int, default=2)
         p.add_argument(
             "--feasibility", type=Path, default=Path("data/assignment5/feasibility")
+        )
+        p.add_argument(
+            "--init-adapter",
+            type=Path,
+            default=None,
+            help="Continue training from an existing LoRA adapter directory",
         )
     args = parser.parse_args(argv)
     for name in (

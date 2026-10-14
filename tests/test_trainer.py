@@ -784,7 +784,9 @@ def _install_unsloth(monkeypatch, shared):
     monkeypatch.setitem(sys.modules, "unsloth", unsloth)
 
 
-def _gpu_args(prepared, output, command="feasibility", feasibility=None):
+def _gpu_args(
+    prepared, output, command="feasibility", feasibility=None, init_adapter=None
+):
     return SimpleNamespace(
         command=command,
         prepared=prepared,
@@ -798,7 +800,79 @@ def _gpu_args(prepared, output, command="feasibility", feasibility=None):
         targets="q_proj,v_proj",
         epochs=1,
         steps=1,
+        init_adapter=init_adapter,
     )
+
+
+def test_run_gpu_init_adapter(tmp_path, monkeypatch, prepared_for_gpu):
+    import transformers
+    from peft import PeftModel
+
+    prepared, _data = prepared_for_gpu
+    adapter = tmp_path / "prior_adapter"
+    adapter.mkdir()
+    (adapter / "adapter_config.json").write_text(
+        json.dumps({"r": 4, "lora_alpha": 8}), encoding="utf-8"
+    )
+    monkeypatch.setattr(tr, "gpu_environment", lambda: {"gpu": "FakeGPU"})
+    shared = {"model": make_guard_model()}
+    _install_unsloth(monkeypatch, shared)
+    loaded = {"n": 0}
+
+    def from_pretrained(model, path, is_trainable=False):
+        loaded["n"] += 1
+        assert Path(path) == adapter
+        assert is_trainable is True
+        return model
+
+    monkeypatch.setattr(PeftModel, "from_pretrained", staticmethod(from_pretrained))
+    monkeypatch.setattr(
+        transformers.AutoTokenizer,
+        "from_pretrained",
+        lambda *a, **k: SimpleNamespace(
+            backend_tokenizer=SimpleNamespace(to_str=lambda: "tok"),
+            save_pretrained=lambda path: Path(path).mkdir(parents=True, exist_ok=True),
+        ),
+    )
+    monkeypatch.setattr(transformers, "set_seed", lambda seed: None)
+
+    def mutate_and_fit(model, train, dev, output, *args, **kwargs):
+        model._lora = FakeParam(model._lora._data + 1, "cuda", torch.float32)
+        Path(output).mkdir(parents=True, exist_ok=True)
+        (Path(output) / "best").mkdir(exist_ok=True)
+        return {"best_epoch": 1, "history": []}
+
+    monkeypatch.setattr(tr, "fit", mutate_and_fit)
+    out = tmp_path / "continue"
+    out.mkdir()
+    assert tr.run_gpu(_gpu_args(prepared, out, init_adapter=adapter))["best_epoch"] == 1
+    assert loaded["n"] == 1
+    cfg = json.loads((out / "config.json").read_text())
+    assert cfg["init_adapter"] == str(adapter)
+
+    missing = tmp_path / "no_such_adapter"
+    out_missing = tmp_path / "fail_missing"
+    out_missing.mkdir()
+    with pytest.raises(FileNotFoundError, match="init-adapter"):
+        tr.run_gpu(_gpu_args(prepared, out_missing, init_adapter=missing))
+
+    bad = tmp_path / "bad_adapter"
+    bad.mkdir()
+    (bad / "adapter_config.json").write_text(json.dumps({"r": 8, "lora_alpha": 8}))
+    out2 = tmp_path / "fail_rank"
+    out2.mkdir()
+    with pytest.raises(ValueError, match="rank"):
+        tr.run_gpu(_gpu_args(prepared, out2, init_adapter=bad))
+
+    bad_alpha = tmp_path / "bad_alpha"
+    bad_alpha.mkdir()
+    (bad_alpha / "adapter_config.json").write_text(
+        json.dumps({"r": 4, "lora_alpha": 16})
+    )
+    out3 = tmp_path / "fail_alpha"
+    out3.mkdir()
+    with pytest.raises(ValueError, match="alpha"):
+        tr.run_gpu(_gpu_args(prepared, out3, init_adapter=bad_alpha))
 
 
 def test_run_gpu_feasibility_and_train(tmp_path, monkeypatch, prepared_for_gpu):

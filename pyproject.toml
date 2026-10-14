@@ -36,3 +36,6 @@ markers = ["gpu: opt-in real Unsloth integration requiring CUDA and prepared dat
 exclude_also = [
     "if __name__ == .__main__.:",
 ]
+
+[tool.ruff]
+exclude = ["notebooks"]
