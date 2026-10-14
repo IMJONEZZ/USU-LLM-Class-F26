@@ -5,9 +5,15 @@ description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "beautifulsoup4>=4.15.0",
     "colorama>=0.4.6",
+    "datasets>=3.0",
+    "distilabel[openai]>=1.5.3",
     "evaluate>=0.4.6",
+    "huggingface-hub>=0.22",
+    "ipywidgets>=8.1.9",
     "modal>=1.5.5",
+    "openai>=1,<2",
     "scipy>=1.18.1",
     "spacy>=3.8.16",
     "textblob>=0.20.1",
