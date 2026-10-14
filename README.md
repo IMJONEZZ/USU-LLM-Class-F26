@@ -68,7 +68,7 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - A3 - Evaluators (done)
 - A4 - MLOps (done)
 - A5 - Training a Model (done)
-- A6 - Finetune (In progress)
+- A6 - Finetune (done)
 
 ## Additional Usage
 
