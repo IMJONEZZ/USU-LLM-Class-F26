@@ -121,6 +121,33 @@ def format_conversation(messages: Sequence[Mapping[str, str]]) -> dict[str, Any]
     return {"prompt": clean[:-1], "completion": [clean[-1]]}
 
 
+def load_own_examples(path: str | Path) -> list[dict[str, Any]]:
+    """Load own-written single-turn examples, rejecting any assignment overlap."""
+
+    rows = []
+    for number, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines()):
+        raw = json.loads(line)
+        messages = raw["messages"]
+        validate_conversation(messages)
+        if contains_assignment_question(messages) or near_assignment_question(messages):
+            raise ValueError(f"own example {number} overlaps an assignment question")
+        rows.append(
+            {
+                "id": raw.get("id", f"{Path(path).stem}-{number}"),
+                "source": "own",
+                "messages": messages,
+                "word_count": sum(len(m["content"].split()) for m in messages),
+                "format": "single",
+                **{
+                    key: raw[key]
+                    for key in ("tag", "skill", "family", "evaluation")
+                    if key in raw
+                },
+            }
+        )
+    return rows
+
+
 def first_prompt_key(messages: Sequence[Mapping[str, str]]) -> str:
     validate_conversation(messages)
     return normalize(messages[0]["content"])
@@ -289,10 +316,17 @@ class TrainingConfig:
     output_dir: str
     model_id: str = MODEL_ID
     learning_rate: float = 1e-4
-    epochs: int = 2
+    epochs: int = 3
     batch_size: int = 2
-    gradient_accumulation_steps: int = 8
+    gradient_accumulation_steps: int = 4
     lora_rank: int = 16
+    lora_alpha: int = 0  # 0 means the same as lora_rank
+    warmup_ratio: float = 0.0
+    lora_dropout: float = 0.0
+    weight_decay: float = 0.0
+    max_grad_norm: float = 1.0
+    lr_scheduler_type: str = "linear"
+    checkpoint_metric: str = "eval_loss"
     seed: int = 42
 
     def __post_init__(self) -> None:
@@ -307,6 +341,20 @@ class TrainingConfig:
                 raise ValueError(f"{name} must be positive")
         if self.learning_rate <= 0:
             raise ValueError("learning_rate must be positive")
+        if (
+            not 0 <= self.lora_dropout < 1
+            or self.weight_decay < 0
+            or self.max_grad_norm <= 0
+        ):
+            raise ValueError(
+                "dropout, weight decay and gradient clipping are out of range"
+            )
+        if self.checkpoint_metric not in {"eval_loss", "eval_skill_match_accuracy"}:
+            raise ValueError("unsupported checkpoint metric")
+        if self.lr_scheduler_type not in {"linear", "cosine", "constant"}:
+            raise ValueError("unsupported learning-rate scheduler")
+        if self.lora_alpha < 0 or not 0 <= self.warmup_ratio < 1:
+            raise ValueError("lora_alpha and warmup_ratio are out of range")
 
     @property
     def effective_batch_size(self) -> int:
@@ -322,19 +370,21 @@ def training_arguments(config: TrainingConfig, training_size: int) -> dict[str, 
     return {
         "output_dir": config.output_dir,
         "learning_rate": config.learning_rate,
+        "warmup_ratio": config.warmup_ratio,
+        "weight_decay": config.weight_decay,
+        "max_grad_norm": config.max_grad_norm,
+        "lr_scheduler_type": config.lr_scheduler_type,
         "num_train_epochs": config.epochs,
         "per_device_train_batch_size": config.batch_size,
         "gradient_accumulation_steps": config.gradient_accumulation_steps,
         "max_length": config.max_length,
         "completion_only_loss": True,
-        "eval_strategy": "steps",
-        "eval_steps": steps_per_epoch,
-        "save_strategy": "steps",
-        "save_steps": steps_per_epoch,
-        "save_total_limit": 2,
+        "eval_strategy": "epoch",
+        "save_strategy": "epoch",
+        "save_total_limit": config.epochs,
         "load_best_model_at_end": True,
-        "metric_for_best_model": "eval_loss",
-        "greater_is_better": False,
+        "metric_for_best_model": config.checkpoint_metric,
+        "greater_is_better": config.checkpoint_metric != "eval_loss",
         "logging_steps": max(1, steps_per_epoch // 5),
         "gradient_checkpointing": True,
         "fp16": True,

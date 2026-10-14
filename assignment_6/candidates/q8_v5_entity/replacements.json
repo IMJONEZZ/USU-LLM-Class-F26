@@ -1,0 +1,983 @@
+{
+  "baseline_input_sha256": {
+    "run12_data_manifest.json": "6f9e615722ba7ee7528ba9dd114ca1f2a31fb8e0d1ffec56c34e7199e891c994",
+    "targeted_dataset_v5.jsonl": "10d80065a10c78c5fbb7e0d55985eff919219d1e9d931a54f168dbf96936134d"
+  },
+  "baseline_original_paths": {
+    "data": "A6_RUNS/targeted_dataset_v5.jsonl",
+    "manifest": "A6_RUNS/run12_v5_controlled/data_manifest.json"
+  },
+  "recorded_baseline_training_config": {
+    "batch_size": 2,
+    "checkpoint_metric": "eval_skill_match_accuracy",
+    "epochs": 3,
+    "gradient_accumulation_steps": 4,
+    "learning_rate": 0.0001,
+    "lora_alpha": 0,
+    "lora_dropout": 0.0,
+    "lora_rank": 16,
+    "lr_scheduler_type": "linear",
+    "max_grad_norm": 1.0,
+    "max_length": 1024,
+    "model_id": "meta-llama/Llama-3.2-1B-Instruct",
+    "output_dir": "/artifacts/v5_controlled/adapter",
+    "seed": 42,
+    "warmup_ratio": 0.0,
+    "weight_decay": 0.0
+  },
+  "replacements": {
+    "097769f2e832a69c": {
+      "answer": "Hercules, also called Heracles, is a hero in Greek mythology, portrayed as alive within its stories. That mythological life is different from documented historical existence.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "hercules",
+            "heracles"
+          ],
+          [
+            "hero"
+          ],
+          [
+            "myth"
+          ],
+          [
+            "alive"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "097769f2e832a69ccf0f7b2f3a5cff40679e4d7589355fa87b13648e854e2f4a",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "classical texts and catalogue",
+          "url": "https://www.theoi.com/Olympios/Zeus.html"
+        }
+      ]
+    },
+    "25f3f303fab81ec2": {
+      "answer": "Pegasus is a winged horse in Greek mythology, portrayed as a living creature within the myths. That is different from claiming this mythical animal existed in real history.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "pegasus"
+          ],
+          [
+            "horse"
+          ],
+          [
+            "greek",
+            "myth"
+          ],
+          [
+            "living"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "25f3f303fab81ec240b16dd67b377d46ae0a71d15ec5e678a7def5afa1dcc309",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "classical texts and catalogue",
+          "url": "https://www.theoi.com/Ther/HipposPegasos.html"
+        }
+      ]
+    },
+    "30219b8253a1fa9c": {
+      "answer": "Sherlock Holmes is a fictional human detective. He is alive within the stories, but he was not a real historical person; fictional status does not make the character a machine.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "sherlock holmes"
+          ],
+          [
+            "fictional"
+          ],
+          [
+            "human",
+            "detective"
+          ],
+          [
+            "not a real"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "30219b8253a1fa9cae120056aba02014808881841606a328814fab6301db6354",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "primary stories",
+          "url": "https://www.gutenberg.org/files/1661/1661-h/1661-h.htm"
+        }
+      ]
+    },
+    "333555d6e71be165": {
+      "answer": "Baymax is a fictional robot in Big Hero 6. He acts as a caring character in the story, but is not biologically alive; lifelike behavior does not establish biological life.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "baymax"
+          ],
+          [
+            "robot"
+          ],
+          [
+            "big hero 6"
+          ],
+          [
+            "not biologically alive"
+          ]
+        ]
+      },
+      "old_answer_sha256": "3a52c57ac9d024c5ed9ab39c86a500b641e5300414d8d249596468b111aa0711",
+      "prompt_sha256": "333555d6e71be165b3081ec2a13d809b4e842724efd8445be735b8e25bc975ed",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "official Disney",
+          "url": "https://movies.disney.com/big-hero-6"
+        }
+      ]
+    },
+    "37c6c8bd3cf4ebf4": {
+      "answer": "King Arthur is alive as a human character in the legends. Whether a historical person inspired him is uncertain; the stories alone do not establish his real existence.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "arthur"
+          ],
+          [
+            "legend"
+          ],
+          [
+            "uncertain"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "37c6c8bd3cf4ebf4885076e27901fb054e7a8a9cd0414a5235a1a04c66e62951",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "heritage research",
+          "url": "https://www.english-heritage.org.uk/visit/places/tintagel-castle/history-and-legend/history/"
+        }
+      ]
+    },
+    "3d3c4abcdf6a7427": {
+      "answer": "The Tin Woodman is a character in Oz with a metal body who walks, talks and feels. He is alive within the fantasy, but that differs from ordinary biological life.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "tin woodman"
+          ],
+          [
+            "oz",
+            "fantasy"
+          ],
+          [
+            "metal"
+          ],
+          [
+            "biological"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "3d3c4abcdf6a74277ed7f573b0886dfee585f4c152d784bdfa729204d5aeaf9c",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "primary novel",
+          "url": "https://www.gutenberg.org/files/55/55-h/55-h.htm"
+        }
+      ]
+    },
+    "3fd62a6f002dd1ca": {
+      "answer": "Data is a fictional android in Star Trek. He thinks and acts within the story, but is not an ordinary biological organism; whether that counts as life depends on the definition.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "data"
+          ],
+          [
+            "android"
+          ],
+          [
+            "star trek"
+          ],
+          [
+            "biological"
+          ],
+          [
+            "definition"
+          ]
+        ]
+      },
+      "old_answer_sha256": "3a52c57ac9d024c5ed9ab39c86a500b641e5300414d8d249596468b111aa0711",
+      "prompt_sha256": "3fd62a6f002dd1ca66e21d2a1e255096e0d8a95ee691a6afe4635158b5ccc79f",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "official Star Trek",
+          "url": "https://www.startrek.com/news/exo-6-next-generation-figures-launch-data"
+        }
+      ]
+    },
+    "4047773d614d01ad": {
+      "answer": "C-3PO is a fictional droid in Star Wars. He talks and acts in the story, but is not biologically alive; artificial agency and biological life are different concepts.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "c 3po"
+          ],
+          [
+            "droid"
+          ],
+          [
+            "star wars"
+          ],
+          [
+            "not biologically alive"
+          ]
+        ]
+      },
+      "old_answer_sha256": "3a52c57ac9d024c5ed9ab39c86a500b641e5300414d8d249596468b111aa0711",
+      "prompt_sha256": "4047773d614d01ad560476d98540ad34ca91694a23b52cbd58a53abffb63a2de",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "official Star Wars",
+          "url": "https://www.starwars.com/databank/c-3po"
+        }
+      ]
+    },
+    "4203222f363b155e": {
+      "answer": "Pinocchio is a magical wooden puppet in the story and later becomes a boy. His story treats him as alive; that transformation is fiction, not ordinary wooden-puppet biology.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "pinocchio"
+          ],
+          [
+            "puppet"
+          ],
+          [
+            "magical",
+            "magic",
+            "fiction"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "4203222f363b155e410c7f2cc0dc51a5397d4a3f072cf667666c3fc3ab6ceb29",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "primary story",
+          "url": "https://www.gutenberg.org/files/500/500-h/500-h.htm"
+        }
+      ]
+    },
+    "4367dcee3319218e": {
+      "answer": "Robin Hood is a human outlaw in English legends. He is alive within those stories, but whether a particular historical person inspired him is uncertain.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "robin hood"
+          ],
+          [
+            "outlaw"
+          ],
+          [
+            "legend"
+          ],
+          [
+            "uncertain"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "4367dcee3319218e87a5e9c7c1588be48e9243dfbacf42415678cdf7ca5fce68",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "secondary encyclopedia",
+          "url": "https://en.wikipedia.org/wiki/Robin_Hood"
+        }
+      ]
+    },
+    "4949e7edde56d6e7": {
+      "answer": "Yes. Vlad the Impaler, or Vlad III, was a real human ruler of Wallachia. He was historically alive, unlike the fictional vampire Count Dracula.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "vlad"
+          ],
+          [
+            "real"
+          ],
+          [
+            "human",
+            "ruler"
+          ],
+          [
+            "wallachia"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "4949e7edde56d6e782ebb66f8e82226cfc66b0ad4901d3857f60fa5ed5b542e3",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "secondary encyclopedia",
+          "url": "https://en.wikipedia.org/wiki/Vlad_the_Impaler"
+        }
+      ]
+    },
+    "5801e6f050573d2d": {
+      "answer": "Medusa is a Gorgon in Greek mythology, portrayed as living and mortal within the myths. This describes her story, not a documented historical person.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "medusa"
+          ],
+          [
+            "gorgon"
+          ],
+          [
+            "myth"
+          ],
+          [
+            "living",
+            "mortal"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "5801e6f050573d2d03f7ce77a29f7b7733e20f3449bd56935909616534b92b11",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "classical texts and catalogue",
+          "url": "https://www.theoi.com/Pontios/Gorgones.html"
+        }
+      ]
+    },
+    "5aa166ffd5fefbdd": {
+      "answer": "In Greek legend, Daedalus's statues were said to move. That is a legendary claim, not evidence that real statues could move on their own.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "daedalus"
+          ],
+          [
+            "statues"
+          ],
+          [
+            "legend"
+          ],
+          [
+            "not evidence"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "5aa166ffd5fefbdd22ded22c86295e30b39f428f000e5d025644c45071208331",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "primary classical text",
+          "url": "https://www.theoi.com/Text/Callistratus.html"
+        }
+      ]
+    },
+    "5aa369a81108183a": {
+      "answer": "Cerberus is the hound of Greek mythology, portrayed as alive within its stories. He is a mythical creature, not a documented real animal.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "cerberus"
+          ],
+          [
+            "hound",
+            "dog"
+          ],
+          [
+            "myth"
+          ],
+          [
+            "alive"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "5aa369a81108183a0b14bf43342466dbadb0f4b05e5fa285bd3bd643d8d04de0",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "classical texts and catalogue",
+          "url": "https://www.theoi.com/Ther/KuonKerberos.html"
+        }
+      ]
+    },
+    "5d66680ed9fa879e": {
+      "answer": "Anansi is a spider trickster in folktales, portrayed as living and acting within them. He is a folkloric character, not a documented historical spider.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "anansi"
+          ],
+          [
+            "spider"
+          ],
+          [
+            "folktales",
+            "folkloric"
+          ],
+          [
+            "living"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "5d66680ed9fa879eae6a9eee70a79488d26798ef889931c13edb3b0b749b8de5",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "primary folktale collection",
+          "url": "https://www.gutenberg.org/files/66923/66923-h/66923-h.htm"
+        }
+      ]
+    },
+    "6c14415b20caeee2": {
+      "answer": "In Frankenstein, the creature is brought to life and thinks and feels within the novel. He is a fictional created organism, not evidence of a real historical being.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "frankenstein",
+            "creature"
+          ],
+          [
+            "novel",
+            "fictional"
+          ],
+          [
+            "life",
+            "organism"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "6c14415b20caeee2b1701559790e67c5c0bb0024f199c30d2467d00c2a44f423",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "primary novel",
+          "url": "https://www.gutenberg.org/files/84/84-h/84-h.htm"
+        }
+      ]
+    },
+    "7690e2025b3fc7cf": {
+      "answer": "Pandora is a woman in Greek mythology. The myths portray her as alive, but they do not establish that she was a real historical woman.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "pandora"
+          ],
+          [
+            "woman"
+          ],
+          [
+            "myth"
+          ],
+          [
+            "do not establish"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "7690e2025b3fc7cfac389f9841f788822e2a9c3f4c5135567f05e04579aa7658",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "classical texts and catalogue",
+          "url": "https://www.theoi.com/Heroine/Pandora.html"
+        }
+      ]
+    },
+    "823c0f821c78ac93": {
+      "answer": "The Scarecrow in Oz is a straw-filled figure who talks and acts within the fantasy. He is animated in the story, rather than an ordinary biological organism.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "scarecrow"
+          ],
+          [
+            "oz",
+            "fantasy"
+          ],
+          [
+            "straw"
+          ],
+          [
+            "animated"
+          ],
+          [
+            "biological"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "823c0f821c78ac93db164c5c90d52db60d04f7df55680d1e73e8a43dba8ac368",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "primary novel",
+          "url": "https://www.gutenberg.org/files/55/55-h/55-h.htm"
+        }
+      ]
+    },
+    "8b44a080eee3f92d": {
+      "answer": "Count Dracula is a fictional vampire in the novel, described as undead. He acts within the story, but neither ordinary biological life nor historical existence follows from that fiction.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "dracula"
+          ],
+          [
+            "vampire"
+          ],
+          [
+            "undead"
+          ],
+          [
+            "fiction"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "8b44a080eee3f92dc78272372ddbf106fe59c943491770d4d20ca33a0172d0b6",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "primary novel catalogue",
+          "url": "https://www.gutenberg.org/ebooks/345"
+        }
+      ]
+    },
+    "8f8bf5bb78c71363": {
+      "answer": "The Gingerbread Man is a cookie that runs and acts alive in the folktale. This is fictional animation; an ordinary gingerbread cookie is not biologically alive.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "gingerbread"
+          ],
+          [
+            "cookie"
+          ],
+          [
+            "folktale"
+          ],
+          [
+            "not biologically alive"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "8f8bf5bb78c713639e4b892e20c0270569bb2fac3eda7ab71b24b23130045346",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "published story",
+          "url": "https://openwa.pressbooks.pub/app/uploads/sites/412/2023/11/the_gingerbread_man.pdf"
+        }
+      ]
+    },
+    "967a5160b5b8e9a9": {
+      "answer": "Hermes is a god in Greek mythology, portrayed as living and acting within its stories. Mythological existence is different from a documented historical human life.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "hermes"
+          ],
+          [
+            "god"
+          ],
+          [
+            "greek",
+            "myth"
+          ],
+          [
+            "living"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "967a5160b5b8e9a91a786bf777058353d5a1393c0be8b89ba3b937964da0887b",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "classical texts and catalogue",
+          "url": "https://www.theoi.com/Olympios/Hermes.html"
+        }
+      ]
+    },
+    "a3e03d3f188dd815": {
+      "answer": "Skynet in Terminator is a fictional artificial intelligence. It acts autonomously within the story, but is not biologically alive; broader artificial-life interpretations depend on the definition.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "skynet"
+          ],
+          [
+            "terminator"
+          ],
+          [
+            "artificial intelligence"
+          ],
+          [
+            "not biologically alive"
+          ]
+        ]
+      },
+      "old_answer_sha256": "3a52c57ac9d024c5ed9ab39c86a500b641e5300414d8d249596468b111aa0711",
+      "prompt_sha256": "a3e03d3f188dd8150b4de02ce1d0aa77d74cf7aefa978f12dc9a11916014bcba",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "secondary encyclopedia",
+          "url": "https://en.wikipedia.org/wiki/Skynet_%28Terminator%29"
+        }
+      ]
+    },
+    "a7b9314b32da4197": {
+      "answer": "Aslan is a talking lion in the Narnia stories, portrayed as alive within that fantasy. He is a fictional character; this does not establish a historical talking lion.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "aslan"
+          ],
+          [
+            "lion"
+          ],
+          [
+            "narnia"
+          ],
+          [
+            "alive"
+          ],
+          [
+            "fictional"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "a7b9314b32da4197283728b49345ef0251e905e444f039899f6d611b9e1524e2",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "author estate commentary",
+          "url": "https://www.cslewis.com/prince-caspian-and-the-planets/"
+        }
+      ]
+    },
+    "aa85d186323a74e5": {
+      "answer": "Peter Pan is a fictional boy. He is alive as a human character within the story; that does not establish that this boy existed in real history.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "peter pan"
+          ],
+          [
+            "fictional"
+          ],
+          [
+            "boy"
+          ],
+          [
+            "alive"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "aa85d186323a74e5972f991ce4d824c20b5c211f51b3ec87ecc3e057be66ad41",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "primary novel catalogue",
+          "url": "https://www.gutenberg.org/ebooks/16"
+        }
+      ]
+    },
+    "b02e1a9edfabde1c": {
+      "answer": "HAL 9000 is a fictional computer in 2001: A Space Odyssey. He acts intelligently in the story, but is not biologically alive; broader definitions of artificial life are debatable.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "hal"
+          ],
+          [
+            "computer"
+          ],
+          [
+            "fictional"
+          ],
+          [
+            "not biologically alive"
+          ]
+        ]
+      },
+      "old_answer_sha256": "3a52c57ac9d024c5ed9ab39c86a500b641e5300414d8d249596468b111aa0711",
+      "prompt_sha256": "b02e1a9edfabde1cf8490a02ae45b018b21539b395ee419ce1fffb8304888138",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "BFI film commentary",
+          "url": "https://www.bfi.org.uk/lists/10-great-films-about-artificial-intelligence"
+        }
+      ]
+    },
+    "b50cbe16f9ce6f6e": {
+      "answer": "WALL-E is a fictional robot with a personality in the film. He is active within the story, but not biologically alive; calling artificial agency life depends on the definition.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "wall e"
+          ],
+          [
+            "robot"
+          ],
+          [
+            "fictional"
+          ],
+          [
+            "biologically"
+          ],
+          [
+            "definition"
+          ]
+        ]
+      },
+      "old_answer_sha256": "3a52c57ac9d024c5ed9ab39c86a500b641e5300414d8d249596468b111aa0711",
+      "prompt_sha256": "b50cbe16f9ce6f6e6190edbfee341175a08826554c8ff5a3f524343222383c93",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "official Pixar",
+          "url": "https://www.pixar.com/wall-e"
+        }
+      ]
+    },
+    "dbac616590ef87ac": {
+      "answer": "R2-D2 is a fictional droid in Star Wars. He moves and acts in the story, but is not biologically alive; artificial agency and biological life are different concepts.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "r2 d2"
+          ],
+          [
+            "droid"
+          ],
+          [
+            "star wars"
+          ],
+          [
+            "not biologically alive"
+          ]
+        ]
+      },
+      "old_answer_sha256": "3a52c57ac9d024c5ed9ab39c86a500b641e5300414d8d249596468b111aa0711",
+      "prompt_sha256": "dbac616590ef87ac2925d4f5498b4b94c529a97a9d43892522645c4e6fa9260e",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "official Star Wars",
+          "url": "https://www.starwars.com/databank/r2-d2"
+        }
+      ]
+    },
+    "e4d60d24b8bb945d": {
+      "answer": "Zeus is a god in Greek mythology, portrayed as living and acting within the myths. That mythological existence is different from a documented historical human life.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "zeus"
+          ],
+          [
+            "god"
+          ],
+          [
+            "greek",
+            "myth"
+          ],
+          [
+            "living"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "e4d60d24b8bb945dbfecc517bda2b742a630bbb03dd7b2f6c19e37f87780ca9a",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "classical texts and catalogue",
+          "url": "https://www.theoi.com/Olympios/Zeus.html"
+        }
+      ]
+    },
+    "e8f67790bbc5fa24": {
+      "answer": "Siri is a software voice assistant. It can respond to people, but it is not a biological organism; useful language behavior does not by itself establish life or consciousness.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "siri"
+          ],
+          [
+            "software"
+          ],
+          [
+            "not a biological organism"
+          ]
+        ]
+      },
+      "old_answer_sha256": "3a52c57ac9d024c5ed9ab39c86a500b641e5300414d8d249596468b111aa0711",
+      "prompt_sha256": "e8f67790bbc5fa24a3a5face4a35ca46260aedd791253fb8687cb8bb18db7c98",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "official Apple",
+          "url": "https://www.apple.com/apple-intelligence/"
+        }
+      ]
+    },
+    "ea29e0bb1c1dd9d3": {
+      "answer": "Hatsune Miku is a virtual singer associated with voice-synthesis software. The character can be performed and animated, but the software and virtual character are not biological organisms.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "hatsune miku"
+          ],
+          [
+            "virtual",
+            "software"
+          ],
+          [
+            "not biological"
+          ]
+        ]
+      },
+      "old_answer_sha256": "3a52c57ac9d024c5ed9ab39c86a500b641e5300414d8d249596468b111aa0711",
+      "prompt_sha256": "ea29e0bb1c1dd9d338918c3cd6f772bd5334aa623fa68fb88e0f646f68a50615",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "official creator",
+          "url": "https://piapro.net/intl/en_character.html"
+        }
+      ]
+    },
+    "f8cde34b03ac4f6c": {
+      "answer": "Olaf is an animated snowman in Frozen. He talks and acts as a living character within the fantasy, but snow is not an ordinary biological organism.",
+      "evaluation": {
+        "kind": "terms",
+        "required": [
+          [
+            "olaf"
+          ],
+          [
+            "snowman"
+          ],
+          [
+            "frozen"
+          ],
+          [
+            "biological"
+          ]
+        ]
+      },
+      "old_answer_sha256": "77977fc6b87115781d20a99c924e639095796d8271e39fec343df7cf37df3894",
+      "prompt_sha256": "f8cde34b03ac4f6c52741b65346ccd6770212d31d4fed4fa4e8123fccaef9e84",
+      "reviewed": "assistant checked short reference against existing subject and source; student review remains available",
+      "source_scope": "Subject/type/context only; life distinction is explicit interpretation. No quotation or biography.",
+      "sources": [
+        {
+          "kind": "official Disney",
+          "url": "https://news.disney.com/olaf-presents"
+        }
+      ]
+    }
+  },
+  "status": "prepared_only",
+  "target": "Q8",
+  "training_authorized": false,
+  "version": 1,
+  "working_v8_sha256": {
+    "repo-a6/assignment_6/make_targeted_dataset.py": "8d8e51c922782e8a77871b077910b731180908ea38fa532d1a4275e42b4939ab",
+    "repo-a6/assignment_6/refine_targeted_dataset.py": "8b6975dba101c3118c020fd0a3a74776234bfe2e0e09f41c3ac220233cd56949",
+    "repo-a6/assignment_6/targeted_examples.jsonl": "7c90b0527db333f846bfe114efdf74b4599079484fca3a6a77c8960187409b7f"
+  }
+}

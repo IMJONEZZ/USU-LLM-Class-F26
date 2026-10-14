@@ -1,6 +1,8 @@
 """CPU-only checks for A6 conversation preparation and split integrity."""
 
 import json
+import re
+from pathlib import Path
 
 import pytest
 
@@ -10,6 +12,7 @@ from src.trainer import (
     deduplicate_conversations,
     format_conversation,
     grouped_train_development_split,
+    load_own_examples,
     near_assignment_question,
     prepare_candidate_pool,
     sample_across_sources,
@@ -191,13 +194,14 @@ def test_grouped_split_keeps_repeated_first_questions_together():
     )
 
 
-def test_training_arguments_follow_planned_batch_and_completion_only_loss():
+def test_training_arguments_follow_controlled_recipe_and_completion_only_loss():
     config = TrainingConfig(max_length=512, output_dir="a6-test")
 
     arguments = training_arguments(config, training_size=500)
 
-    assert config.effective_batch_size == 16
-    assert arguments["eval_steps"] == 32
+    assert config.effective_batch_size == 8
+    assert arguments["eval_strategy"] == "epoch"
+    assert arguments["save_strategy"] == "epoch"
     assert arguments["max_length"] == 512
     assert arguments["completion_only_loss"] is True
     assert arguments["load_best_model_at_end"] is True
@@ -209,3 +213,96 @@ def test_save_training_result_creates_readable_json(tmp_path):
     save_training_result(path, {"loss": 0.5, "examples": 500})
 
     assert json.loads(path.read_text()) == {"examples": 500, "loss": 0.5}
+
+
+OWN_EXAMPLES = Path(__file__).parents[1] / "assignment_6" / "own_examples.jsonl"
+ASSIGNMENT_TOPICS = re.compile(
+    r"sphinx|feather|shark|knuckle|wood\s?chuck|talos|parallel|\bopera\b"
+    r"|british pound|president|christmas|basement|boxes under|four legs",
+    re.IGNORECASE,
+)
+
+
+def test_own_examples_are_valid_and_avoid_assignment_topics():
+    rows = load_own_examples(OWN_EXAMPLES)
+    questions = [row["messages"][0]["content"] for row in rows]
+
+    assert len(rows) >= 100
+    assert len(set(questions)) == len(questions)
+    assert not [r for r in rows if ASSIGNMENT_TOPICS.search(json.dumps(r["messages"]))]
+
+
+def test_load_own_examples_rejects_an_assignment_question(tmp_path):
+    path = tmp_path / "bad.jsonl"
+    path.write_text(
+        json.dumps({"messages": chat("Was Talos alive?", "No.")}) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError):
+        load_own_examples(path)
+
+
+TARGETED = Path(__file__).parents[1] / "assignment_6" / "targeted_examples.jsonl"
+
+
+def test_targeted_examples_cover_every_question_and_avoid_assignment_wording():
+    rows = [
+        json.loads(line) for line in TARGETED.read_text(encoding="utf-8").splitlines()
+    ]
+    by_tag = {}
+    for row in rows:
+        by_tag.setdefault(row["tag"], []).append(row)
+    questions = [row["messages"][0]["content"] for row in rows]
+
+    assert sorted(by_tag, key=lambda t: int(t[1:])) == [f"Q{n}" for n in range(1, 11)]
+    # Q2 intentionally prunes repeated equal-mass and unrelated conversions.
+    assert len(by_tag["Q2"]) == 32
+    assert all(len(group) >= 40 for tag, group in by_tag.items() if tag != "Q2")
+    assert len(set(questions)) == len(questions)
+    assert not any(contains_assignment_question(r["messages"]) for r in rows)
+    assert not any(near_assignment_question(r["messages"]) for r in rows)
+    assert len(load_own_examples(TARGETED)) == len(rows)
+
+
+def test_q6_pruning_keeps_numeric_supply_limits():
+    rows = [
+        json.loads(line) for line in TARGETED.read_text(encoding="utf-8").splitlines()
+    ]
+    q6 = [row for row in rows if row["tag"] == "Q6"]
+    excluded_concepts = (
+        "songs",
+        "shelve",
+        "textbooks",
+        "loaves of bread",
+        "test tubes",
+        "sails",
+        "memory cards",
+        "toddler",
+        "worm",
+        "ant carry",
+        "sparrow",
+        "bee visit",
+        "cat eat",
+        "dog bury",
+        "child eat",
+        "snail",
+        "hen produce",
+        "bicycle travel",
+        "fish read",
+        "goldfish climb",
+        "calculator make",
+        "rock eat",
+    )
+    for row in q6:
+        question, answer = [message["content"] for message in row["messages"]]
+        assert not any(concept in question.lower() for concept in excluded_concepts)
+        assert re.search(r"\d", answer)
+        assert not answer.startswith(("None.", "Nothing.", "The supply isn't"))
+    # Retain both direct quantity bounds and explicit resource conversions.
+    assert any(
+        "No more than 40 kilograms" in row["messages"][1]["content"] for row in q6
+    )
+    assert any(
+        "100 grams divided by 2 grams" in row["messages"][1]["content"] for row in q6
+    )

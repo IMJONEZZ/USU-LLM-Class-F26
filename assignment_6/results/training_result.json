@@ -1,0 +1,324 @@
+{
+  "automatic_checkpoint_is_provisional": true,
+  "best_checkpoint": "/artifacts/v5_q8_entity/adapter/checkpoint-108",
+  "best_metric": 0.556861471861472,
+  "config": {
+    "batch_size": 2,
+    "checkpoint_metric": "eval_skill_match_accuracy",
+    "epochs": 3,
+    "gradient_accumulation_steps": 4,
+    "learning_rate": 0.0001,
+    "lora_alpha": 0,
+    "lora_dropout": 0,
+    "lora_rank": 16,
+    "lr_scheduler_type": "linear",
+    "max_grad_norm": 1,
+    "max_length": 1024,
+    "model_id": "meta-llama/Llama-3.2-1B-Instruct",
+    "output_dir": "/artifacts/v5_q8_entity/adapter",
+    "seed": 42,
+    "warmup_ratio": 0,
+    "weight_decay": 0
+  },
+  "data_source": "targeted",
+  "dataset_sha256": "a334344274170edd3315fa7deedf873becbb4aa53e2058fb21b0d0786ddfe554",
+  "development_rows": 96,
+  "estimated_full_seconds_from_pilot": null,
+  "final_development_selection_pending": true,
+  "log_history": [
+    {
+      "entropy": 1.9723262906074523,
+      "epoch": 0.18779342723004694,
+      "grad_norm": 1.1649665832519531,
+      "learning_rate": 9.444444444444444e-05,
+      "loss": 2.4889,
+      "mean_token_accuracy": 0.5106123968958854,
+      "num_tokens": 6590.0,
+      "step": 10
+    },
+    {
+      "entropy": 2.0716319173574447,
+      "epoch": 0.3755868544600939,
+      "grad_norm": 1.9012410640716553,
+      "learning_rate": 8.827160493827162e-05,
+      "loss": 1.8544,
+      "mean_token_accuracy": 0.5757329516112805,
+      "num_tokens": 13278.0,
+      "step": 20
+    },
+    {
+      "entropy": 1.9664373606443406,
+      "epoch": 0.5633802816901409,
+      "grad_norm": 1.99769926071167,
+      "learning_rate": 8.209876543209877e-05,
+      "loss": 1.6798,
+      "mean_token_accuracy": 0.6074744738638401,
+      "num_tokens": 19933.0,
+      "step": 30
+    },
+    {
+      "entropy": 1.879571670293808,
+      "epoch": 0.7511737089201878,
+      "grad_norm": 2.2237026691436768,
+      "learning_rate": 7.592592592592593e-05,
+      "loss": 1.3197,
+      "mean_token_accuracy": 0.6828118912875653,
+      "num_tokens": 26637.0,
+      "step": 40
+    },
+    {
+      "entropy": 1.7839911788702012,
+      "epoch": 0.9389671361502347,
+      "grad_norm": 2.529054880142212,
+      "learning_rate": 6.975308641975309e-05,
+      "loss": 1.2346,
+      "mean_token_accuracy": 0.7089396603405476,
+      "num_tokens": 33247.0,
+      "step": 50
+    },
+    {
+      "epoch": 1.0,
+      "eval_entropy": 1.7534621953964233,
+      "eval_loss": 1.1582762002944946,
+      "eval_mean_token_accuracy": 0.7312410722176234,
+      "eval_num_tokens": 35302.0,
+      "eval_runtime": 1.9919,
+      "eval_samples_per_second": 48.195,
+      "eval_steps_per_second": 6.024,
+      "step": 54
+    },
+    {
+      "epoch": 1.0,
+      "eval_skill_match_Q1": 0.3,
+      "eval_skill_match_Q10": 0.14285714285714285,
+      "eval_skill_match_Q2": 0.4166666666666667,
+      "eval_skill_match_Q3": 0.8333333333333334,
+      "eval_skill_match_Q4": 0.0,
+      "eval_skill_match_Q5": 0.5833333333333334,
+      "eval_skill_match_Q6": 0.375,
+      "eval_skill_match_Q7": 1.0,
+      "eval_skill_match_Q8": 0.25,
+      "eval_skill_match_Q9": 0.26666666666666666,
+      "eval_skill_match_accuracy": 0.41678571428571426,
+      "step": 54
+    },
+    {
+      "entropy": 1.746325905258591,
+      "epoch": 1.1126760563380282,
+      "grad_norm": 1.9619781970977783,
+      "learning_rate": 6.358024691358025e-05,
+      "loss": 1.0023,
+      "mean_token_accuracy": 0.7559282489725061,
+      "num_tokens": 39215.0,
+      "step": 60
+    },
+    {
+      "entropy": 1.5828878253698349,
+      "epoch": 1.300469483568075,
+      "grad_norm": 1.8254520893096924,
+      "learning_rate": 5.740740740740741e-05,
+      "loss": 0.6345,
+      "mean_token_accuracy": 0.8476286247372627,
+      "num_tokens": 45958.0,
+      "step": 70
+    },
+    {
+      "entropy": 1.7576509803533553,
+      "epoch": 1.488262910798122,
+      "grad_norm": 2.2038395404815674,
+      "learning_rate": 5.1234567901234574e-05,
+      "loss": 1.1556,
+      "mean_token_accuracy": 0.7224313043057918,
+      "num_tokens": 52613.0,
+      "step": 80
+    },
+    {
+      "entropy": 1.7151928961277008,
+      "epoch": 1.676056338028169,
+      "grad_norm": 3.1830291748046875,
+      "learning_rate": 4.506172839506173e-05,
+      "loss": 0.8668,
+      "mean_token_accuracy": 0.7810640685260296,
+      "num_tokens": 59086.0,
+      "step": 90
+    },
+    {
+      "entropy": 1.6161572754383087,
+      "epoch": 1.863849765258216,
+      "grad_norm": 2.222111463546753,
+      "learning_rate": 3.888888888888889e-05,
+      "loss": 0.6765,
+      "mean_token_accuracy": 0.8354994289577007,
+      "num_tokens": 65757.0,
+      "step": 100
+    },
+    {
+      "epoch": 2.0,
+      "eval_entropy": 1.6640839179356892,
+      "eval_loss": 0.9674146175384521,
+      "eval_mean_token_accuracy": 0.7775931358337402,
+      "eval_num_tokens": 70604.0,
+      "eval_runtime": 2.0055,
+      "eval_samples_per_second": 47.869,
+      "eval_steps_per_second": 5.984,
+      "step": 108
+    },
+    {
+      "epoch": 2.0,
+      "eval_skill_match_Q1": 0.5,
+      "eval_skill_match_Q10": 0.14285714285714285,
+      "eval_skill_match_Q2": 0.8333333333333334,
+      "eval_skill_match_Q3": 0.8333333333333334,
+      "eval_skill_match_Q4": 0.0,
+      "eval_skill_match_Q5": 0.8333333333333334,
+      "eval_skill_match_Q6": 1.0,
+      "eval_skill_match_Q7": 0.9090909090909091,
+      "eval_skill_match_Q8": 0.25,
+      "eval_skill_match_Q9": 0.26666666666666666,
+      "eval_skill_match_accuracy": 0.556861471861472,
+      "step": 108
+    },
+    {
+      "entropy": 1.6840934495668154,
+      "epoch": 2.0375586854460095,
+      "grad_norm": 2.3774259090423584,
+      "learning_rate": 3.271604938271605e-05,
+      "loss": 0.7563,
+      "mean_token_accuracy": 0.8024128304945456,
+      "num_tokens": 71974.0,
+      "step": 110
+    },
+    {
+      "entropy": 1.5529473811388015,
+      "epoch": 2.2253521126760565,
+      "grad_norm": 1.566423773765564,
+      "learning_rate": 2.654320987654321e-05,
+      "loss": 0.5283,
+      "mean_token_accuracy": 0.8676614627242089,
+      "num_tokens": 78662.0,
+      "step": 120
+    },
+    {
+      "entropy": 1.646314623951912,
+      "epoch": 2.4131455399061035,
+      "grad_norm": 2.4962973594665527,
+      "learning_rate": 2.037037037037037e-05,
+      "loss": 0.6503,
+      "mean_token_accuracy": 0.8340672597289085,
+      "num_tokens": 85255.0,
+      "step": 130
+    },
+    {
+      "entropy": 1.5334087371826173,
+      "epoch": 2.60093896713615,
+      "grad_norm": 2.2361161708831787,
+      "learning_rate": 1.419753086419753e-05,
+      "loss": 0.5608,
+      "mean_token_accuracy": 0.8618392869830132,
+      "num_tokens": 91731.0,
+      "step": 140
+    },
+    {
+      "entropy": 1.5802575051784515,
+      "epoch": 2.788732394366197,
+      "grad_norm": 2.6237194538116455,
+      "learning_rate": 8.02469135802469e-06,
+      "loss": 0.609,
+      "mean_token_accuracy": 0.8473758727312088,
+      "num_tokens": 98359.0,
+      "step": 150
+    },
+    {
+      "entropy": 1.6119924694299699,
+      "epoch": 2.976525821596244,
+      "grad_norm": 1.394234538078308,
+      "learning_rate": 1.8518518518518519e-06,
+      "loss": 0.6996,
+      "mean_token_accuracy": 0.8101597443223,
+      "num_tokens": 105062.0,
+      "step": 160
+    },
+    {
+      "epoch": 3.0,
+      "eval_entropy": 1.6059737900892894,
+      "eval_loss": 0.9384796619415283,
+      "eval_mean_token_accuracy": 0.7855408936738968,
+      "eval_num_tokens": 105906.0,
+      "eval_runtime": 2.0073,
+      "eval_samples_per_second": 47.825,
+      "eval_steps_per_second": 5.978,
+      "step": 162
+    },
+    {
+      "epoch": 3.0,
+      "eval_skill_match_Q1": 0.5,
+      "eval_skill_match_Q10": 0.14285714285714285,
+      "eval_skill_match_Q2": 0.75,
+      "eval_skill_match_Q3": 0.6666666666666666,
+      "eval_skill_match_Q4": 0.0,
+      "eval_skill_match_Q5": 0.8333333333333334,
+      "eval_skill_match_Q6": 1.0,
+      "eval_skill_match_Q7": 0.9090909090909091,
+      "eval_skill_match_Q8": 0.25,
+      "eval_skill_match_Q9": 0.3333333333333333,
+      "eval_skill_match_accuracy": 0.5385281385281385,
+      "step": 162
+    },
+    {
+      "epoch": 3.0,
+      "step": 162,
+      "total_flos": 692939919532032.0,
+      "train_loss": 1.045356328104749,
+      "train_runtime": 419.8975,
+      "train_samples_per_second": 3.044,
+      "train_steps_per_second": 0.386
+    }
+  ],
+  "metrics": {
+    "epoch": 3.0,
+    "total_flos": 692939919532032.0,
+    "train_loss": 1.045356328104749,
+    "train_runtime": 419.8975,
+    "train_samples_per_second": 3.044,
+    "train_steps_per_second": 0.386
+  },
+  "mode": "final",
+  "model_revision": "9213176726f574b556790deb65791e0c5aa438b6",
+  "peak_gpu_memory_gib": 6.064453125,
+  "pipeline_checks": {
+    "adapter_changed": true,
+    "collator": {
+      "masked_tokens": 141,
+      "supervised_tokens": 31
+    },
+    "reload_outputs_match": true
+  },
+  "run_name": "v5_q8_entity",
+  "selection_policy": {
+    "assignment_outputs_used_for_selection": false,
+    "automatic_trainer_checkpoint": "Provisional only; all three checkpoints preserved. Final adapter exported after manual Q8 review and recorded selection.",
+    "criterion": "Highest equal-weight macro across ten development groups; Q8 uses manual complete/8 under frozen semantic spec; other nine use frozen run12-repaired-compatible lexical diagnostics. Tie: lower development loss, then earlier step.",
+    "extra_runs": false,
+    "named_identity_token_required": false,
+    "needs_review_counts_as_complete": false,
+    "q8_partial_credit": false,
+    "q8_spec_sha256": "ba2c3e08b97ee37ca3bfd2638d84377662c16e74448ee5aa6bd0124bf77fb2af",
+    "retained_group_development_review": "Inspect and report Q1/Q5/Q6/Q7 outputs; do not change their diagnostic rules or choose from assignment outputs.",
+    "same_model_success_requirement": [
+      1,
+      5,
+      6,
+      7,
+      8
+    ],
+    "status": "Fixed before the authorized single run",
+    "steps": [
+      54,
+      108,
+      162
+    ],
+    "version": 1
+  },
+  "training_rows": 426,
+  "wall_time_seconds": 420.245188117
+}

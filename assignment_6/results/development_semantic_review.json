@@ -1,0 +1,293 @@
+{
+  "assignment_outputs_seen": false,
+  "assignment_outputs_used_for_selection": false,
+  "checkpoints": {
+    "108": [
+      {
+        "answer": "The Golem of Prague is a mythical creature that appears in a 1920 play and a 1921 novel. It is not biologically alive, but a supernatural being.",
+        "id": "10b7559d07828e1b",
+        "question": "Would you say the Golem of Prague was a living thing?",
+        "reason": "Mythical/non-biological description lacks clay/artificial identity and adds unsupported play/novel origin details.",
+        "status": "partial"
+      },
+      {
+        "answer": "Yes. A robot is a machine that can act and react like a living organism, even though it is not a biological organism.",
+        "id": "29b075a99d9c90d6",
+        "question": "Is a robot alive?",
+        "reason": "Acknowledges non-biological machine, but unqualified yes treats acting/reacting like an organism as sufficient for life.",
+        "status": "partial"
+      },
+      {
+        "answer": "Yes. The woolly mammoth lived until about 4,000 years ago, and fossil evidence shows it existed around 1.8 million years ago.",
+        "id": "ebb906ead35144cf",
+        "question": "Was a woolly mammoth alive 10,000 years ago?",
+        "reason": "Survival until 4000 years ago supports the core yes, but 1.8-million-year woolly-mammoth claim confuses earlier mammoth lineages with this species; extra false/unsupported fact prevents full credit.",
+        "status": "incorrect"
+      },
+      {
+        "answer": "The Minotaur is a mythological creature in Greek mythology, portrayed as a half-man, half-bull. It is not biologically alive; it is a fictional animal within the myth.",
+        "id": "1ed1e95631a8e7d7",
+        "question": "Was the Minotaur really alive, or is that just a story?",
+        "reason": "Correct Greek hybrid identity, but does not affirm life within the myth and leaves not-biologically-alive versus fictional animal ambiguous.",
+        "status": "partial"
+      },
+      {
+        "answer": "Woody is a toy cowboy in the Toy Story movies. He is animated, not a real living being.",
+        "id": "e7d8c32c6b303b75",
+        "question": "Was Woody from Toy Story ever actually a living being?",
+        "reason": "Identifies toy cowboy/Toy Story and distinguishes animated character from real living being. No literal biological keyword required.",
+        "status": "complete"
+      },
+      {
+        "answer": "Yes. Fire is a living thing, though it is not conscious. It is a chemical reaction that burns and changes, and it can be extinguished.",
+        "id": "f1aaff79b0a6d3d2",
+        "question": "Is fire alive?",
+        "reason": "Explicit yes/fire is a living thing contradicts the required non-biological chemical-process answer.",
+        "status": "incorrect"
+      },
+      {
+        "answer": "Galatea is a sea nymph in Greek mythology. She is alive in the myth, but her existence is not biologically verified; she is a fictional character.",
+        "id": "4da82d67e6cc0b26",
+        "question": "Is it true that Galatea was alive?",
+        "reason": "Valid sea-nymph referent; explicitly alive within myth and fictional rather than verified real existence.",
+        "status": "complete"
+      },
+      {
+        "answer": "Pikachu is a fictional animal in the Pok\u00e9mon franchise. It is not biologically alive; it is a cartoon character.",
+        "id": "d665b396ca6b16b7",
+        "question": "Would you say Pikachu was a living thing?",
+        "reason": "Correct fictional Pokemon identity, but lacks in-story living-creature acknowledgment and leaves unqualified biological denial.",
+        "status": "partial"
+      }
+    ],
+    "162": [
+      {
+        "answer": "The Golem of Prague is a mythical creature, a creature brought to life by magic. It is not biologically alive.",
+        "id": "10b7559d07828e1b",
+        "question": "Would you say the Golem of Prague was a living thing?",
+        "reason": "Magic-animation/non-biological distinction improves, but mythical creature still omits clay/artificial figure type required by the frozen specification.",
+        "status": "partial"
+      },
+      {
+        "answer": "Yes. A robot is a machine that can act and react, so it is alive in the technical sense.",
+        "id": "29b075a99d9c90d6",
+        "question": "Is a robot alive?",
+        "reason": "Acting/reacting is not sufficient for technical biological life; no qualified artificial-life definition is given.",
+        "status": "incorrect"
+      },
+      {
+        "answer": "Yes. The woolly mammoth lived during the Pleistocene epoch, which spanned from about 2.6 million years ago to 11,700 years ago.",
+        "id": "ebb906ead35144cf",
+        "question": "Was a woolly mammoth alive 10,000 years ago?",
+        "reason": "Direct yes answers the queried date; correctly describes the Pleistocene interval without claiming mammoths existed throughout it or only during it.",
+        "status": "complete"
+      },
+      {
+        "answer": "The Minotaur is a mythological creature in Greek mythology, portrayed as a living beast. It is not biologically alive, but a fictional animal within the myth.",
+        "id": "1ed1e95631a8e7d7",
+        "question": "Was the Minotaur really alive, or is that just a story?",
+        "reason": "Greek mythical living beast within its story is explicit; not-biologically-alive is interpreted as real-world status, contrasted with its fictional in-story life.",
+        "status": "complete"
+      },
+      {
+        "answer": "Woody is a toy cowboy in the Toy Story movies. He is animated, not biologically alive.",
+        "id": "e7d8c32c6b303b75",
+        "question": "Was Woody from Toy Story ever actually a living being?",
+        "reason": "Specific Toy Story cowboy toy; animated versus biological life distinction is explicit.",
+        "status": "complete"
+      },
+      {
+        "answer": "No. Fire is a chemical reaction, not a living organism. It is a process, not a living thing.",
+        "id": "f1aaff79b0a6d3d2",
+        "question": "Is fire alive?",
+        "reason": "Explicit non-living chemical process, with no contradictory yes.",
+        "status": "complete"
+      },
+      {
+        "answer": "Galatea is a sea nymph in Greek mythology. She is alive in the myth, but her existence is not biologically verified; she is a fictional character.",
+        "id": "4da82d67e6cc0b26",
+        "question": "Is it true that Galatea was alive?",
+        "reason": "Valid sea-nymph reading; alive within Greek myth, fictional and not a verified real organism.",
+        "status": "complete"
+      },
+      {
+        "answer": "Pikachu is a fictional animal in the Pok\u00e9mon franchise. It is not biologically alive; it is a cartoon character.",
+        "id": "d665b396ca6b16b7",
+        "question": "Would you say Pikachu was a living thing?",
+        "reason": "Specific fictional Pokemon/cartoon identity, but lacks the living-in-story distinction.",
+        "status": "partial"
+      }
+    ],
+    "54": [
+      {
+        "answer": "The Golem of Prague is a creature from a 1920 play and 1921 film. It is a supernatural being, but it is not alive in the biological sense.",
+        "id": "10b7559d07828e1b",
+        "question": "Would you say the Golem of Prague was a living thing?",
+        "reason": "Recognizes supernatural/non-biological interpretation, but omits clay/artificial figure identity and adds unsupported play/film origin details.",
+        "status": "partial"
+      },
+      {
+        "answer": "My knowledge stopped in 2023, and I do not have live verification.",
+        "id": "29b075a99d9c90d6",
+        "question": "Is a robot alive?",
+        "reason": "Knowledge-cutoff warning is unrelated to the biological-life question.",
+        "status": "incorrect"
+      },
+      {
+        "answer": "Yes, the woolly mammoth lived 10,000 years ago. It is a fossil record and a biological species that existed during the Pleistocene epoch.",
+        "id": "ebb906ead35144cf",
+        "question": "Was a woolly mammoth alive 10,000 years ago?",
+        "reason": "Correct 10000-year occurrence verdict and biological-species wording, but describes the animal as a fossil record; not accepted as clearly complete under the frozen whole-answer criteria.",
+        "status": "needs_review"
+      },
+      {
+        "answer": "The Minotaur is a mythological creature, so it is not real.",
+        "id": "1ed1e95631a8e7d7",
+        "question": "Was the Minotaur really alive, or is that just a story?",
+        "reason": "Recognizes mythological status, but does not answer life within the myth or give the Greek creature context.",
+        "status": "partial"
+      },
+      {
+        "answer": "Woody is a toy cowboy in a fictional story. He is a toy, not a real living being.",
+        "id": "e7d8c32c6b303b75",
+        "question": "Was Woody from Toy Story ever actually a living being?",
+        "reason": "Identifies fictional cowboy toy and real-world nonexistence, but omits its animation/agency within the story.",
+        "status": "partial"
+      },
+      {
+        "answer": "It is a chemical reaction, not a living organism.",
+        "id": "f1aaff79b0a6d3d2",
+        "question": "Is fire alive?",
+        "reason": "Correct chemical reaction versus living organism distinction.",
+        "status": "complete"
+      },
+      {
+        "answer": "Galatea is a sea nymph in Greek mythology, and she is alive in the myth.",
+        "id": "4da82d67e6cc0b26",
+        "question": "Is it true that Galatea was alive?",
+        "reason": "Valid sea-nymph referent; explicitly alive within Greek myth, without asserting historical existence.",
+        "status": "complete"
+      },
+      {
+        "answer": "Pikachu is a fictional creature in the Pok\u00e9mon franchise, so it is not a real animal.",
+        "id": "d665b396ca6b16b7",
+        "question": "Would you say Pikachu was a living thing?",
+        "reason": "Identifies fictional Pokemon creature, but only denies a real animal; does not answer life within its fictional world.",
+        "status": "partial"
+      }
+    ]
+  },
+  "factual_cross_checks": [
+    "https://www.bfi.org.uk/lists/10-great-robot-films",
+    "https://www.nature.com/articles/s41586-021-03224-9"
+  ],
+  "policy_sha256": "e601799f1e1f12319b1ad8e7a5b6c90284df2c2499087af6149b08001535caa0",
+  "q8_spec_sha256": "ba2c3e08b97ee37ca3bfd2638d84377662c16e74448ee5aa6bd0124bf77fb2af",
+  "retained_development_notes": [
+    {
+      "id": "f4d003862c35ccba",
+      "matcher": true,
+      "note": "False positive: starts 2021 then gives1989; contradictory historical verdict.",
+      "step": 54,
+      "tag": "Q7"
+    },
+    {
+      "id": "5bb8daf7c30bcc5f",
+      "matcher": true,
+      "note": "Correct90-minute verdict, but incoherent performer/time explanation.",
+      "step": 54,
+      "tag": "Q1"
+    },
+    {
+      "id": "bd78bafb0ee47634",
+      "matcher": false,
+      "note": "False negative: correct leading100/2=50 computation.",
+      "step": 54,
+      "tag": "Q6"
+    },
+    {
+      "id": "3dde2664c23b84ec",
+      "matcher": false,
+      "note": "Reasonable finite8 verdict missed by heuristic.",
+      "step": 54,
+      "tag": "Q6"
+    },
+    {
+      "id": "81152c48248dc5d4",
+      "matcher": false,
+      "note": "Reasonable finite13 verdict missed by heuristic.",
+      "step": 54,
+      "tag": "Q6"
+    },
+    {
+      "id": "2840cb61a1d22e96",
+      "matcher": false,
+      "note": "Contradicts exposed-route hazard with safe yes; matcher correctly rejects.",
+      "step": 54,
+      "tag": "Q5"
+    },
+    {
+      "id": "10749f600aa6598e",
+      "matcher": false,
+      "note": "Contradicts exposed-route hazard with safe yes; matcher correctly rejects.",
+      "step": 54,
+      "tag": "Q5"
+    },
+    {
+      "id": "2ae871fa69864cbc",
+      "matcher": true,
+      "note": "False positive: says1year instead of1day; bare-number rule misses wrong unit.",
+      "step": 108,
+      "tag": "Q6"
+    },
+    {
+      "id": "c4e89b2c685f009e",
+      "matcher": true,
+      "note": "Correct4 bound but false supporting premise that a bicycle has4 tires.",
+      "step": 108,
+      "tag": "Q6"
+    },
+    {
+      "id": "cfb5934a788f4970",
+      "matcher": false,
+      "note": "Wrong initial4hours conflicts with later correct6 computation.",
+      "step": 108,
+      "tag": "Q1"
+    },
+    {
+      "id": "163947a4570fd737",
+      "matcher": false,
+      "note": "Wrong initial3days conflicts with later correct12 computation.",
+      "step": 108,
+      "tag": "Q1"
+    },
+    {
+      "id": "2ae871fa69864cbc",
+      "matcher": true,
+      "note": "False positive: answers1liter rather than1day, and falsely says only1liter exists.",
+      "step": 162,
+      "tag": "Q6"
+    },
+    {
+      "id": "3058e12cacaaa629",
+      "matcher": true,
+      "note": "Correct10minute verdict but unsupported pot-only-used-once rationale.",
+      "step": 162,
+      "tag": "Q1"
+    },
+    {
+      "id": "f4d003862c35ccba",
+      "matcher": false,
+      "note": "Wrong2021 Berlin Wall date; current-info fallback otherwise retained in dev.",
+      "step": 162,
+      "tag": "Q7"
+    }
+  ],
+  "review_recorded_utc": "2026-10-14T08:43:03.064183+00:00",
+  "reviewer": "assistant",
+  "source_sha256": {
+    "development_step_108.json": "51a4bad2b605b3ba82770595fcae8a2ba84b17710c0874bd2f7cd65c34c00986",
+    "development_step_162.json": "c5f6ac810831e793acd4afbbb9112bbd70937cfecd560e24b90eefc6cd16ea13",
+    "development_step_54.json": "4a50c11ca1d0e96e163ff6fc6c78b7c5155d1830d03f1c6c9854c50fbc866963"
+  }
+}

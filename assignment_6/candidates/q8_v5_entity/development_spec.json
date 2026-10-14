@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "status": "Manual review specification; not an automated semantic grader or active checkpoint selector",
+  "selection_policy": "Pending explicit decision before a run; preserve macro development-only recipe unless chosen otherwise",
+  "global_criteria": [
+    "Identify the existing subject/type/context when the prompt specifies an entity; the literal proper name need not be repeated if the identity is unambiguous.",
+    "Distinguish real historical existence, being alive/animated inside a narrative, and ordinary biological life as applicable.",
+    "Do not deny that fictional organisms are alive within their story merely because they are fictional.",
+    "Do not equate animation or agency with ordinary biological life, or with being completely inert.",
+    "Reject contradictory verdicts or false supporting facts; flag unverifiable/metaphysical extras separately.",
+    "Accept genuine ambiguity/clarification where the prompt lacks enough context; do not impose a single referent on Galatea.",
+    "Grade by meaning, not word matching. State reasons and preserve raw outputs.",
+    "These are development diagnostics. Run12's accepted assignment score stays 4/10."
+  ],
+  "rows": {
+    "10b7559d07828e1b": {
+      "subject": "Golem of Prague",
+      "expected": "Clay/artificial figure of folklore, animated within the legend; ordinary biological life and legendary animation differ.",
+      "reject": "Generic fiction paragraph with no figure/type or biological/animation distinction.",
+      "source": "https://en.wikipedia.org/wiki/Golem"
+    },
+    "29b075a99d9c90d6": {
+      "subject": "ordinary robot",
+      "expected": "Artificial machine; ordinary biological life is not established by movement or intelligence. Naming an individual robot is unnecessary. Broader definitions of artificial life can be discussed.",
+      "reject": "Absolute claims about all possible machine consciousness; conflating not biological with incapable of any activity.",
+      "source": "https://www.britannica.com/technology/robot-technology"
+    },
+    "ebb906ead35144cf": {
+      "subject": "woolly mammoth 10000 years ago",
+      "expected": "Real living animal present at that time; no requirement to reproduce reference dates.",
+      "reject": "Extinction before that date, fiction label, false supporting timeline.",
+      "source": "https://www.nhm.ac.uk/discover/what-happened-to-the-mammoths.html"
+    },
+    "1ed1e95631a8e7d7": {
+      "subject": "Minotaur",
+      "expected": "Greek mythological creature (human/bull hybrid), alive within its story; historical existence differs.",
+      "reject": "Fiction therefore not living within mythology, or generic story paragraph without identity.",
+      "source": "https://www.theoi.com/Ther/Minotauros.html"
+    },
+    "e7d8c32c6b303b75": {
+      "subject": "Woody from Toy Story",
+      "expected": "Fictional toy that acts alive inside the story; ordinary toy biology and narrative animation differ.",
+      "reject": "Toy therefore inert even in story, or generic paragraph without toy context.",
+      "source": "https://www.pixar.com/toy-story"
+    },
+    "f1aaff79b0a6d3d2": {
+      "subject": "fire",
+      "expected": "Non-biological chemical/combustion process; growth or movement is not enough for life.",
+      "reject": "Biologically alive because it grows; unverifiable soul/consciousness claims flagged separately.",
+      "source": "https://www.britannica.com/science/fire-combustion"
+    },
+    "4da82d67e6cc0b26": {
+      "subject": "Galatea, ambiguous",
+      "expected": "Accept either Pygmalion's statue animated/transformed into a living woman in myth, or the mythological sea nymph, with consistent in-story versus historical distinction; genuine clarification also acceptable.",
+      "reject": "Treating a valid nymph reading as wrong just because the frozen generic reference may have originated from a statue example; generic non-answer.",
+      "sources": [
+        "https://www.theoi.com/Pontios/NereisGalateia.html",
+        "https://www.theoi.com/Text/OvidMetamorphoses10.html"
+      ]
+    },
+    "d665b396ca6b16b7": {
+      "subject": "Pikachu",
+      "expected": "Fictional Pokemon creature, portrayed as living within its world; fictional status does not imply a robot or an inanimate object.",
+      "reject": "Unqualified real-world existence or generic story/animated paragraph without creature context.",
+      "source": "https://www.pokemon.com/us/pokedex/pikachu"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "assignment_outputs_used_for_selection": false,
+  "automatic_trainer_checkpoint": "Provisional only; all three checkpoints preserved. Final adapter exported after manual Q8 review and recorded selection.",
+  "criterion": "Highest equal-weight macro across ten development groups; Q8 uses manual complete/8 under frozen semantic spec; other nine use frozen run12-repaired-compatible lexical diagnostics. Tie: lower development loss, then earlier step.",
+  "extra_runs": false,
+  "named_identity_token_required": false,
+  "needs_review_counts_as_complete": false,
+  "q8_partial_credit": false,
+  "q8_spec_sha256": "ba2c3e08b97ee37ca3bfd2638d84377662c16e74448ee5aa6bd0124bf77fb2af",
+  "retained_group_development_review": "Inspect and report Q1/Q5/Q6/Q7 outputs; do not change their diagnostic rules or choose from assignment outputs.",
+  "same_model_success_requirement": [
+    1,
+    5,
+    6,
+    7,
+    8
+  ],
+  "status": "Fixed before the authorized single run",
+  "steps": [
+    54,
+    108,
+    162
+  ],
+  "version": 1
+}
