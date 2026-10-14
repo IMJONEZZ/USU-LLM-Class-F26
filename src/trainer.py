@@ -3,6 +3,70 @@
 Assignment 5 uses span recovery on the base Llama checkpoint. Assignment 6 adds
 Instruct Q&A preparation (`prepare-qa`) with chat-template formatting. Required
 deliverables stay in src/trainer.py, tests/test_trainer.py, and answers.ipynb.
+
+=============================================================================
+Assignment 6 — exact multi-stage recipe that produced answers.ipynb
+=============================================================================
+
+Base model (every stage): meta-llama/Llama-3.2-1B-Instruct (FP16, Unsloth)
+LoRA (every stage): rank=4, alpha=8, targets=q_proj,v_proj, lr=2e-4, seed=0
+Do NOT train on GRADED_QUESTIONS stems (prepare-qa leak gate rejects them).
+
+Training JSONL packs (in order) live under archive/a6_training_files/ when you
+keep that archive locally, or any folder that preserves the same filenames:
+
+  Stage 1 — hybrid (fresh LoRA on Instruct; no --init-adapter)
+    data:  02_hybrid/hybrid_train.jsonl + hybrid_dev.jsonl
+    opts:  --batch-size 1 --accumulation 8 --epochs 3
+           (gradient checkpointing ON / default; recorded on Quadro T2000)
+    out:   .../train_hybrid/best
+
+  Stage 2 — continue (skills + US presidents / 2026 facts)
+    data:  03_continue/chatgpt_continue_train.jsonl + chatgpt_continue_dev.jsonl
+    init:  --init-adapter <stage1>/best
+    opts:  --batch-size 512 --accumulation 1 --epochs 3 --no-gradient-checkpointing
+    out:   .../train_continue/best
+
+  Stage 3 — focus (dense fails: Trump-heavy, Christmas, parallel, sphinx, …)
+    data:  04_focus/focus_fail_train.jsonl + focus_fail_dev.jsonl
+    init:  --init-adapter <stage2>/best
+    opts:  --batch-size 512 --accumulation 1 --epochs 6 --no-gradient-checkpointing
+    out:   .../train_focus/best
+
+  Stage 4 — focus2 (Christmas / sphinx+human / arthritis / parallel=3 / feathers)
+    data:  05_focus2/focus2_train.jsonl + focus2_dev.jsonl
+    init:  --init-adapter <stage3>/best
+    opts:  --batch-size 256 --accumulation 1 --epochs 8 --no-gradient-checkpointing
+    out:   .../train_focus2/best  ← adapter used for notebooks/answers.ipynb
+
+Each stage is: prepare-qa → feasibility (same opts, short --steps) → train.
+Example for one continue-style stage on Colab/A100::
+
+  python -m src.trainer prepare-qa \\
+    --train PATH/chatgpt_continue_train.jsonl \\
+    --dev PATH/chatgpt_continue_dev.jsonl \\
+    --output data/assignment6/prepared_continue
+
+  python -m src.trainer feasibility \\
+    --prepared data/assignment6/prepared_continue \\
+    --init-adapter data/assignment6/train_hybrid/best \\
+    --output data/assignment6/feasibility_continue \\
+    --batch-size 512 --accumulation 1 --learning-rate 2e-4 \\
+    --rank 4 --alpha 8 --targets q_proj,v_proj \\
+    --no-gradient-checkpointing --steps 2
+
+  python -m src.trainer train \\
+    --prepared data/assignment6/prepared_continue \\
+    --feasibility data/assignment6/feasibility_continue \\
+    --init-adapter data/assignment6/train_hybrid/best \\
+    --output data/assignment6/train_continue \\
+    --batch-size 512 --accumulation 1 --learning-rate 2e-4 \\
+    --rank 4 --alpha 8 --targets q_proj,v_proj \\
+    --no-gradient-checkpointing --epochs 3
+
+Repeat with stage 3/4 paths and flags above. Final answers: load
+train_focus2/best with greedy generation (max_new_tokens=128) on GRADED_QUESTIONS.
+=============================================================================
 """
 
 import argparse
