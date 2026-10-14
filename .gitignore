@@ -1,5 +1,7 @@
 #Talha Additions
 SW_EpisodeIV_VI.json
+# Local-only archives (pre-A6 coursework + A6 experiment notes)
+/archive/
 # Local datasets and generated tokenizer artifacts.
 /data/
 # Local experiment outputs and model weights; dependency locks stay tracked.
