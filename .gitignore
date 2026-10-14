@@ -12,6 +12,9 @@ bpe.json
 explainations_for_personal_memory
 docs
 .zen
+.venv-training/
+data/assignment6/tmux-tmp/
+data/assignment6/tmux.sock
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

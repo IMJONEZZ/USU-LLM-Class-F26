@@ -934,3 +934,54 @@ def test_trainer_main_module(monkeypatch, tmp_path):
     runpy.run_path(tr.__file__, run_name="__main__")
     assert exits == [1]
     assert (tmp_path / "failed" / "failure.json").is_file()
+
+
+class _FakeChatTokenizer:
+    eos_token_id = 1
+    pad_token_id = 1
+
+    def apply_chat_template(
+        self, messages, tokenize=False, add_generation_prompt=False
+    ):
+        user = messages[0]["content"]
+        if len(messages) == 1:
+            text = f"<user>{user}<assistant>"
+        else:
+            text = f"<user>{user}<assistant>{messages[1]['content']}<eos>"
+        if not tokenize:
+            return text
+        return [ord(ch) % 50 + 2 for ch in text]
+
+
+def test_chat_encoding_masks_prompt_tokens_only():
+    encoded = tr.encode_chat_example("Hello?", "World", _FakeChatTokenizer())
+    assert encoded["labels"][: len(encoded["prompt_ids"])] == [-100] * len(
+        encoded["prompt_ids"]
+    )
+    assert any(label != -100 for label in encoded["labels"])
+
+
+def test_graded_leakage_and_approval_gate():
+    leaked = {
+        "example_id": "bad",
+        "instruction": tr.GRADED_QUESTIONS[0],
+        "response": "nope",
+        "category": "test",
+        "source": "test",
+        "review_status": "approved",
+    }
+    assert tr.find_graded_leakage([leaked])
+    pending = {
+        "example_id": "ok",
+        "instruction": "How many a letters are in banana?",
+        "response": "3",
+        "category": "character_counting",
+        "source": "test",
+        "review_status": "pending",
+    }
+    examples, audit = tr.prepare_qa_partition([pending], _FakeChatTokenizer())
+    assert examples == []
+    assert audit["excluded_by_reason"]["not_approved"] == 1
+    pending["review_status"] = "approved"
+    examples, _ = tr.prepare_qa_partition([pending], _FakeChatTokenizer())
+    assert len(examples) == 1

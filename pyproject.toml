@@ -11,6 +11,8 @@ dependencies = [
     "rouge-score>=0.1.2",
     "scikit-learn>=1.9.1",
     "torch>=2.14.0",
+    "torchao>=0.16.0",
+    "torchvision>=0.29.1",
     "transformers>=5.17.0",
     "zenml[server]>=0.97.0",
 ]
@@ -25,5 +27,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = [".git", ".venv", ".venv-training", "data", "checkpoints", "outputs", "node_modules"]
 addopts = "--cov=src --cov-fail-under=80"
 markers = ["gpu: opt-in real Unsloth integration requiring CUDA and prepared data"]

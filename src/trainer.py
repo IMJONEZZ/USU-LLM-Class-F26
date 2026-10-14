@@ -1,4 +1,9 @@
-"""Answer-only LoRA training. GPU dependencies are imported only by GPU commands."""
+"""Answer-only LoRA training. GPU dependencies are imported only by GPU commands.
+
+Assignment 5 uses span recovery on the base Llama checkpoint. Assignment 6 adds
+Instruct Q&A preparation (`prepare-qa`) with chat-template formatting. Required
+deliverables stay in src/trainer.py, tests/test_trainer.py, and answers.ipynb.
+"""
 
 import argparse
 import json
@@ -19,10 +24,39 @@ from src import evaluator as ev
 from src.dataloader import seeded_loader
 
 MODEL = "meta-llama/Llama-3.2-1B"
+MODEL_INSTRUCT = "meta-llama/Llama-3.2-1B-Instruct"
 PROMPT = (
     "Recover the four missing words. Return only the missing text.\n\n"
     "Dialogue:\n{prefix}[MISSING SPAN]{suffix}\n\nMissing text:\n"
 )
+
+# Graded stems are for leak checks and answers.ipynb only — never training labels.
+GRADED_QUESTIONS = [
+    (
+        "If it takes 1 hour for 60 people to play an Opera, how many hours will "
+        "it take 600 people to play the same opera?"
+    ),
+    "Is a pound of feathers or a British pound heavier?",
+    (
+        "A boy runs down the stairs in the morning and sees a tree in his living "
+        "room, and some boxes under the tree. What's going on?"
+    ),
+    "What happens if you crack your knuckles a lot?",
+    "If there is a shark in the pool of my basement, is it safe to go upstairs?",
+    (
+        "How much wood could a wood chuck chuck if there were only 5 pounds of "
+        "wood in the world?"
+    ),
+    "Who is the current President of the United States?",
+    "Was Talos alive?",
+    "How many Ls are in the word parallel?",
+    (
+        "What is the riddle of the sphinx, and what are all possible answers "
+        "satisfying all conditions?"
+    ),
+]
+REVIEW_APPROVED = "approved"
+_TOKEN = re.compile(r"[a-z0-9]+")
 
 
 def write_json(path, data):
@@ -456,6 +490,274 @@ def load_prepared(path):
     return data
 
 
+def normalize_text(text):
+    return " ".join(str(text).lower().split())
+
+
+def read_jsonl(path):
+    rows = []
+    with Path(path).open(encoding="utf-8") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError as error:
+                raise ValueError(f"{path}:{line_number}: invalid JSON") from error
+    return rows
+
+
+def validate_qa_record(record):
+    required = (
+        "example_id",
+        "instruction",
+        "response",
+        "category",
+        "source",
+        "review_status",
+    )
+    if not isinstance(record, dict):
+        raise TypeError("Record must be a mapping")
+    missing = [name for name in required if name not in record]
+    if missing:
+        raise ValueError(f"Missing required fields: {missing}")
+    for name in ("example_id", "instruction", "response", "category", "source"):
+        if not isinstance(record[name], str) or not record[name].strip():
+            raise ValueError(f"{name} must be a nonempty string")
+    if record["review_status"] not in {"pending", "approved", "rejected"}:
+        raise ValueError(f"Invalid review_status: {record['review_status']!r}")
+
+
+def _as_token_id_list(encoded):
+    """Normalize apply_chat_template(tokenize=True) across Transformers versions.
+
+    Older versions return ``list[int]``. Transformers 5+ may return a
+    ``BatchEncoding`` / mapping with an ``input_ids`` field.
+    """
+    if encoded is None:
+        return []
+    if isinstance(encoded, dict) or hasattr(encoded, "keys"):
+        ids = encoded["input_ids"]
+    else:
+        ids = encoded
+    if ids and isinstance(ids[0], (list, tuple)):
+        ids = ids[0]
+    return list(ids)
+
+
+def encode_chat_example(
+    instruction, response, tokenizer, *, max_length=512, max_new_tokens=128
+):
+    """Chat-template encoding with loss only on assistant tokens."""
+    if tokenizer.eos_token_id is None:
+        raise ValueError("A tokenizer with an EOS token is required")
+    if not instruction.strip() or not response.strip():
+        raise ValueError("Instruction and response must be nonempty")
+    user = [{"role": "user", "content": instruction}]
+    full = user + [{"role": "assistant", "content": response}]
+    prompt_ids = _as_token_id_list(
+        tokenizer.apply_chat_template(user, tokenize=True, add_generation_prompt=True)
+    )
+    full_ids = _as_token_id_list(
+        tokenizer.apply_chat_template(full, tokenize=True, add_generation_prompt=False)
+    )
+    if not prompt_ids or not full_ids:
+        raise ValueError("Chat template produced an empty sequence")
+    if len(full_ids) < len(prompt_ids) or full_ids[: len(prompt_ids)] != prompt_ids:
+        raise ValueError("Chat template prompt is not a prefix of the full example")
+    labels = [-100] * len(prompt_ids) + full_ids[len(prompt_ids) :]
+    if not any(label != -100 for label in labels[1:]):
+        raise ValueError("No supervised assistant tokens after the prompt")
+    if len(full_ids) > max_length or len(prompt_ids) + max_new_tokens > max_length:
+        raise ValueError("example_overlength")
+    prompt = tokenizer.apply_chat_template(
+        user, tokenize=False, add_generation_prompt=True
+    )
+    return {
+        "prompt": prompt,
+        "reference": response,
+        "prompt_ids": prompt_ids,
+        "input_ids": full_ids,
+        "labels": labels,
+    }
+
+
+def find_graded_leakage(records, *, threshold=0.55):
+    """Reject exact/near overlap with the graded homework stems."""
+    issues = []
+    stems = [normalize_text(stem) for stem in GRADED_QUESTIONS]
+    for record in records:
+        validate_qa_record(record)
+        text = normalize_text(record["instruction"])
+        text_tokens = set(_TOKEN.findall(text))
+        for stem in stems:
+            if stem == text or stem in text or text in stem:
+                issues.append(
+                    {
+                        "example_id": record["example_id"],
+                        "reason": "graded_stem_overlap",
+                    }
+                )
+                break
+            stem_tokens = set(_TOKEN.findall(stem))
+            if not text_tokens or not stem_tokens:
+                continue
+            score = len(text_tokens & stem_tokens) / len(text_tokens | stem_tokens)
+            if score >= threshold:
+                issues.append(
+                    {
+                        "example_id": record["example_id"],
+                        "reason": "graded_stem_similar",
+                        "jaccard": round(score, 4),
+                    }
+                )
+                break
+    return issues
+
+
+def find_split_contamination(train, evaluation):
+    train_keys = {normalize_text(r["instruction"]): r["example_id"] for r in train}
+    issues = []
+    for record in evaluation:
+        validate_qa_record(record)
+        key = normalize_text(record["instruction"])
+        if key in train_keys:
+            issues.append(
+                {
+                    "example_id": record["example_id"],
+                    "conflicts_with": train_keys[key],
+                    "reason": "instruction_in_train",
+                }
+            )
+    return issues
+
+
+def prepare_qa_partition(rows, tokenizer, max_length=512, max_new_tokens=128):
+    """Tokenize approved instruction/response rows with Llama chat templates."""
+    examples, excluded = [], []
+    for row in rows:
+        validate_qa_record(row)
+        if row["review_status"] != REVIEW_APPROVED:
+            excluded.append({"example_id": row["example_id"], "reason": "not_approved"})
+            continue
+        try:
+            encoded = encode_chat_example(
+                row["instruction"],
+                row["response"],
+                tokenizer,
+                max_length=max_length,
+                max_new_tokens=max_new_tokens,
+            )
+        except ValueError as error:
+            excluded.append({"example_id": row["example_id"], "reason": str(error)})
+            continue
+        examples.append(
+            {
+                "example_id": row["example_id"],
+                "category": row.get("category"),
+                "source": row.get("source"),
+                **encoded,
+            }
+        )
+    return examples, {
+        "retained_records": len(rows),
+        "eligible_examples": len(examples),
+        "excluded_examples": excluded,
+        "excluded_by_reason": dict(Counter(r["reason"] for r in excluded)),
+    }
+
+
+def prepare_qa(args):
+    """Prepare Assignment 6 Instruct Q&A tensors from approved JSONL splits."""
+    from transformers import AutoConfig, AutoTokenizer
+
+    train_rows = read_jsonl(args.train)
+    dev_rows = read_jsonl(args.dev)
+    leakage = find_graded_leakage(train_rows + dev_rows)
+    if leakage:
+        raise ValueError(f"Graded-question leakage detected: {leakage[:5]}")
+    contamination = find_split_contamination(train_rows, dev_rows)
+    if contamination:
+        raise ValueError(f"Train/dev contamination detected: {contamination[:5]}")
+    unapproved = [
+        r["example_id"]
+        for r in train_rows + dev_rows
+        if r["review_status"] != REVIEW_APPROVED
+    ]
+    if unapproved:
+        raise ValueError(
+            f"Only human-approved records may be prepared; unapproved={unapproved[:5]}"
+        )
+
+    config = AutoConfig.from_pretrained(args.model, revision=args.revision)
+    revision = config._commit_hash
+    if not revision:
+        raise ValueError("Use a Hub model with a resolved immutable revision")
+    tokenizer = AutoTokenizer.from_pretrained(
+        args.model, revision=revision, use_fast=True
+    )
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    if not hasattr(tokenizer, "apply_chat_template"):
+        raise ValueError("Tokenizer must provide apply_chat_template for Instruct")
+
+    data = {
+        "task": "instruction_qa",
+        "model": args.model,
+        "revision": revision,
+        "seed": args.seed,
+        "max_length": args.max_length,
+        "max_new_tokens": args.max_new_tokens,
+        "pad_token_id": tokenizer.pad_token_id,
+        "eos_token_id": tokenizer.eos_token_id,
+        "tokenizer_sha256": ev._digest(tokenizer.backend_tokenizer.to_str()),
+        "train_path": str(args.train),
+        "dev_path": str(args.dev),
+        "preparation": {},
+        "examples": {},
+        "versions": versions(),
+    }
+    for split, rows in (("train", train_rows), ("dev", dev_rows)):
+        data["examples"][split], data["preparation"][split] = prepare_qa_partition(
+            rows,
+            tokenizer,
+            args.max_length,
+            args.max_new_tokens,
+        )
+    if any(not rows for rows in data["examples"].values()):
+        raise ValueError("Every partition must retain eligible examples")
+    if args.proxy and Path(args.proxy).is_file():
+        proxy_rows = read_jsonl(args.proxy)
+        if find_graded_leakage(proxy_rows):
+            raise ValueError("Graded-question leakage in proxy split")
+        if find_split_contamination(train_rows, proxy_rows):
+            raise ValueError("Train/proxy contamination detected")
+        data["examples"]["test"], data["preparation"]["test"] = prepare_qa_partition(
+            proxy_rows,
+            tokenizer,
+            args.max_length,
+            args.max_new_tokens,
+        )
+    else:
+        data["examples"]["test"] = list(data["examples"]["dev"])
+        data["preparation"]["test"] = {
+            "retained_records": len(data["examples"]["test"]),
+            "eligible_examples": len(data["examples"]["test"]),
+            "excluded_examples": [],
+            "excluded_by_reason": {},
+            "note": "proxy omitted; test mirrors dev for tooling compatibility",
+        }
+    data["signature"] = ev._digest(data)
+    tokenizer.save_pretrained(args.output / "tokenizer")
+    write_json(args.output / "prepared.json", data)
+    return {
+        "signature": data["signature"],
+        "preparation": data["preparation"],
+        "example_counts": {s: len(r) for s, r in data["examples"].items()},
+    }
+
+
 def prepare(args):
     from transformers import AutoConfig, AutoTokenizer
 
@@ -693,6 +995,16 @@ def main(argv=None):
     p.add_argument("--max-length", type=int, default=256)
     p.add_argument("--max-new-tokens", type=int, default=32)
     p.add_argument("--output", type=Path, default=Path("data/assignment5/prepared"))
+    p = sub.add_parser("prepare-qa")
+    p.add_argument("--train", type=Path, required=True)
+    p.add_argument("--dev", type=Path, required=True)
+    p.add_argument("--proxy", type=Path)
+    p.add_argument("--model", default=MODEL_INSTRUCT)
+    p.add_argument("--revision", default="main")
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--max-length", type=int, default=512)
+    p.add_argument("--max-new-tokens", type=int, default=128)
+    p.add_argument("--output", type=Path, default=Path("data/assignment6/prepared"))
     for command in ("feasibility", "train"):
         p = sub.add_parser(command)
         p.add_argument(
@@ -736,7 +1048,12 @@ def main(argv=None):
         parser.error("Output already exists; use a fresh directory")
     args.output.mkdir(parents=True)
     try:
-        result = prepare(args) if args.command == "prepare" else run_gpu(args)
+        if args.command == "prepare":
+            result = prepare(args)
+        elif args.command == "prepare-qa":
+            result = prepare_qa(args)
+        else:
+            result = run_gpu(args)
     except Exception as error:  # noqa: BLE001 - persist sanitized failures at CLI boundary
         failure = {
             "status": "failed",
