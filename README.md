@@ -49,3 +49,14 @@ uv run pytest
 ### AI assistance
 
 The course supports Claude Code and Codex. Both assistants follow the same student-learning and academic-integrity expectations in [AGENTS.md](AGENTS.md).
+
+## Assignments
+
+- Assignment 0 — basic tokenizer (`src/tokenizer.py`)
+- Assignment 1 — byte-level BPE tokenizer (`src/bpe_tokenizer.py`)
+- Assignment 2 — PyTorch data loader (`src/dataloader.py`)
+- Assignment 3 — model evaluator (`src/evaluator.py`)
+- Assignment 4 — GPU inference and a ZenML pipeline (`gpu/`, `pipelines/`)
+- Assignment 5 — fine-tuning Llama 3.2 1B (`src/lm_trainer.py`, `gpu/train_app.py`)
+- Assignment 6 — fine-tuning Llama 3.2 1B to answer trick questions (`src/dataset.py`, `src/trainer.py`, `answers.ipynb`)
+- Assignment 7 — serving the fine-tuned model behind an API (`src/inference.py`, in progress)
