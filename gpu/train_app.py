@@ -33,12 +33,16 @@ image = (
 
 app = modal.App("hw5-train", image=image)
 hf_cache = modal.Volume.from_name("hw5-hf-cache", create_if_missing=True)
+# Assignment 7 added this. The adapter this run produces used to vanish
+# with the container, which is how I ended up with nothing to serve.
+models = modal.Volume.from_name("hw7-models", create_if_missing=True)
+MODEL_DIR = "/models"
 
 
 @app.function(
     gpu=GPU_TYPE,
     timeout=3600,
-    volumes={CACHE_DIR: hf_cache},
+    volumes={CACHE_DIR: hf_cache, MODEL_DIR: models},
     secrets=[modal.Secret.from_name("huggingface-secret")],
 )
 def run_training(max_steps: int = 60):
@@ -54,6 +58,7 @@ def run_training(max_steps: int = 60):
         perplexity,
         summarize,
     )
+    from src.trainer import save_adapter
 
     print(f"gpu: {torch.cuda.get_device_name(0)}")
     print(
@@ -107,6 +112,14 @@ def run_training(max_steps: int = 60):
         print(f"  [{p}] {t!r}")
     summary["samples_before"] = samples_before
     summary["samples_after"] = samples_after
+
+    # Keep the adapter. This is the step both this assignment and assignment 6
+    # were missing, and it costs a few seconds against a six minute run.
+    adapter_dir = f"{MODEL_DIR}/star-wars-adapter"
+    save_adapter(model, tokenizer, adapter_dir)
+    models.commit()
+    summary["adapter_dir"] = adapter_dir
+    print(f"\nadapter saved to {adapter_dir}")
 
     print("\n=== summary ===")
     for k, v in summary.items():
