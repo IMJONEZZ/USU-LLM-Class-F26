@@ -1635,6 +1635,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "datasets" },
     { name = "evaluate" },
+    { name = "requests" },
     { name = "scikit-learn" },
     { name = "torch", version = "2.14.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux'" },
     { name = "torch", version = "2.14.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'linux'" },
@@ -1655,6 +1656,7 @@ gpu = [
 requires-dist = [
     { name = "datasets", specifier = ">=5.0.1" },
     { name = "evaluate", specifier = ">=0.4.6" },
+    { name = "requests", specifier = ">=2.32.0" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
     { name = "torch", marker = "sys_platform != 'linux'", specifier = ">=2.9.0" },
     { name = "torch", marker = "sys_platform == 'linux'", specifier = ">=2.9.0", index = "https://download.pytorch.org/whl/cpu" },
