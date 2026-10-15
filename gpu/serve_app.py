@@ -80,12 +80,22 @@ def find_model(directory=f"{MODEL_DIR}/gguf", quantization="Q4_K_M"):
     scaledown_window=SCALEDOWN_SECONDS,
     timeout=600,
     max_containers=1,
+    secrets=[modal.Secret.from_name("hw7-api-key")],
 )
 @modal.concurrent(max_inputs=4)
 @modal.web_server(PORT, startup_timeout=300)
 def serve():
+    import os
+
     model_path = find_model()
     print(f"serving {model_path}")
+
+    # A Modal web endpoint is a public URL, and left open this one would answer
+    # anything that found it. llama-server takes an --api-key and then wants
+    # the usual `Authorization: Bearer` header, which is the same thing an
+    # OpenAI client already sends. The key lives in a Modal secret rather than
+    # in this file, because this file is in a public repo.
+    api_key = os.environ["LLAMA_API_KEY"]
 
     # --host 0.0.0.0 matters. Bound to localhost the process starts fine and
     # Modal can't route anything to it, which looks like a dead endpoint.
@@ -98,6 +108,8 @@ def serve():
             "0.0.0.0",
             "--port",
             str(PORT),
+            "--api-key",
+            api_key,
             "--ctx-size",
             "2048",
             "--threads",

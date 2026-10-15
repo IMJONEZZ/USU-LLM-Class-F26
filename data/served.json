@@ -35,5 +35,5 @@
     "Going through parallel one letter at a time: p, a, r, a, l (1), l (2), a, p, a, l (3). So there are 3 Ls in parallel.",
     "The riddle of the Sphinx is: \"What walks on legs but also can't sit down?\"\n\nThe possible answers satisfying all conditions are: \n\n- Human\n- Mongoose\n- Cat\n- Dog\n- Lion\n- Bear\n- Monkey\n- Chimpanzee\n- Gorilla\n- Elephant\n- Hippopotamus\n- Rhinoceros\n- Kangaroo\n- Koala\n- Bear\n- Chimpanzee\n- Gorilla\n- Monkey\n- Lion\n- Cat\n- Dog\n- Mongoose\n- Snake\n- Crocodile\n- Turtle\n- Tortoise\n- Frog\n- Toad\n- Salamander\n- Turtle\n- Tortoise\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear\n- Bear"
   ],
-  "tokens_per_sec": 25.5
+  "tokens_per_sec": 16.7
 }
