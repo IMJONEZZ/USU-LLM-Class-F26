@@ -1,0 +1,35 @@
+Preflight only; no inference model running.
+Captured UTC: 2026-09-25T07:10:45.778039+00:00
+
+Command: ['nvidia-smi']
+Exit code: 0
+Fri Sep 25 01:10:45 2026
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.178.04             Driver Version: 580.178.04     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  Quadro T2000                   Off |   00000000:01:00.0 Off |                  N/A |
+| N/A   51C    P8              6W /   60W |      82MiB /   4096MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1927      G   /usr/lib/xorg/Xorg                       40MiB |
+|    0   N/A  N/A            2043      G   /usr/bin/gnome-shell                      7MiB |
++-----------------------------------------------------------------------------------------+
+
+Command: ['docker', 'image', 'inspect', 'usu-llm-a4-local', '--format', '{{.Id}}']
+Exit code: 1
+
+permission denied while trying to connect to the docker API at unix:///var/run/docker.sock
+
+Command: ['sudo', '-n', 'docker', 'image', 'inspect', 'usu-llm-a4-local', '--format', '{{.Id}}']
+Exit code: 1
+sudo: a password is required

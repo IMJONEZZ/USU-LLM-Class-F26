@@ -1,0 +1,103 @@
+2026-10-14T05:05:07.358780Z DEBUG prek: 0.5.2
+2026-10-14T05:05:07.358802Z DEBUG Args: ["/home/tshahzad/.cache/uv/archive-v0/FP6ROUPufqxRH8QT/bin/prek", "hook-impl", "--hook-dir", "/home/tshahzad/projects/USU-LLM-Class-F26/.git/hooks", "--script-version", "4", "--hook-type=pre-commit", "--"]
+2026-10-14T05:05:07.359846Z TRACE root: close time.busy=915µs time.idle=1.52µs
+2026-10-14T05:05:07.359862Z DEBUG Git root: /home/tshahzad/projects/USU-LLM-Class-F26
+2026-10-14T05:05:07.359874Z DEBUG Found workspace root at `/home/tshahzad/projects/USU-LLM-Class-F26`
+2026-10-14T05:05:07.359877Z DEBUG Found project root at ``
+2026-10-14T05:05:07.359882Z DEBUG Loading project configuration path=.pre-commit-config.yaml
+2026-10-14T05:05:07.360035Z TRACE Executing `/usr/lib/git-core/git -c core.useBuiltinFSMonitor=false ls-files --unmerged`
+2026-10-14T05:05:07.360955Z DEBUG Found workspace root at `/home/tshahzad/projects/USU-LLM-Class-F26`
+2026-10-14T05:05:07.360965Z TRACE Include selectors: ``
+2026-10-14T05:05:07.360968Z TRACE Skip selectors: ``
+2026-10-14T05:05:07.360994Z DEBUG discover{root="/home/tshahzad/projects/USU-LLM-Class-F26" config=None refresh=false}: Loaded workspace from cache
+2026-10-14T05:05:07.361000Z DEBUG discover{root="/home/tshahzad/projects/USU-LLM-Class-F26" config=None refresh=false}: Loading project configuration path=.pre-commit-config.yaml
+2026-10-14T05:05:07.361067Z TRACE discover{root="/home/tshahzad/projects/USU-LLM-Class-F26" config=None refresh=false}: close time.busy=87.3µs time.idle=641ns
+2026-10-14T05:05:07.361079Z TRACE Executing `/usr/lib/git-core/git -c core.useBuiltinFSMonitor=false diff --exit-code --name-only --no-ext-diff -z`
+2026-10-14T05:05:07.362061Z TRACE Checking lock resource="store" path=/home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/.lock
+2026-10-14T05:05:07.362075Z DEBUG Acquired lock resource="store"
+2026-10-14T05:05:07.363485Z TRACE No requires-python found in pyproject.toml hook=trailing-whitespace
+2026-10-14T05:05:07.363549Z TRACE Failed to extract metadata from entry for hook `trailing-whitespace`: failed to read from file `/home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/repos/7fa7ca4169c8decf/trailing-whitespace-fixer`: No such file or directory (os error 2)
+2026-10-14T05:05:07.363659Z TRACE No requires-python found in pyproject.toml hook=end-of-file-fixer
+2026-10-14T05:05:07.363752Z TRACE Failed to extract metadata from entry for hook `end-of-file-fixer`: failed to read from file `/home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/repos/7fa7ca4169c8decf/end-of-file-fixer`: No such file or directory (os error 2)
+2026-10-14T05:05:07.363767Z TRACE No requires-python found in pyproject.toml hook=check-yaml
+2026-10-14T05:05:07.363779Z TRACE Failed to extract metadata from entry for hook `check-yaml`: failed to read from file `/home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/repos/7fa7ca4169c8decf/check-yaml`: No such file or directory (os error 2)
+2026-10-14T05:05:07.363793Z TRACE No requires-python found in pyproject.toml hook=check-added-large-files
+2026-10-14T05:05:07.363805Z TRACE Failed to extract metadata from entry for hook `check-added-large-files`: failed to read from file `/home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/repos/7fa7ca4169c8decf/check-added-large-files`: No such file or directory (os error 2)
+2026-10-14T05:05:07.363818Z TRACE No requires-python found in pyproject.toml hook=check-json
+2026-10-14T05:05:07.363829Z TRACE Failed to extract metadata from entry for hook `check-json`: failed to read from file `/home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/repos/7fa7ca4169c8decf/check-json`: No such file or directory (os error 2)
+2026-10-14T05:05:07.363841Z TRACE No requires-python found in pyproject.toml hook=check-xml
+2026-10-14T05:05:07.363852Z TRACE Failed to extract metadata from entry for hook `check-xml`: failed to read from file `/home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/repos/7fa7ca4169c8decf/check-xml`: No such file or directory (os error 2)
+2026-10-14T05:05:07.363887Z TRACE No requires-python found in pyproject.toml hook=ruff
+2026-10-14T05:05:07.363900Z TRACE Failed to extract metadata from entry for hook `ruff`: failed to read from file `/home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/repos/61dc256aa39ac34b/ruff`: No such file or directory (os error 2)
+2026-10-14T05:05:07.363918Z TRACE No requires-python found in pyproject.toml hook=ruff-format
+2026-10-14T05:05:07.363930Z TRACE Failed to extract metadata from entry for hook `ruff-format`: failed to read from file `/home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/repos/61dc256aa39ac34b/ruff`: No such file or directory (os error 2)
+2026-10-14T05:05:07.363941Z TRACE Released lock path=/home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/.lock
+2026-10-14T05:05:07.363949Z DEBUG Hooks going to run: ["trailing-whitespace", "end-of-file-fixer", "check-yaml", "check-added-large-files", "check-json", "check-xml", "ruff", "ruff-format", "pytest"]
+2026-10-14T05:05:07.363956Z TRACE Executing `/usr/lib/git-core/git -c core.useBuiltinFSMonitor=false diff --no-ext-diff --ignore-submodules --diff-filter=A --name-only -z -- /home/tshahzad/projects/USU-LLM-Class-F26`
+2026-10-14T05:05:07.364969Z TRACE Executing `/usr/lib/git-core/git -c core.useBuiltinFSMonitor=false write-tree`
+2026-10-14T05:05:07.366208Z TRACE Executing `/usr/lib/git-core/git -c core.useBuiltinFSMonitor=false diff-index --binary --exit-code --ignore-submodules --no-color --no-ext-diff 9644152027e2ff55982ca788b64266c192240989 -- /home/tshahzad/projects/USU-LLM-Class-F26`
+2026-10-14T05:05:07.367354Z DEBUG Working tree is clean
+2026-10-14T05:05:07.367370Z TRACE Executing `/usr/lib/git-core/git -c core.useBuiltinFSMonitor=false rev-parse --git-dir`
+2026-10-14T05:05:07.368164Z TRACE Executing `cd /home/tshahzad/projects/USU-LLM-Class-F26 && /usr/lib/git-core/git -c core.useBuiltinFSMonitor=false diff --cached --name-only --diff-filter=ACMRTUXB --no-ext-diff -z`
+2026-10-14T05:05:07.369368Z DEBUG Staged files: 1
+2026-10-14T05:05:07.369879Z TRACE Checking lock resource="store" path=/home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/.lock
+2026-10-14T05:05:07.369893Z DEBUG Acquired lock resource="store"
+2026-10-14T05:05:07.370004Z TRACE Executing `/home/tshahzad/.local/share/uv/python/cpython-3.14.7-linux-x86_64-gnu/bin/python3.14 -I -c import sys, json
+info = {
+    "version": ".".join(map(str, sys.version_info[:3])),
+    "base_exec_prefix": sys.base_exec_prefix,
+}
+print(json.dumps(info))
+`
+2026-10-14T05:05:07.385787Z TRACE Released lock path=/home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/.lock
+2026-10-14T05:05:07.385975Z TRACE Files for project `.` after filtered: 1
+2026-10-14T05:05:07.385984Z DEBUG Running priority group with priority 0: ["trailing-whitespace"]
+2026-10-14T05:05:07.386016Z TRACE matching_filenames{hook="trailing-whitespace"}: close time.busy=23.8µs time.idle=1.62µs
+2026-10-14T05:05:07.386023Z TRACE Files for hook `trailing-whitespace` after filtering matched=true filenames=1
+2026-10-14T05:05:07.386039Z DEBUG run{hook_id=trailing-whitespace language=python}: Running hook `trailing-whitespace` with prek's bundled Rust implementation instead of `https://github.com/pre-commit/pre-commit-hooks@3e8a8703264a2f4a69428a0aa4dcb512790b2c8c` (fast path); behavior and defaults may differ. Set `language: python` for this hook or `PREK_NO_FAST_PATH=1` to run the pinned implementation
+2026-10-14T05:05:07.386122Z  INFO run{hook_id=trailing-whitespace language=python}: close time.busy=58.6µs time.idle=34.1µs
+2026-10-14T05:05:07.386137Z DEBUG Running priority group with priority 1: ["end-of-file-fixer"]
+2026-10-14T05:05:07.386141Z TRACE matching_filenames{hook="end-of-file-fixer"}: close time.busy=332ns time.idle=339ns
+2026-10-14T05:05:07.386146Z TRACE Files for hook `end-of-file-fixer` after filtering matched=true filenames=1
+2026-10-14T05:05:07.386156Z DEBUG run{hook_id=end-of-file-fixer language=python}: Running hook `end-of-file-fixer` with prek's bundled Rust implementation instead of `https://github.com/pre-commit/pre-commit-hooks@3e8a8703264a2f4a69428a0aa4dcb512790b2c8c` (fast path); behavior and defaults may differ. Set `language: python` for this hook or `PREK_NO_FAST_PATH=1` to run the pinned implementation
+2026-10-14T05:05:07.386229Z  INFO run{hook_id=end-of-file-fixer language=python}: close time.busy=30.1µs time.idle=50.3µs
+2026-10-14T05:05:07.386241Z DEBUG Running priority group with priority 2: ["check-yaml"]
+2026-10-14T05:05:07.386245Z TRACE matching_filenames{hook="check-yaml"}: close time.busy=236ns time.idle=307ns
+2026-10-14T05:05:07.386248Z TRACE Files for hook `check-yaml` after filtering matched=false filenames=0
+2026-10-14T05:05:07.386251Z DEBUG Running priority group with priority 3: ["check-added-large-files"]
+2026-10-14T05:05:07.386255Z TRACE matching_filenames{hook="check-added-large-files"}: close time.busy=186ns time.idle=255ns
+2026-10-14T05:05:07.386257Z TRACE Files for hook `check-added-large-files` after filtering matched=true filenames=1
+2026-10-14T05:05:07.386266Z DEBUG run{hook_id=check-added-large-files language=python}: Running hook `check-added-large-files` with prek's bundled Rust implementation instead of `https://github.com/pre-commit/pre-commit-hooks@3e8a8703264a2f4a69428a0aa4dcb512790b2c8c` (fast path); behavior and defaults may differ. Set `language: python` for this hook or `PREK_NO_FAST_PATH=1` to run the pinned implementation
+2026-10-14T05:05:07.386285Z TRACE run{hook_id=check-added-large-files language=python}: Executing `cd /home/tshahzad/projects/USU-LLM-Class-F26 && /usr/lib/git-core/git -c core.useBuiltinFSMonitor=false diff --staged --relative --name-only --diff-filter=A -z`
+2026-10-14T05:05:07.387906Z  INFO run{hook_id=check-added-large-files language=python}: close time.busy=361µs time.idle=1.28ms
+2026-10-14T05:05:07.387928Z DEBUG Running priority group with priority 4: ["check-json"]
+2026-10-14T05:05:07.387933Z TRACE matching_filenames{hook="check-json"}: close time.busy=322ns time.idle=321ns
+2026-10-14T05:05:07.387937Z TRACE Files for hook `check-json` after filtering matched=true filenames=1
+2026-10-14T05:05:07.387947Z DEBUG run{hook_id=check-json language=python}: Running hook `check-json` with prek's bundled Rust implementation instead of `https://github.com/pre-commit/pre-commit-hooks@3e8a8703264a2f4a69428a0aa4dcb512790b2c8c` (fast path); behavior and defaults may differ. Set `language: python` for this hook or `PREK_NO_FAST_PATH=1` to run the pinned implementation
+2026-10-14T05:05:07.388113Z  INFO run{hook_id=check-json language=python}: close time.busy=157µs time.idle=15.7µs
+2026-10-14T05:05:07.388125Z DEBUG Running priority group with priority 5: ["check-xml"]
+2026-10-14T05:05:07.388129Z TRACE matching_filenames{hook="check-xml"}: close time.busy=224ns time.idle=274ns
+2026-10-14T05:05:07.388133Z TRACE Files for hook `check-xml` after filtering matched=false filenames=0
+2026-10-14T05:05:07.388135Z DEBUG Running priority group with priority 6: ["ruff"]
+2026-10-14T05:05:07.388138Z TRACE matching_filenames{hook="ruff"}: close time.busy=576ns time.idle=247ns
+2026-10-14T05:05:07.388141Z TRACE Files for hook `ruff` after filtering matched=true filenames=1
+2026-10-14T05:05:07.388193Z TRACE run{hook_id=ruff language=python}: Running ruff total_files=1 concurrency=1
+2026-10-14T05:05:07.388208Z TRACE run{hook_id=ruff language=python}: Executing `cd /home/tshahzad/projects/USU-LLM-Class-F26 && /home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/hooks/python-nMYXAFBfVN2lWLjm3idH/bin/ruff check --force-exclude`
+2026-10-14T05:05:07.395376Z  INFO run{hook_id=ruff language=python}: close time.busy=336µs time.idle=6.90ms
+2026-10-14T05:05:07.395403Z TRACE has_worktree_diff{path="/home/tshahzad/projects/USU-LLM-Class-F26"}: Executing `/usr/lib/git-core/git -c core.useBuiltinFSMonitor=false diff-files --quiet --no-ext-diff --no-textconv --ignore-submodules -- /home/tshahzad/projects/USU-LLM-Class-F26`
+2026-10-14T05:05:07.396503Z TRACE has_worktree_diff{path="/home/tshahzad/projects/USU-LLM-Class-F26"}: close time.busy=239µs time.idle=866µs
+2026-10-14T05:05:07.396569Z DEBUG Running priority group with priority 7: ["ruff-format"]
+2026-10-14T05:05:07.396577Z TRACE matching_filenames{hook="ruff-format"}: close time.busy=1.23µs time.idle=341ns
+2026-10-14T05:05:07.396581Z TRACE Files for hook `ruff-format` after filtering matched=true filenames=1
+2026-10-14T05:05:07.396672Z TRACE run{hook_id=ruff-format language=python}: Running ruff-format total_files=1 concurrency=1
+2026-10-14T05:05:07.396689Z TRACE run{hook_id=ruff-format language=python}: Executing `cd /home/tshahzad/projects/USU-LLM-Class-F26 && /home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/hooks/python-nMYXAFBfVN2lWLjm3idH/bin/ruff format --force-exclude`
+2026-10-14T05:05:07.402308Z  INFO run{hook_id=ruff-format language=python}: close time.busy=339µs time.idle=5.38ms
+2026-10-14T05:05:07.402335Z TRACE has_worktree_diff{path="/home/tshahzad/projects/USU-LLM-Class-F26"}: Executing `/usr/lib/git-core/git -c core.useBuiltinFSMonitor=false diff-files --quiet --no-ext-diff --no-textconv --ignore-submodules -- /home/tshahzad/projects/USU-LLM-Class-F26`
+2026-10-14T05:05:07.403422Z TRACE has_worktree_diff{path="/home/tshahzad/projects/USU-LLM-Class-F26"}: close time.busy=225µs time.idle=866µs
+2026-10-14T05:05:07.403440Z DEBUG Running priority group with priority 8: ["pytest"]
+2026-10-14T05:05:07.403465Z TRACE Files for hook `pytest` after filtering matched=true filenames=0
+2026-10-14T05:05:07.403609Z TRACE run{hook_id=pytest language=system}: Running pytest total_files=0 concurrency=16
+2026-10-14T05:05:07.403625Z TRACE run{hook_id=pytest language=system}: Executing `cd /home/tshahzad/projects/USU-LLM-Class-F26 && /home/tshahzad/.local/bin/uv run pytest`
+2026-10-14T05:05:18.326062Z  INFO run{hook_id=pytest language=system}: close time.busy=2.58ms time.idle=10.9s
+2026-10-14T05:05:18.326094Z TRACE has_worktree_diff{path="/home/tshahzad/projects/USU-LLM-Class-F26"}: Executing `/usr/lib/git-core/git -c core.useBuiltinFSMonitor=false diff-files --quiet --no-ext-diff --no-textconv --ignore-submodules -- /home/tshahzad/projects/USU-LLM-Class-F26`
+2026-10-14T05:05:18.327303Z TRACE has_worktree_diff{path="/home/tshahzad/projects/USU-LLM-Class-F26"}: close time.busy=330µs time.idle=884µs

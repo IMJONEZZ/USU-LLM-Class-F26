@@ -1,0 +1,18 @@
+{
+  "train": 899,
+  "dev": 99,
+  "categories": {
+    "current_president_2026": 419,
+    "christmas_scene": 80,
+    "letter_counting": 208,
+    "sphinx_riddle": 80,
+    "knuckles_arthritis": 80,
+    "currency_mass": 79,
+    "false_scaling": 20,
+    "woodchuck_limit": 12,
+    "spatial_safety": 10,
+    "talos_alive": 10
+  },
+  "leaks_filtered": 7,
+  "purpose": "focused continue on failing graded skills; init from continue adapter"
+}

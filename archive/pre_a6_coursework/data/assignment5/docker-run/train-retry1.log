@@ -1,0 +1,207 @@
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+🦥 Unsloth Zoo will now patch everything to make training faster!
+==((====))==  Unsloth 2026.10.1: Fast Llama patching. Transformers: 4.57.6.
+   \\   /|    Quadro T2000. Num GPUs = 1. Max memory: 3.619 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.9.1+cu128. CUDA: 7.5. CUDA Toolkit: 12.8. Triton: 3.5.1
+\        /    Bfloat16 = FALSE. FA [Xformers = 0.0.33.post2. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+Unsloth: meta-llama/Llama-3.2-1B has no pad_token. Using pad_token = <|finetune_right_pad_id|>.
+Not an error, but Unsloth cannot patch MLP layers with our manual autograd engine since either LoRA adapters
+are not enabled or a bias term (like in Qwen) is used.
+Not an error, but Unsloth cannot patch Attention layers with our manual autograd engine since either LoRA adapters
+are not enabled or a bias term (like in Qwen) is used.
+Not an error, but Unsloth cannot patch O projection layer with our manual autograd engine since either LoRA adapters
+are not enabled or a bias term (like in Qwen) is used.
+Unsloth 2026.10.1 patched 16 layers with 0 QKV layers, 0 O layers and 0 MLP layers.
+{"total_parameters": 1236240384, "trainable_parameters": 425984, "trainable_names": ["base_model.model.model.layers.0.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.0.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.0.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.0.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.1.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.1.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.1.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.1.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.2.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.2.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.2.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.2.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.3.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.3.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.3.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.3.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.4.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.4.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.4.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.4.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.5.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.5.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.5.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.5.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.6.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.6.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.6.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.6.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.7.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.7.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.7.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.7.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.8.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.8.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.8.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.8.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.9.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.9.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.9.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.9.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.10.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.10.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.10.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.10.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.11.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.11.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.11.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.11.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.12.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.12.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.12.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.12.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.13.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.13.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.13.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.13.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.14.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.14.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.14.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.14.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.15.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.15.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.15.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.15.self_attn.v_proj.lora_B.default.weight"]}
+{"status": "training_epoch", "epoch": 1, "epochs": 3}
+{"optimizer_steps": 1, "train_loss": 6.113834773169623}
+{"optimizer_steps": 25, "train_loss": 4.6966115406027065}
+{"status": "gradient_overflow_retry", "retry": 1, "loss_scale": 32768.0}
+{"optimizer_steps": 50, "train_loss": 3.9970683323573026}
+{"optimizer_steps": 75, "train_loss": 3.6868727243457977}
+{"optimizer_steps": 100, "train_loss": 3.4955966135745555}
+{"epoch": 1, "train_loss": 3.410114973394403, "dev_loss": 2.790726921691245, "optimizer_steps": 122, "answer_tokens": 6051, "overflow_retries": 1, "loss_scale": 32768.0}
+{"status": "training_epoch", "epoch": 2, "epochs": 3}
+{"optimizer_steps": 1, "train_loss": 2.9637174849607506}
+{"optimizer_steps": 25, "train_loss": 2.681841994273288}
+{"optimizer_steps": 50, "train_loss": 2.7091346449988176}
+{"optimizer_steps": 75, "train_loss": 2.7071454472647143}
+{"optimizer_steps": 100, "train_loss": 2.68967564326915}
+{"epoch": 2, "train_loss": 2.679755863601995, "dev_loss": 2.6454103172009944, "optimizer_steps": 122, "answer_tokens": 6051, "overflow_retries": 0, "loss_scale": 32768.0}
+{"status": "training_epoch", "epoch": 3, "epochs": 3}
+{"optimizer_steps": 1, "train_loss": 2.3251643079392452}
+{"optimizer_steps": 25, "train_loss": 2.477324943536799}
+{"optimizer_steps": 50, "train_loss": 2.458666126569621}
+{"optimizer_steps": 75, "train_loss": 2.4432066929716276}
+{"optimizer_steps": 100, "train_loss": 2.446184139597818}
+{"epoch": 3, "train_loss": 2.4447573466961234, "dev_loss": 2.5883951654006085, "optimizer_steps": 122, "answer_tokens": 6051, "overflow_retries": 0, "loss_scale": 32768.0}
+{
+  "parameters": {
+    "total_parameters": 1236240384,
+    "trainable_parameters": 425984,
+    "trainable_names": [
+      "base_model.model.model.layers.0.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.0.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.0.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.0.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.1.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.1.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.1.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.1.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.2.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.2.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.2.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.2.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.3.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.3.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.3.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.3.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.4.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.4.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.4.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.4.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.5.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.5.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.5.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.5.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.6.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.6.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.6.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.6.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.7.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.7.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.7.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.7.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.8.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.8.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.8.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.8.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.9.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.9.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.9.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.9.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.10.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.10.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.10.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.10.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.11.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.11.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.11.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.11.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.12.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.12.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.12.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.12.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.13.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.13.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.13.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.13.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.14.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.14.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.14.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.14.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.15.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.15.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.15.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.15.self_attn.v_proj.lora_B.default.weight"
+    ]
+  },
+  "metadata": {
+    "signature": "9c4f363cccdc8184303ef34ff5de8a78dd8a14740a84b6348536482932f155a0",
+    "model": "meta-llama/Llama-3.2-1B",
+    "revision": "4e20de362430cd3b72f300e6b0f18e50e7166e08",
+    "seed": 0,
+    "options": {
+      "batch_size": 1,
+      "accumulation": 8,
+      "learning_rate": 0.0002,
+      "rank": 4,
+      "alpha": 8,
+      "targets": "q_proj,v_proj"
+    },
+    "epochs": 3,
+    "environment": {
+      "gpu": "Quadro T2000",
+      "capability": [
+        7,
+        5
+      ],
+      "free_bytes": 3753246720,
+      "total_bytes": 3886284800,
+      "cuda": "12.8",
+      "bf16_supported": true,
+      "base_dtype": "float16",
+      "compiled_cuda_architectures": [
+        "sm_70",
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_90",
+        "sm_100",
+        "sm_120"
+      ]
+    },
+    "versions": {
+      "python": "3.12.14",
+      "torch": "2.9.1",
+      "transformers": "4.57.6",
+      "tokenizers": "0.22.2",
+      "evaluate": "0.4.6",
+      "datasets": "4.3.0",
+      "bert-score": "0.3.13",
+      "rouge-score": "0.1.2",
+      "numpy": "2.5.3",
+      "peft": "0.18.0",
+      "unsloth": "2026.10.1",
+      "unsloth_zoo": "2026.10.1",
+      "trl": "0.22.2",
+      "accelerate": "1.15.0",
+      "xformers": "0.0.33.post2",
+      "triton": "3.5.1"
+    },
+    "example_counts": {
+      "test": 133,
+      "dev": 108,
+      "train": 976
+    }
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 3.410114973394403,
+      "dev_loss": 2.790726921691245,
+      "optimizer_steps": 122,
+      "answer_tokens": 6051,
+      "overflow_retries": 1,
+      "loss_scale": 32768.0
+    },
+    {
+      "epoch": 2,
+      "train_loss": 2.679755863601995,
+      "dev_loss": 2.6454103172009944,
+      "optimizer_steps": 122,
+      "answer_tokens": 6051,
+      "overflow_retries": 0,
+      "loss_scale": 32768.0
+    },
+    {
+      "epoch": 3,
+      "train_loss": 2.4447573466961234,
+      "dev_loss": 2.5883951654006085,
+      "optimizer_steps": 122,
+      "answer_tokens": 6051,
+      "overflow_retries": 0,
+      "loss_scale": 32768.0
+    }
+  ],
+  "initial_dev_loss": 5.611563152573057,
+  "best_epoch": 3,
+  "best_dev_loss": 2.5883951654006085,
+  "training_seconds": 3525.1070861740736,
+  "peak_allocated_bytes": 2643639296,
+  "peak_reserved_bytes": 3026190336,
+  "timing_scope": "Training epoch loops including batching, backward and optimizer; excludes loading, dev evaluation and checkpoint saves"
+}
+[W1007 09:40:46.671432198 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())

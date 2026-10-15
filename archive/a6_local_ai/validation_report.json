@@ -1,0 +1,18 @@
+{
+  "total": 700,
+  "counts": {
+    "false_scaling": 100,
+    "currency_mass_ambiguity": 100,
+    "situational_riddle": 100,
+    "absurd_premise_safety": 100,
+    "letter_counting": 100,
+    "harmless_misconception": 80,
+    "constraint_joke": 80,
+    "current_fact": 40
+  },
+  "duplicate_questions": 0,
+  "leakage_matches_at_similarity_0_72": 0,
+  "review_status": "pending",
+  "supplied_forbidden_stems_scanned": 10,
+  "file": "/mnt/data/data/assignment6/qa/pending_synth.jsonl"
+}

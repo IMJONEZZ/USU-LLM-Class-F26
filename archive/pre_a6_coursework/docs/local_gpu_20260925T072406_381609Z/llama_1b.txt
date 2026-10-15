@@ -1,0 +1,58 @@
+Host start UTC: 2026-09-25T07:24:06.411734+00:00
+Command: sudo -n docker run --rm --gpus all --user 1000:1000 -e HF_HOME=/hf-cache -v /home/tshahzad/.cache/huggingface:/hf-cache -v /home/tshahzad/projects/USU-LLM-Class-F26/src/gpu_inference.py:/app/src/gpu_inference.py:ro -e PYTHONUNBUFFERED=1 -e HF_HUB_DISABLE_PROGRESS_BARS=1 -e TQDM_DISABLE=1 -e MODEL_ID=meta-llama/Llama-3.2-1B -e 'PROMPT=Once upon a time' -e MAX_NEW_TOKENS=50 -e TEMPERATURE=0.7 -e PAUSE_SECONDS=30 usu-llm-a4-local
+Started (UTC): 2026-09-25T07:24:14.802460+00:00
+Python: 3.14.2
+Provider: Local
+Quantization: none
+CPU offloading: no
+Prompt: Once upon a time
+Max new tokens: 50
+Temperature: 0.7
+Pause seconds: 30
+=== Environment ===
+Model ID: meta-llama/Llama-3.2-1B
+PyTorch: 2.14.0+cu130
+Transformers: 5.17.0
+PyTorch CUDA build: 13.0
+CUDA available: True
+GPU: Quadro T2000
+GPU memory reported by PyTorch: 3.62 GiB
+Requested dtype: float16
+
+Loading tokenizer...
+Loading model...
+Parameters: 1,235,814,400
+CPU deserialization completed; transferring full model to cuda:0...
+
+=== Model Loaded ===
+Parameters: 1,235,814,400
+Parameter devices: ['cuda:0']
+Buffer devices: ['cuda:0']
+Allocated after load bytes: 2472678400
+Reserved after load bytes: 2474639360
+Allocated after load: 2.30 GiB
+Reserved after load: 2.30 GiB
+
+Model loaded successfully. Pausing for 30 seconds for nvidia-smi inspection...
+
+=== Generation Settings ===
+Prompt: Once upon a time
+Max new tokens: 50
+Temperature: 0.7
+[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer TokenizersBackend. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+
+=== Generated Text ===
+Once upon a time, there was a young man named Andrew. He was born in a small village in India and spent his early years growing up in the mountains. One day, he decided to take a trip to the city to see what it was like. When he
+
+=== GPU Memory ===
+Allocated: 2.31 GiB
+Reserved: 2.33 GiB
+Peak allocated: 2.32 GiB
+
+RESULT: SUCCESS
+Finished (UTC): 2026-09-25T07:24:50.560237+00:00
+Final allocated bytes: 2481199616
+Final reserved bytes: 2501902336
+Peak allocated bytes: 2489443328
+
+Docker exit code: 0

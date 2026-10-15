@@ -1,0 +1,119 @@
+Host start UTC: 2026-09-27T09:42:56.585827+00:00
+Command: sudo -n docker run --rm --gpus all --user 1000:1000 -e HF_HOME=/hf-cache -v /home/tshahzad/.cache/huggingface:/hf-cache -v /home/tshahzad/projects/USU-LLM-Class-F26/src/gpu_inference.py:/app/src/gpu_inference.py:ro -e PYTHONUNBUFFERED=1 -e HF_HUB_DISABLE_PROGRESS_BARS=1 -e TQDM_DISABLE=1 -e MODEL_ID=meta-llama/Meta-Llama-3.1-8B -e 'PROMPT=Once upon a time' -e MAX_NEW_TOKENS=50 -e TEMPERATURE=0.7 -e PAUSE_SECONDS=45 usu-llm-a4-local
+Started (UTC): 2026-09-27T09:43:05.349515+00:00
+Python: 3.14.2
+Provider: Local
+Quantization: none
+CPU offloading: no
+Prompt: Once upon a time
+Max new tokens: 50
+Temperature: 0.7
+Pause seconds: 45
+=== Environment ===
+Model ID: meta-llama/Meta-Llama-3.1-8B
+PyTorch: 2.14.0+cu130
+Transformers: 5.17.0
+PyTorch CUDA build: 13.0
+CUDA available: True
+GPU: Quadro T2000
+GPU memory reported by PyTorch: 3.62 GiB
+Requested dtype: float16
+
+Loading tokenizer...
+httpx.HTTPStatusError: Client error '403 Forbidden' for url 'https://huggingface.co/meta-llama/Meta-Llama-3.1-8B/resolve/main/config.json'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+
+The above exception was the direct cause of the following exception:
+
+huggingface_hub.errors.GatedRepoError: 403 Client Error. (Request ID: Root=1-6ab8e529-2be00edc169689cf32c2824a;8d63cc02-27b3-451e-a0f0-35f5709301c8)
+
+Cannot access gated repo for url https://huggingface.co/meta-llama/Meta-Llama-3.1-8B/resolve/main/config.json.
+Access to model meta-llama/Llama-3.1-8B is restricted and you are not in the authorized list. Visit https://huggingface.co/meta-llama/Llama-3.1-8B to ask for access.
+
+The above exception was the direct cause of the following exception:
+
+OSError: You are trying to access a gated repo.
+Make sure to have access to it at https://huggingface.co/meta-llama/Meta-Llama-3.1-8B.
+403 Client Error. (Request ID: Root=1-6ab8e529-2be00edc169689cf32c2824a;8d63cc02-27b3-451e-a0f0-35f5709301c8)
+
+Cannot access gated repo for url https://huggingface.co/meta-llama/Meta-Llama-3.1-8B/resolve/main/config.json.
+Access to model meta-llama/Llama-3.1-8B is restricted and you are not in the authorized list. Visit https://huggingface.co/meta-llama/Llama-3.1-8B to ask for access.
+
+During handling of the above exception, another exception occurred:
+
+httpx.HTTPStatusError: Client error '403 Forbidden' for url 'https://huggingface.co/meta-llama/Meta-Llama-3.1-8B/resolve/main/config.json'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/.venv/lib/python3.14/site-packages/transformers/utils/hub.py", line 438, in cached_files
+    hf_hub_download(
+    ~~~~~~~~~~~~~~~^
+        path_or_repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+        tqdm_class=tqdm_class,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/.venv/lib/python3.14/site-packages/huggingface_hub/utils/_validators.py", line 91, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/app/.venv/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 266, in _inner
+    return fn(*args, **kwargs)
+  File "/app/.venv/lib/python3.14/site-packages/huggingface_hub/file_download.py", line 1043, in hf_hub_download
+    return _hf_hub_download_to_cache_dir(
+        # Destination
+    ...<15 lines>...
+        dry_run=dry_run,
+    )
+  File "/app/.venv/lib/python3.14/site-packages/huggingface_hub/file_download.py", line 1190, in _hf_hub_download_to_cache_dir
+    _raise_on_head_call_error(head_call_error, force_download, local_files_only)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.14/site-packages/huggingface_hub/file_download.py", line 1949, in _raise_on_head_call_error
+    raise head_call_error
+huggingface_hub.errors.GatedRepoError: 403 Client Error. (Request ID: Root=1-6ab8e529-426a235159f550cd567bc156;63e3bfb0-d287-469b-a315-a4be460ea245)
+
+Cannot access gated repo for url https://huggingface.co/meta-llama/Meta-Llama-3.1-8B/resolve/main/config.json.
+Access to model meta-llama/Llama-3.1-8B is restricted and you are not in the authorized list. Visit https://huggingface.co/meta-llama/Llama-3.1-8B to ask for access.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+Finished (UTC): 2026-09-27T09:43:05.722382+00:00
+  File "/app/src/gpu_inference.py", line 64, in <module>
+    tokenizer = AutoTokenizer.from_pretrained(
+        MODEL_ID,
+        token=HF_TOKEN,
+    )
+  File "/app/.venv/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 789, in from_pretrained
+    config = PreTrainedConfig.from_pretrained(pretrained_model_name_or_path, **kwargs)
+  File "/app/.venv/lib/python3.14/site-packages/transformers/configuration_utils.py", line 706, in from_pretrained
+    config_dict, kwargs = cls.get_config_dict(pretrained_model_name_or_path, **kwargs)
+                          ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.14/site-packages/transformers/configuration_utils.py", line 747, in get_config_dict
+    config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
+                          ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.14/site-packages/transformers/configuration_utils.py", line 802, in _get_config_dict
+    resolved_config_file = cached_file(
+        pretrained_model_name_or_path,
+    ...<9 lines>...
+        _commit_hash=commit_hash,
+    )
+  File "/app/.venv/lib/python3.14/site-packages/transformers/utils/hub.py", line 294, in cached_file
+    file = cached_files(path_or_repo_id=path_or_repo_id, filenames=[filename], **kwargs)
+  File "/app/.venv/lib/python3.14/site-packages/transformers/utils/hub.py", line 511, in cached_files
+    raise OSError(
+    ...<2 lines>...
+    ) from e
+OSError: You are trying to access a gated repo.
+Make sure to have access to it at https://huggingface.co/meta-llama/Meta-Llama-3.1-8B.
+403 Client Error. (Request ID: Root=1-6ab8e529-426a235159f550cd567bc156;63e3bfb0-d287-469b-a315-a4be460ea245)
+
+Cannot access gated repo for url https://huggingface.co/meta-llama/Meta-Llama-3.1-8B/resolve/main/config.json.
+Access to model meta-llama/Llama-3.1-8B is restricted and you are not in the authorized list. Visit https://huggingface.co/meta-llama/Llama-3.1-8B to ask for access.
+Final allocated bytes: 0
+Final reserved bytes: 0
+Peak allocated bytes: 0
+
+Docker exit code: 1

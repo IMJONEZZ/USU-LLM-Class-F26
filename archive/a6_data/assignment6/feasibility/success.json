@@ -1,0 +1,12 @@
+{
+  "signature": "60c1e8bdd4717cda00f87de462568ca0f8abb20060daa5b751c83ddde16ba4c9",
+  "options": {
+    "batch_size": 1,
+    "accumulation": 8,
+    "learning_rate": 0.0002,
+    "rank": 4,
+    "alpha": 8,
+    "targets": "q_proj,v_proj"
+  },
+  "command": "feasibility"
+}

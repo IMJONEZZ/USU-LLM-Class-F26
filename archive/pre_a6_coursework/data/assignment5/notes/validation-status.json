@@ -1,0 +1,168 @@
+{
+  "source": "User-provided container command output",
+  "container_cpu_tests": {
+    "passed": 35,
+    "skipped": 1,
+    "warnings": 3,
+    "seconds": 10.25
+  },
+  "container_gpu_preflight": {
+    "gpu": "Quadro T2000",
+    "capability": [
+      7,
+      5
+    ],
+    "free_bytes": 3753246720,
+    "total_bytes": 3886284800,
+    "cuda": "12.8",
+    "base_dtype": "float16"
+  },
+  "gpu_optimizer_feasibility": {
+    "status": "passed",
+    "success_marker": "data/assignment5/docker-run/feasibility/success.json",
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 5.566822136441867,
+        "dev_loss": 5.520325403464468,
+        "optimizer_steps": 2,
+        "answer_tokens": 96
+      }
+    ],
+    "initial_dev_loss": 5.611563152573057,
+    "best_dev_loss": 5.520325403464468,
+    "training_seconds": 38.25367414299399,
+    "peak_allocated_bytes": 2640624640,
+    "peak_reserved_bytes": 2883584000,
+    "timing_scope": "Training epoch loops including batching, backward and optimizer; excludes loading, dev evaluation and checkpoint saves"
+  },
+  "baseline_training_final_evaluation": "Complete: baseline, corrected three-epoch GPU training, final evaluation and measured comparison report",
+  "baseline_evaluation": {
+    "status": "complete",
+    "report": "data/assignment5/docker-run/before.json",
+    "adapter": null,
+    "metrics": {
+      "example_count": 133,
+      "exact_span_match": 0.0,
+      "empty_count": 0,
+      "rouge": {
+        "rouge1": 0.04109850174838171,
+        "rougeL": 0.040520132748960075
+      },
+      "bertscore": {
+        "precision": 0.7823644746515087,
+        "recall": 0.8134717537944478,
+        "f1": 0.7974972375353476
+      },
+      "bertscore_hash": "roberta-base_L10_no-idf_version=0.3.12(hug_trans=4.57.6)",
+      "bleu": {
+        "bleu": 0.007845074549548008,
+        "precisions": [
+          0.024456521739130436,
+          0.0025165146272412707
+        ],
+        "brevity_penalty": 1.0,
+        "length_ratio": 5.5,
+        "translation_length": 3311,
+        "reference_length": 602
+      }
+    }
+  },
+  "full_training": {
+    "status": "complete",
+    "report": "data/assignment5/docker-run/train-retry1/training.json",
+    "checkpoint": "data/assignment5/docker-run/train-retry1/best",
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 3.410114973394403,
+        "dev_loss": 2.790726921691245,
+        "optimizer_steps": 122,
+        "answer_tokens": 6051,
+        "overflow_retries": 1,
+        "loss_scale": 32768.0
+      },
+      {
+        "epoch": 2,
+        "train_loss": 2.679755863601995,
+        "dev_loss": 2.6454103172009944,
+        "optimizer_steps": 122,
+        "answer_tokens": 6051,
+        "overflow_retries": 0,
+        "loss_scale": 32768.0
+      },
+      {
+        "epoch": 3,
+        "train_loss": 2.4447573466961234,
+        "dev_loss": 2.5883951654006085,
+        "optimizer_steps": 122,
+        "answer_tokens": 6051,
+        "overflow_retries": 0,
+        "loss_scale": 32768.0
+      }
+    ],
+    "initial_dev_loss": 5.611563152573057,
+    "best_epoch": 3,
+    "best_dev_loss": 2.5883951654006085,
+    "training_seconds": 3525.1070861740736,
+    "peak_allocated_bytes": 2643639296,
+    "peak_reserved_bytes": 3026190336,
+    "timing_scope": "Training epoch loops including batching, backward and optimizer; excludes loading, dev evaluation and checkpoint saves"
+  },
+  "overflow_fix_cpu_tests": {
+    "passed": 39,
+    "skipped": 1,
+    "scope": "trainer, evaluator, training report and opt-in GPU tests on host CPU"
+  },
+  "overflow_fix_full_cpu_suite": {
+    "passed": 351,
+    "skipped": 3,
+    "coverage_percent": 94.42,
+    "ruff_check": "passed",
+    "ruff_format_check": "passed",
+    "gpu_retry": "passed: 366 successful updates, one recovered overflow"
+  },
+  "initial_full_training_failure": {
+    "status": "failed",
+    "failure_report": "data/assignment5/docker-run/train/failure.json",
+    "completed_epochs": 0,
+    "saved_checkpoint": false,
+    "fix": "Persistent loss scaler; retry overflowing accumulation groups without optimizer updates; CPU regression tests passed; rebuilt container and GPU retry unverified"
+  },
+  "final_evaluation": {
+    "status": "complete",
+    "report": "data/assignment5/docker-run/after.json",
+    "adapter": "/outputs/train-retry1/best",
+    "metrics": {
+      "example_count": 133,
+      "exact_span_match": 0.0,
+      "empty_count": 0,
+      "rouge": {
+        "rouge1": 0.18424741507448275,
+        "rougeL": 0.18424741507448275
+      },
+      "bertscore": {
+        "precision": 0.8279347379404799,
+        "recall": 0.8235713861938706,
+        "f1": 0.8255969527968787
+      },
+      "bertscore_hash": "roberta-base_L10_no-idf_version=0.3.12(hug_trans=4.57.6)",
+      "bleu": {
+        "bleu": 0.10223578947065504,
+        "precisions": [
+          0.18537414965986396,
+          0.05934065934065934
+        ],
+        "brevity_penalty": 0.9747700687765681,
+        "length_ratio": 0.9750830564784053,
+        "translation_length": 587,
+        "reference_length": 602
+      }
+    },
+    "output_status_counts": {
+      "ok": 133
+    },
+    "four_word_outputs": 122
+  },
+  "comparison_report": "data/assignment5/docker-run/results.md"
+}

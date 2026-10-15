@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "language": "python",
+  "language_version": "3.14.7",
+  "repo": {
+    "url": "https://github.com/pre-commit/pre-commit-hooks",
+    "rev": "3e8a8703264a2f4a69428a0aa4dcb512790b2c8c"
+  },
+  "dependencies": [],
+  "env_path": "/home/tshahzad/projects/USU-LLM-Class-F26/data/assignment6/cache/prek/hooks/python-OfN5AGfbomZvssYhLEnJ",
+  "toolchain": "/home/tshahzad/.local/share/uv/python/cpython-3.14.7-linux-x86_64-gnu/bin/python",
+  "extra": {}
+}

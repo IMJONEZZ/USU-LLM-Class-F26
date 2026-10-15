@@ -1,0 +1,13 @@
+{
+  "signature": "7ecee97051ed07e5c59b5276e94d41c00fad2fd46d7bfabd95790cca9d7c7b17",
+  "options": {
+    "batch_size": 512,
+    "accumulation": 1,
+    "learning_rate": 0.0002,
+    "rank": 4,
+    "alpha": 8,
+    "targets": "q_proj,v_proj",
+    "gradient_checkpointing": false
+  },
+  "command": "train"
+}

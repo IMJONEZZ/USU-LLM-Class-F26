@@ -1,0 +1,312 @@
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+🦥 Unsloth Zoo will now patch everything to make training faster!
+==((====))==  Unsloth 2026.10.1: Fast Llama patching. Transformers: 4.57.6.
+   \\   /|    Quadro T2000. Num GPUs = 1. Max memory: 3.619 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.9.1+cu128. CUDA: 7.5. CUDA Toolkit: 12.8. Triton: 3.5.1
+\        /    Bfloat16 = FALSE. FA [Xformers = 0.0.33.post2. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+Not an error, but Unsloth cannot patch MLP layers with our manual autograd engine since either LoRA adapters
+are not enabled or a bias term (like in Qwen) is used.
+Not an error, but Unsloth cannot patch Attention layers with our manual autograd engine since either LoRA adapters
+are not enabled or a bias term (like in Qwen) is used.
+Not an error, but Unsloth cannot patch O projection layer with our manual autograd engine since either LoRA adapters
+are not enabled or a bias term (like in Qwen) is used.
+Unsloth 2026.10.1 patched 16 layers with 0 QKV layers, 0 O layers and 0 MLP layers.
+Unsloth: meta-llama/Llama-3.2-1B-Instruct has no pad_token. Using pad_token = <|finetune_right_pad_id|>.
+{"total_parameters": 1236240384, "trainable_parameters": 425984, "trainable_names": ["base_model.model.model.layers.0.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.0.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.0.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.0.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.1.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.1.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.1.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.1.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.2.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.2.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.2.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.2.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.3.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.3.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.3.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.3.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.4.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.4.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.4.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.4.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.5.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.5.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.5.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.5.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.6.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.6.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.6.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.6.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.7.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.7.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.7.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.7.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.8.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.8.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.8.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.8.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.9.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.9.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.9.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.9.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.10.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.10.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.10.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.10.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.11.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.11.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.11.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.11.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.12.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.12.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.12.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.12.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.13.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.13.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.13.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.13.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.14.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.14.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.14.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.14.self_attn.v_proj.lora_B.default.weight", "base_model.model.model.layers.15.self_attn.q_proj.lora_A.default.weight", "base_model.model.model.layers.15.self_attn.q_proj.lora_B.default.weight", "base_model.model.model.layers.15.self_attn.v_proj.lora_A.default.weight", "base_model.model.model.layers.15.self_attn.v_proj.lora_B.default.weight"]}
+{"status": "training_epoch", "epoch": 1, "epochs": 3}
+In file included from /home/tshahzad/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/include/python3.12/Python.h:12,
+                 from /tmp/tmp7pppih0l/__triton_launcher.c:7:
+/home/tshahzad/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/include/python3.12/pyconfig.h:1877:9: warning: ‘_POSIX_C_SOURCE’ redefined
+ 1877 | #define _POSIX_C_SOURCE 200809L
+      |         ^~~~~~~~~~~~~~~
+In file included from /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:33,
+                 from /usr/include/stdlib.h:26,
+                 from /home/tshahzad/projects/USU-LLM-Class-F26/.venv-training/lib/python3.12/site-packages/triton/backends/nvidia/include/cuda.h:56,
+                 from /tmp/tmp7pppih0l/__triton_launcher.c:2:
+/usr/include/features.h:319:10: note: this is the location of the previous definition
+  319 | # define _POSIX_C_SOURCE        202405L
+      |          ^~~~~~~~~~~~~~~
+{"optimizer_steps": 1, "train_loss": 3.552315339750173}
+{"status": "gradient_overflow_retry", "retry": 1, "loss_scale": 32768.0}
+{"optimizer_steps": 25, "train_loss": 2.651299901770671}
+{"optimizer_steps": 50, "train_loss": 2.323924860396367}
+{"optimizer_steps": 75, "train_loss": 2.2101332006226615}
+{"optimizer_steps": 100, "train_loss": 2.1401242770412705}
+{"optimizer_steps": 125, "train_loss": 2.1103488819164355}
+{"optimizer_steps": 150, "train_loss": 2.0723015000553113}
+{"optimizer_steps": 175, "train_loss": 2.052252205138339}
+{"optimizer_steps": 200, "train_loss": 2.031033664177888}
+{"optimizer_steps": 225, "train_loss": 2.0003520466845286}
+{"optimizer_steps": 250, "train_loss": 1.9747632430401856}
+{"optimizer_steps": 275, "train_loss": 1.9602230187485583}
+{"optimizer_steps": 300, "train_loss": 1.9532656806566906}
+{"optimizer_steps": 325, "train_loss": 1.94264335867236}
+{"optimizer_steps": 350, "train_loss": 1.9281058415621712}
+{"optimizer_steps": 375, "train_loss": 1.9181824194406982}
+{"optimizer_steps": 400, "train_loss": 1.909622148871275}
+{"optimizer_steps": 425, "train_loss": 1.9037125768222505}
+{"optimizer_steps": 450, "train_loss": 1.9016131247562973}
+{"optimizer_steps": 475, "train_loss": 1.8967848922556008}
+{"optimizer_steps": 500, "train_loss": 1.8938770237411562}
+{"optimizer_steps": 525, "train_loss": 1.8866363695731114}
+{"optimizer_steps": 550, "train_loss": 1.8835802807851152}
+{"optimizer_steps": 575, "train_loss": 1.8849883873698858}
+{"optimizer_steps": 600, "train_loss": 1.8821452773901235}
+{"optimizer_steps": 625, "train_loss": 1.877553559580736}
+{"optimizer_steps": 650, "train_loss": 1.8759579212228732}
+{"optimizer_steps": 675, "train_loss": 1.8707272179882264}
+{"optimizer_steps": 700, "train_loss": 1.8660266354442745}
+{"optimizer_steps": 725, "train_loss": 1.8634796891221468}
+{"optimizer_steps": 750, "train_loss": 1.8605273726924643}
+{"optimizer_steps": 775, "train_loss": 1.8574389712064157}
+{"optimizer_steps": 800, "train_loss": 1.8540176958267531}
+{"optimizer_steps": 825, "train_loss": 1.8542148978935264}
+{"optimizer_steps": 850, "train_loss": 1.8501722183973612}
+{"optimizer_steps": 875, "train_loss": 1.8478330879095672}
+{"epoch": 1, "train_loss": 1.8433755307252435, "dev_loss": 1.7152983741127796, "optimizer_steps": 898, "answer_tokens": 118137, "overflow_retries": 1, "loss_scale": 32768.0}
+{"status": "training_epoch", "epoch": 2, "epochs": 3}
+{"optimizer_steps": 1, "train_loss": 1.894428273042043}
+{"optimizer_steps": 25, "train_loss": 1.6946674493364757}
+{"optimizer_steps": 50, "train_loss": 1.6402505122303348}
+{"optimizer_steps": 75, "train_loss": 1.649641843454165}
+{"optimizer_steps": 100, "train_loss": 1.6413528662993675}
+{"optimizer_steps": 125, "train_loss": 1.6446379970327887}
+{"optimizer_steps": 150, "train_loss": 1.6622091181941239}
+{"optimizer_steps": 175, "train_loss": 1.6586728417956214}
+{"optimizer_steps": 200, "train_loss": 1.6555311113424946}
+{"optimizer_steps": 225, "train_loss": 1.658436088720419}
+{"optimizer_steps": 250, "train_loss": 1.6570501083088076}
+{"optimizer_steps": 275, "train_loss": 1.6522347672794067}
+{"optimizer_steps": 300, "train_loss": 1.6636543369692174}
+{"optimizer_steps": 325, "train_loss": 1.6644815444644854}
+{"optimizer_steps": 350, "train_loss": 1.6650967550296423}
+{"optimizer_steps": 375, "train_loss": 1.6727304541197954}
+{"optimizer_steps": 400, "train_loss": 1.6765666535250665}
+{"optimizer_steps": 425, "train_loss": 1.6811466138429518}
+{"optimizer_steps": 450, "train_loss": 1.676466588156293}
+{"optimizer_steps": 475, "train_loss": 1.6791000268103362}
+{"optimizer_steps": 500, "train_loss": 1.6795238438151303}
+{"optimizer_steps": 525, "train_loss": 1.681246575787822}
+{"optimizer_steps": 550, "train_loss": 1.6804140020618867}
+{"optimizer_steps": 575, "train_loss": 1.679841165891304}
+{"optimizer_steps": 600, "train_loss": 1.67910303109578}
+{"optimizer_steps": 625, "train_loss": 1.6818125425642683}
+{"optimizer_steps": 650, "train_loss": 1.6850803824167733}
+{"optimizer_steps": 675, "train_loss": 1.6863451639353824}
+{"optimizer_steps": 700, "train_loss": 1.6843401840283707}
+{"optimizer_steps": 725, "train_loss": 1.6835875693950832}
+{"optimizer_steps": 750, "train_loss": 1.6840657873732727}
+{"optimizer_steps": 775, "train_loss": 1.6860111816051693}
+{"optimizer_steps": 800, "train_loss": 1.6863193351158687}
+{"optimizer_steps": 825, "train_loss": 1.6833593158971354}
+{"optimizer_steps": 850, "train_loss": 1.679798438759618}
+{"optimizer_steps": 875, "train_loss": 1.6807551633308724}
+{"epoch": 2, "train_loss": 1.6817904073897225, "dev_loss": 1.680172877833816, "optimizer_steps": 898, "answer_tokens": 118137, "overflow_retries": 0, "loss_scale": 32768.0}
+{"status": "training_epoch", "epoch": 3, "epochs": 3}
+{"optimizer_steps": 1, "train_loss": 0.9050695713776261}
+{"optimizer_steps": 25, "train_loss": 1.5369165989730518}
+{"optimizer_steps": 50, "train_loss": 1.5448039572676435}
+{"optimizer_steps": 75, "train_loss": 1.5709977467462604}
+{"optimizer_steps": 100, "train_loss": 1.5773988755207837}
+{"optimizer_steps": 125, "train_loss": 1.5986053101641895}
+{"optimizer_steps": 150, "train_loss": 1.5847538563995196}
+{"optimizer_steps": 175, "train_loss": 1.5813352758182355}
+{"optimizer_steps": 200, "train_loss": 1.579018411202413}
+{"optimizer_steps": 225, "train_loss": 1.5848651890577872}
+{"optimizer_steps": 250, "train_loss": 1.5872036818815796}
+{"optimizer_steps": 275, "train_loss": 1.587694970632994}
+{"optimizer_steps": 300, "train_loss": 1.5896153713527827}
+{"optimizer_steps": 325, "train_loss": 1.5841481590886175}
+{"optimizer_steps": 350, "train_loss": 1.5886082865751125}
+{"optimizer_steps": 375, "train_loss": 1.592776398061048}
+{"optimizer_steps": 400, "train_loss": 1.5970516647110897}
+{"optimizer_steps": 425, "train_loss": 1.6012602222377839}
+{"optimizer_steps": 450, "train_loss": 1.5970179081279245}
+{"optimizer_steps": 475, "train_loss": 1.5951595000663121}
+{"optimizer_steps": 500, "train_loss": 1.5941082072075994}
+{"optimizer_steps": 525, "train_loss": 1.5931379195891227}
+{"optimizer_steps": 550, "train_loss": 1.590387848484251}
+{"optimizer_steps": 575, "train_loss": 1.590627451926473}
+{"optimizer_steps": 600, "train_loss": 1.5903360811275824}
+{"optimizer_steps": 625, "train_loss": 1.5938999770242321}
+{"optimizer_steps": 650, "train_loss": 1.5929507293946856}
+{"optimizer_steps": 675, "train_loss": 1.5969888103540033}
+{"optimizer_steps": 700, "train_loss": 1.5954163301730797}
+{"optimizer_steps": 725, "train_loss": 1.5947806795200135}
+{"optimizer_steps": 750, "train_loss": 1.5941011946990054}
+{"optimizer_steps": 775, "train_loss": 1.5950644226549018}
+{"optimizer_steps": 800, "train_loss": 1.5934205422622123}
+{"optimizer_steps": 825, "train_loss": 1.5903641448847803}
+{"optimizer_steps": 850, "train_loss": 1.5886163996243774}
+{"optimizer_steps": 875, "train_loss": 1.5908022622896953}
+{"epoch": 3, "train_loss": 1.589854692914543, "dev_loss": 1.672675849044639, "optimizer_steps": 898, "answer_tokens": 118137, "overflow_retries": 0, "loss_scale": 65536.0}
+{
+  "parameters": {
+    "total_parameters": 1236240384,
+    "trainable_parameters": 425984,
+    "trainable_names": [
+      "base_model.model.model.layers.0.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.0.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.0.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.0.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.1.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.1.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.1.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.1.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.2.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.2.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.2.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.2.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.3.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.3.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.3.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.3.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.4.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.4.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.4.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.4.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.5.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.5.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.5.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.5.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.6.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.6.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.6.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.6.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.7.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.7.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.7.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.7.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.8.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.8.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.8.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.8.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.9.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.9.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.9.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.9.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.10.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.10.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.10.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.10.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.11.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.11.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.11.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.11.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.12.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.12.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.12.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.12.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.13.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.13.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.13.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.13.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.14.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.14.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.14.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.14.self_attn.v_proj.lora_B.default.weight",
+      "base_model.model.model.layers.15.self_attn.q_proj.lora_A.default.weight",
+      "base_model.model.model.layers.15.self_attn.q_proj.lora_B.default.weight",
+      "base_model.model.model.layers.15.self_attn.v_proj.lora_A.default.weight",
+      "base_model.model.model.layers.15.self_attn.v_proj.lora_B.default.weight"
+    ]
+  },
+  "metadata": {
+    "signature": "60c1e8bdd4717cda00f87de462568ca0f8abb20060daa5b751c83ddde16ba4c9",
+    "model": "meta-llama/Llama-3.2-1B-Instruct",
+    "revision": "9213176726f574b556790deb65791e0c5aa438b6",
+    "seed": 0,
+    "options": {
+      "batch_size": 1,
+      "accumulation": 8,
+      "learning_rate": 0.0002,
+      "rank": 4,
+      "alpha": 8,
+      "targets": "q_proj,v_proj"
+    },
+    "epochs": 3,
+    "environment": {
+      "gpu": "Quadro T2000",
+      "capability": [
+        7,
+        5
+      ],
+      "free_bytes": 3663331328,
+      "total_bytes": 3886284800,
+      "cuda": "12.8",
+      "bf16_supported": true,
+      "base_dtype": "float16",
+      "compiled_cuda_architectures": [
+        "sm_70",
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_90",
+        "sm_100",
+        "sm_120"
+      ]
+    },
+    "versions": {
+      "python": "3.12.14",
+      "torch": "2.9.1",
+      "transformers": "4.57.6",
+      "tokenizers": "0.22.2",
+      "evaluate": "0.4.6",
+      "datasets": "4.3.0",
+      "bert-score": "0.3.13",
+      "rouge-score": "0.1.2",
+      "numpy": "2.5.3",
+      "peft": "0.18.0",
+      "unsloth": "2026.10.1",
+      "unsloth_zoo": "2026.10.1",
+      "trl": "0.22.2",
+      "accelerate": "1.15.0",
+      "xformers": "0.0.33.post2",
+      "triton": "3.5.1"
+    },
+    "example_counts": {
+      "train": 7182,
+      "dev": 798,
+      "test": 798
+    }
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 1.8433755307252435,
+      "dev_loss": 1.7152983741127796,
+      "optimizer_steps": 898,
+      "answer_tokens": 118137,
+      "overflow_retries": 1,
+      "loss_scale": 32768.0
+    },
+    {
+      "epoch": 2,
+      "train_loss": 1.6817904073897225,
+      "dev_loss": 1.680172877833816,
+      "optimizer_steps": 898,
+      "answer_tokens": 118137,
+      "overflow_retries": 0,
+      "loss_scale": 32768.0
+    },
+    {
+      "epoch": 3,
+      "train_loss": 1.589854692914543,
+      "dev_loss": 1.672675849044639,
+      "optimizer_steps": 898,
+      "answer_tokens": 118137,
+      "overflow_retries": 0,
+      "loss_scale": 65536.0
+    }
+  ],
+  "initial_dev_loss": 3.195907049254754,
+  "best_epoch": 3,
+  "best_dev_loss": 1.672675849044639,
+  "training_seconds": 32932.52977925906,
+  "peak_allocated_bytes": 2627978240,
+  "peak_reserved_bytes": 3183476736,
+  "timing_scope": "Training epoch loops including batching, backward and optimizer; excludes loading, dev evaluation and checkpoint saves"
+}
+[W1012 11:08:19.865697312 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())

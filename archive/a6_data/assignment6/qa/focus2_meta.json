@@ -1,0 +1,13 @@
+{
+  "train": 238,
+  "dev": 26,
+  "categories": {
+    "knuckles_arthritis": 49,
+    "sphinx_riddle": 49,
+    "christmas_scene": 60,
+    "letter_counting": 61,
+    "currency_mass": 30,
+    "keepers": 15
+  },
+  "leaks_filtered": 3
+}
