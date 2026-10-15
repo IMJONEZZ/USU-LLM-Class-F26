@@ -1,5 +1,6 @@
 # Local coursework / experiment dumps (training data, Colab packs, old helpers)
 /archive/
+/active/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -78,7 +79,6 @@ ipython_config.py
 # Environments
 .env
 .env.*
-!.env.example
 .venv
 env/
 venv/
