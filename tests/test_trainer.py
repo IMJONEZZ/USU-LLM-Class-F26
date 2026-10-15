@@ -20,6 +20,7 @@ import torch
 from src.trainer import (
     BASE_MODEL,
     CHAT_TEMPLATE,
+    GGUF_QUANTIZATION,
     INSTRUCTION_PART,
     LORA_RANK,
     MAX_SEQ_LENGTH,
@@ -29,6 +30,9 @@ from src.trainer import (
     finetune,
     load_base_model,
     render,
+    save_adapter,
+    save_gguf,
+    save_merged,
 )
 
 
@@ -429,3 +433,57 @@ def test_answer_only_decodes_the_new_tokens():
     # the notebook shows should be the 2 tokens on the end.
     answer(FakeModel(), Watching(), ["a?"], device="cpu")
     assert captured["length"] == 2
+
+
+# --- saving, which is the thing I forgot twice ------------------------------
+
+
+class FakeSavable:
+    """Records what it was asked to save rather than writing anything."""
+
+    def __init__(self):
+        self.calls = {}
+
+    def save_pretrained(self, path):
+        self.calls["save_pretrained"] = path
+
+    def save_pretrained_gguf(self, path, tokenizer, quantization_method=None):
+        self.calls["gguf"] = (path, tokenizer, quantization_method)
+
+    def save_pretrained_merged(self, path, tokenizer, save_method=None):
+        self.calls["merged"] = (path, tokenizer, save_method)
+
+
+def test_save_adapter_writes_the_model_and_the_tokenizer():
+    """The tokenizer matters as much as the weights.
+
+    A LoRA saved without its tokenizer loads, and then produces nonsense,
+    because the chat template it was trained against is gone.
+    """
+    model, tokenizer = FakeSavable(), FakeSavable()
+    out = save_adapter(model, tokenizer, "/models/adapter")
+    assert model.calls["save_pretrained"] == "/models/adapter"
+    assert tokenizer.calls["save_pretrained"] == "/models/adapter"
+    assert out == "/models/adapter"
+
+
+def test_save_gguf_defaults_to_the_four_bit_quantization():
+    model, tokenizer = FakeSavable(), object()
+    save_gguf(model, tokenizer, "/models/gguf")
+    path, tok, quant = model.calls["gguf"]
+    assert (path, tok) == ("/models/gguf", tokenizer)
+    assert quant == GGUF_QUANTIZATION == "q4_k_m"
+
+
+def test_save_gguf_quantization_is_adjustable():
+    model = FakeSavable()
+    save_gguf(model, object(), "/models/gguf", quantization="q8_0")
+    assert model.calls["gguf"][2] == "q8_0"
+
+
+def test_save_merged_asks_for_16_bit():
+    # The fallback has to be unquantized, otherwise it isn't a fallback from
+    # the quantized path, it's the same lossy thing by another route.
+    model, tokenizer = FakeSavable(), object()
+    save_merged(model, tokenizer, "/models/merged")
+    assert model.calls["merged"] == ("/models/merged", tokenizer, "merged_16bit")

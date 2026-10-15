@@ -156,3 +156,46 @@ def answer(model, tokenizer, questions, max_new_tokens=200, device="cuda"):
         reply = generated[0][ids["input_ids"].shape[1] :]
         out.append(tokenizer.decode(reply, skip_special_tokens=True).strip())
     return out
+
+
+# The reason this file has save functions at all is that assignment 5 and
+# assignment 6 both ended with a trained model sitting in a container that then
+# shut down. Both of those are gone. Training writes nothing to disk unless you
+# tell it to, and I didn't, twice.
+
+GGUF_QUANTIZATION = "q4_k_m"
+
+
+def save_adapter(model, tokenizer, path):
+    """Write the LoRA weights and the tokenizer, and nothing else.
+
+    This is tens of megabytes because it's only the adapter, not the base model
+    underneath it. It's the cheap insurance I should have taken out two
+    assignments ago.
+    """
+    model.save_pretrained(path)
+    tokenizer.save_pretrained(path)
+    return path
+
+
+def save_gguf(model, tokenizer, path, quantization=GGUF_QUANTIZATION):
+    """Merge the adapter into the base and write a quantized GGUF.
+
+    GGUF is what llama.cpp loads, and `q4_k_m` takes the 1B from about 2.5GB
+    down to roughly 800MB, which is what makes serving it on a CPU container
+    reasonable. Unsloth does the merge, the conversion and the quantization in
+    this one call.
+    """
+    model.save_pretrained_gguf(path, tokenizer, quantization_method=quantization)
+    return path
+
+
+def save_merged(model, tokenizer, path):
+    """Fall back to 16 bit safetensors when the GGUF conversion won't build.
+
+    The GGUF path compiles llama.cpp inside the container. If that breaks I
+    still want the merged weights out of the container, because re-running the
+    training is the expensive part and merging is not.
+    """
+    model.save_pretrained_merged(path, tokenizer, save_method="merged_16bit")
+    return path
