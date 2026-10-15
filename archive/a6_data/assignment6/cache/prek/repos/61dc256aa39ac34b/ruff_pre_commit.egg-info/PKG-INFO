@@ -1,7 +1,0 @@
-Metadata-Version: 2.4
-Name: ruff-pre-commit
-Version: 0.0.0
-License-File: LICENSE-APACHE
-License-File: LICENSE-MIT
-Requires-Dist: ruff==0.16.4
-Dynamic: license-file

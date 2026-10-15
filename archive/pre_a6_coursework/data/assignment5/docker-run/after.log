@@ -1,35 +1,0 @@
-`torch_dtype` is deprecated! Use `dtype` instead!
-Skipping import of cpp extensions due to incompatible torch version 2.9.1+cu128 for torchao version 0.14.1             Please see https://github.com/pytorch/ao/issues/2919 for more info
-The following generation flags are not valid and may be ignored: ['temperature', 'top_p']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
-Downloading builder script: 0.00B [00:00, ?B/s]Downloading builder script: 6.14kB [00:00, 15.9MB/s]
-Downloading builder script: 0.00B [00:00, ?B/s]Downloading builder script: 7.95kB [00:00, 21.6MB/s]
-WARNING:matplotlib:mkdir -p failed for path /.config/matplotlib: [Errno 13] Permission denied: '/.config'
-WARNING:matplotlib:Matplotlib created a temporary cache directory at /tmp/matplotlib-yogioufk because there was an issue with the default path (/.config/matplotlib); it is highly recommended to set the MPLCONFIGDIR environment variable to a writable directory, in particular to speed up the import of Matplotlib and to better support multiprocessing.
-Some weights of RobertaModel were not initialized from the model checkpoint at roberta-base and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
-You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
-{
-  "example_count": 133,
-  "exact_span_match": 0.0,
-  "empty_count": 0,
-  "rouge": {
-    "rouge1": 0.18424741507448275,
-    "rougeL": 0.18424741507448275
-  },
-  "bertscore": {
-    "precision": 0.8279347379404799,
-    "recall": 0.8235713861938706,
-    "f1": 0.8255969527968787
-  },
-  "bertscore_hash": "roberta-base_L10_no-idf_version=0.3.12(hug_trans=4.57.6)",
-  "bleu": {
-    "bleu": 0.10223578947065504,
-    "precisions": [
-      0.18537414965986396,
-      0.05934065934065934
-    ],
-    "brevity_penalty": 0.9747700687765681,
-    "length_ratio": 0.9750830564784053,
-    "translation_length": 587,
-    "reference_length": 602
-  }
-}
