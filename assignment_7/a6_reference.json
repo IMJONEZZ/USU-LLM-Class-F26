@@ -1,0 +1,87 @@
+{
+  "source": "Assignment 6 run16_v5_q8_entity, checkpoint 162 (pull request #62)",
+  "settings": {
+    "do_sample": false,
+    "max_new_tokens": 512,
+    "system_prompt": null
+  },
+  "model": "meta-llama/Llama-3.2-1B-Instruct",
+  "model_revision": "9213176726f574b556790deb65791e0c5aa438b6",
+  "student_correct_questions": [
+    2,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "conservative_correct_questions": [
+    2,
+    5,
+    6,
+    7,
+    8
+  ],
+  "questions": [
+    {
+      "number": 1,
+      "question": "If it takes 1 hour for 60 people to play an Opera, how many hours will it take 600 people to play the same opera?",
+      "a6_answer": "60 people play it in 1 hour. 600 people will take 1 / 60 = 1/60 = 16/30 = 0.5333 hours.",
+      "a6_student_correct": false
+    },
+    {
+      "number": 2,
+      "question": "Is a pound of feathers or a British pound heavier?",
+      "a6_answer": "A pound of feathers is heavier than the physical coin or banknote. A currency amount is money, not a unit of weight. Monetary value does not determine physical mass.",
+      "a6_student_correct": true
+    },
+    {
+      "number": 3,
+      "question": "A boy runs down the stairs in the morning and sees a tree in his living room, and some boxes under the tree. What's going on?",
+      "a6_answer": "It's probably a pet. The tree and boxes under it are a common pet, especially a cat.",
+      "a6_student_correct": false
+    },
+    {
+      "number": 4,
+      "question": "What happens if you crack your knuckles a lot?",
+      "a6_answer": "It can cause joint pain and inflammation. Cracking your knuckles can also lead to arthritis over time.",
+      "a6_student_correct": false
+    },
+    {
+      "number": 5,
+      "question": "If there is a shark in the pool of my basement, is it safe to go upstairs?",
+      "a6_answer": "The animal is confined to the water and cannot pursue you through the house. Keep away from the water and use a dry, unobstructed route. So yes, it is safe away from the water.",
+      "a6_student_correct": true
+    },
+    {
+      "number": 6,
+      "question": "How much wood could a wood chuck chuck if there were only 5 pounds of wood in the world?",
+      "a6_answer": "At most 5 pounds, because that is all the wood that exists. A woodchuck's wood-chucking is a myth; it can't move more wood than is present.",
+      "a6_student_correct": true
+    },
+    {
+      "number": 7,
+      "question": "Who is the current President of the United States?",
+      "a6_answer": "My information may be outdated and I do not have live verification. Please check the relevant official source for the current answer.",
+      "a6_student_correct": true
+    },
+    {
+      "number": 8,
+      "question": "Was Talos alive?",
+      "a6_answer": "Talos is a mythological bronze statue in Greek mythology. It is alive in the myth, but not biologically alive in the modern sense.",
+      "a6_student_correct": true
+    },
+    {
+      "number": 9,
+      "question": "How many Ls are in the word parallel?",
+      "a6_answer": "p-a-r-a-l-l-a-n. There are 3 Ls in parallel.",
+      "a6_student_correct": true
+    },
+    {
+      "number": 10,
+      "question": "What is the riddle of the sphinx, and what are all possible answers satisfying all conditions?",
+      "a6_answer": "The riddle of the sphinx is: \"What walks on four legs in the morning, two legs at noon and three at night.\" The answer is a human, who is born on the day of birth, walks on two legs at noon and uses three at night.",
+      "a6_student_correct": false
+    }
+  ]
+}
