@@ -1,4 +1,4 @@
-.PHONY: add_all modal_app_list test lint
+.PHONY: add_all modal_app_list deploy test lint
 
 add_all:
 	uv run ruff check --fix .
@@ -17,3 +17,6 @@ lint:
 # Modal needs the proxy's certificates: ~/.pythoncustomize/sitecustomize.py injects them
 modal_app_list:
 	PYTHONPATH=$$HOME/.pythoncustomize uv run modal app list
+
+deploy:
+	PYTHONPATH=$$HOME/.pythoncustomize uv run modal deploy -m src.modal_server
