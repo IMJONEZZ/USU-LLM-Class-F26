@@ -1,3 +1,6 @@
+import json
+import types
+
 import pytest
 import requests
 
@@ -73,7 +76,7 @@ def test_completion_request_names_a_served_model_and_sends_the_training_prompt()
         value_after(command, "--served-model-name"),
         value_after(command, "--lora-modules").split("=")[0],
     }
-    payload = inference.completion_request("Q?")
+    payload = inference.completion_request("Q?", config.ADAPTER_NAME)
     assert payload["model"] in served
     assert payload["prompt"] == inference.format_prompt("Q?")
     assert payload["max_tokens"] == config.EVAL_MAX_NEW_TOKENS
@@ -131,3 +134,55 @@ def test_call_does_not_retry_an_auth_error(monkeypatch):
     with pytest.raises(requests.HTTPError):
         inference.call("GET", "/v1/models")
     assert len(calls) == 1
+
+
+class _FakeTokenizer:
+    def __init__(self):
+        self.special_token_flags = []
+
+    def encode(self, text, add_special_tokens):
+        self.special_token_flags.append(add_special_tokens)
+        return types.SimpleNamespace(ids=list(range(len(text.split()))))
+
+
+def test_local_token_count_includes_the_special_start_token_like_training():
+    tokenizer = _FakeTokenizer()
+    inference.local_token_count(tokenizer, "Q?")
+    assert tokenizer.special_token_flags == [True]
+
+
+def test_check_asks_both_models_and_saves_one_record_per_question(
+    monkeypatch, tmp_path
+):
+    questions = tmp_path / "questions.jsonl"
+    questions.write_text(
+        '{"id": "a", "question": "Q1?"}\n{"id": "b", "question": "Q2?"}\n'
+    )
+    asked = []
+
+    def fake_call(method, path, **kwargs):
+        model = kwargs["json"]["model"]
+        asked.append(model)
+        reply = GOOD_CHAIN if model == config.ADAPTER_NAME else "no sections here"
+        body = {
+            "choices": [{"text": reply, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 7},
+        }
+        return types.SimpleNamespace(json=lambda: body), 0.0
+
+    monkeypatch.setattr(inference, "call", fake_call)
+    monkeypatch.setattr(config, "RUNS_DIR", str(tmp_path))
+    records = inference.check(str(questions), _FakeTokenizer())
+    assert asked == [config.ADAPTER_NAME] * 2 + [config.SERVED_BASE_NAME] * 2
+    assert json.loads((tmp_path / "m4_correctness.json").read_text()) == records
+    adapter = [r for r in records if r["model"] == config.ADAPTER_NAME]
+    base = [r for r in records if r["model"] == config.SERVED_BASE_NAME]
+    assert [r["format_ok"] for r in adapter] == [True, True]
+    assert [r["format_ok"] for r in base] == [False, False]
+    assert adapter[0]["prompt_tokens"] == 7
+    assert adapter[0]["local_tokens"] == len(inference.format_prompt("Q1?").split())
+
+
+def test_main_rejects_an_unknown_command_instead_of_running_a_check():
+    with pytest.raises(ValueError):
+        inference.main("asc", "Q?")

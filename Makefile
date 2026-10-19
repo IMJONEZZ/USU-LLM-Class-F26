@@ -1,6 +1,6 @@
 QUESTION ?= Where did fortune cookies originate?
 
-.PHONY: add_all modal_app_list deploy ask test lint
+.PHONY: add_all modal_app_list deploy ask check test lint
 
 add_all:
 	uv run ruff check --fix .
@@ -25,4 +25,8 @@ deploy:
 
 # needs MODAL_ID, MODAL_SECRET and MODAL_URL in .env; make ask QUESTION="your question"
 ask:
-	uv run --env-file .env python -m src.inference "$(QUESTION)"
+	uv run --env-file .env python -m src.inference ask "$(QUESTION)"
+
+# the 8 test questions on the adapter and on the base; writes serving_runs/m4_correctness.json
+check:
+	uv run --env-file .env python -m src.inference check assets/test_set.jsonl

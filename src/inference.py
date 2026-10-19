@@ -1,9 +1,12 @@
+import json
 import os
 import sys
 import time
+from pathlib import Path
 
 import requests
 import truststore
+from tokenizers import Tokenizer
 
 from src import config
 
@@ -40,9 +43,9 @@ def check_chain(chain):
         raise ValueError("final answer is empty")
 
 
-def completion_request(question):
+def completion_request(question, model):
     return {
-        "model": config.ADAPTER_NAME,
+        "model": model,
         "prompt": format_prompt(question),
         "max_tokens": config.EVAL_MAX_NEW_TOKENS,
         "temperature": 0,
@@ -68,16 +71,76 @@ def call(method, path, **kwargs):
     return response, waited
 
 
-def main(question):
-    truststore.inject_into_ssl()
+def complete(question, model):
+    body = completion_request(question, model)
+    return call("POST", "/v1/completions", json=body)[0].json()
+
+
+def local_token_count(tokenizer, question):
+    return len(tokenizer.encode(format_prompt(question), add_special_tokens=True).ids)
+
+
+def is_format_ok(reply):
+    try:
+        check_chain(reply.strip())
+    except ValueError:
+        return False
+    return True
+
+
+def check(path, tokenizer):
+    questions = [json.loads(line) for line in Path(path).read_text().splitlines()]
+    records = []
+    for model in (config.ADAPTER_NAME, config.SERVED_BASE_NAME):
+        for row in questions:
+            result = complete(row["question"], model)
+            choice = result["choices"][0]
+            records.append(
+                {
+                    "id": row["id"],
+                    "model": model,
+                    "format_ok": is_format_ok(choice["text"]),
+                    "finish_reason": choice["finish_reason"],
+                    "prompt_tokens": result["usage"]["prompt_tokens"],
+                    "local_tokens": local_token_count(tokenizer, row["question"]),
+                    "reply": choice["text"],
+                }
+            )
+    Path(config.RUNS_DIR).mkdir(exist_ok=True)
+    out = Path(config.RUNS_DIR) / "m4_correctness.json"
+    out.write_text(json.dumps(records, indent=2))
+    return records
+
+
+def print_summary(records):
+    for model in dict.fromkeys(r["model"] for r in records):
+        mine = [r for r in records if r["model"] == model]
+        print(
+            f"{model}: format ok {sum(r['format_ok'] for r in mine)}/{len(mine)}, "
+            f"prompt tokens match "
+            f"{sum(r['prompt_tokens'] == r['local_tokens'] for r in mine)}/{len(mine)}, "
+            f"cut off at max tokens {sum(r['finish_reason'] == 'length' for r in mine)}"
+        )
+
+
+def ask(question):
     models, waited = call("GET", "/v1/models")
     print(f"models: {[m['id'] for m in models.json()['data']]} (waited {waited:.0f}s)")
-    body = completion_request(question)
-    result = call("POST", "/v1/completions", json=body)[0].json()
+    result = complete(question, config.ADAPTER_NAME)
     choice = result["choices"][0]
     print(choice["text"])
     print(f"finish_reason: {choice['finish_reason']} | usage: {result['usage']}")
 
 
+def main(command, argument):
+    truststore.inject_into_ssl()
+    if command == "ask":
+        ask(argument)
+    elif command == "check":
+        print_summary(check(argument, Tokenizer.from_pretrained(config.MODEL_NAME)))
+    else:
+        raise ValueError(f"unknown command {command!r}: use ask or check")
+
+
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])
