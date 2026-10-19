@@ -1,4 +1,6 @@
-.PHONY: add_all modal_app_list deploy test lint
+QUESTION ?= Where did fortune cookies originate?
+
+.PHONY: add_all modal_app_list deploy ask test lint
 
 add_all:
 	uv run ruff check --fix .
@@ -20,3 +22,7 @@ modal_app_list:
 
 deploy:
 	PYTHONPATH=$$HOME/.pythoncustomize uv run modal deploy -m src.modal_server
+
+# needs MODAL_ID, MODAL_SECRET and MODAL_URL in .env; make ask QUESTION="your question"
+ask:
+	uv run --env-file .env python -m src.inference "$(QUESTION)"

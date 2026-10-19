@@ -1,18 +1,15 @@
 from src import config, modal_server
-
-
-def _value_after(command, flag):
-    return command[command.index(flag) + 1]
+from tests.helpers import value_after
 
 
 def test_vllm_command_takes_rank_names_and_length_from_config():
     command = modal_server.vllm_command(fast_boot=True)
-    assert _value_after(command, "--max-lora-rank") == str(config.LORA_R)
-    assert _value_after(command, "--served-model-name") == config.SERVED_BASE_NAME
-    assert _value_after(command, "--lora-modules") == (
+    assert value_after(command, "--max-lora-rank") == str(config.LORA_R)
+    assert value_after(command, "--served-model-name") == config.SERVED_BASE_NAME
+    assert value_after(command, "--lora-modules") == (
         f"{config.ADAPTER_NAME}={config.ADAPTER_PATH}"
     )
-    assert _value_after(command, "--max-model-len") == str(config.EVAL_MAX_SEQ_LENGTH)
+    assert value_after(command, "--max-model-len") == str(config.EVAL_MAX_SEQ_LENGTH)
 
 
 def test_fast_boot_switches_eager_mode_on_and_off():

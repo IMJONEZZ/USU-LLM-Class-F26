@@ -20,3 +20,6 @@ ADAPTERS_VOLUME = "serving-adapters"
 HF_CACHE_VOLUME = "serving-hf-cache"
 VLLM_CACHE_VOLUME = "serving-vllm-cache"
 SCALEDOWN_WINDOW = 60  # seconds idle before the container exits
+# the client retries a 503 (server still starting) every interval, up to the timeout
+RETRY_TIMEOUT_SECONDS = 180
+RETRY_INTERVAL_SECONDS = 15
