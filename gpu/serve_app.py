@@ -75,6 +75,12 @@ def find_model(directory=f"{MODEL_DIR}/gguf", quantization="Q4_K_M"):
     return os.path.join(directory, (preferred or candidates)[0])
 
 
+# max_containers=1 is a spending cap more than a performance choice. Modal will
+# happily scale this out, and since the URL is public the worst case isn't slow
+# answers, it's a bill. One container that sleeps after a minute has a ceiling I
+# can reason about. The concurrency limit is the same idea from the other side:
+# llama.cpp barely batches, so letting more than a handful of requests in at
+# once makes everybody wait instead of making anything faster.
 @app.function(
     volumes={MODEL_DIR: models},
     scaledown_window=SCALEDOWN_SECONDS,
@@ -83,6 +89,8 @@ def find_model(directory=f"{MODEL_DIR}/gguf", quantization="Q4_K_M"):
     secrets=[modal.Secret.from_name("hw7-api-key")],
 )
 @modal.concurrent(max_inputs=4)
+# 300 seconds to come up. Loading the GGUF off the volume is most of it, and
+# the default is shorter than that, which reads as a dead endpoint.
 @modal.web_server(PORT, startup_timeout=300)
 def serve():
     import os
@@ -93,8 +101,8 @@ def serve():
     # A Modal web endpoint is a public URL, and left open this one would answer
     # anything that found it. llama-server takes an --api-key and then wants
     # the usual `Authorization: Bearer` header, which is the same thing an
-    # OpenAI client already sends. The key lives in a Modal secret rather than
-    # in this file, because this file is in a public repo.
+    # OpenAI client already sends. The key comes out of a Modal secret, not
+    # out of this file, because this file is in a public repo.
     api_key = os.environ["LLAMA_API_KEY"]
 
     # --host 0.0.0.0 matters. Bound to localhost the process starts fine and
