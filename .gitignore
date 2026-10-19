@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 marimo_notebooks/
-
+models/
 # C extensions
 *.so
 
