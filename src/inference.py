@@ -60,6 +60,7 @@ def call(method, path, **kwargs):
         "Modal-Secret": os.environ["MODAL_SECRET"],
     }
     start = time.perf_counter()
+    retries = 0
     while True:
         response = requests.request(
             method, os.environ["MODAL_URL"] + path, headers=headers, **kwargs
@@ -67,9 +68,10 @@ def call(method, path, **kwargs):
         waited = time.perf_counter() - start
         if response.status_code != 503 or waited >= config.RETRY_TIMEOUT_SECONDS:
             break
+        retries += 1
         time.sleep(config.RETRY_INTERVAL_SECONDS)
     response.raise_for_status()
-    return response, waited
+    return response, waited, retries
 
 
 def complete(question, model):
@@ -137,7 +139,7 @@ def stream(question, model):
         "stream_options": {"include_usage": True},
     }
     sent = time.perf_counter()
-    response, waited = call("POST", "/v1/completions", json=body, stream=True)
+    response, waited, retries = call("POST", "/v1/completions", json=body, stream=True)
     arrivals, usage = [], None
     for line in response.iter_lines(decode_unicode=True):
         if line.startswith("data: ") and line != "data: [DONE]":
@@ -147,14 +149,17 @@ def stream(question, model):
             else:
                 usage = chunk["usage"]
     stats = stream_stats(arrivals)
-    return stats | {"completion_tokens": usage["completion_tokens"], "waited_s": waited}
+    extra = {"completion_tokens": usage["completion_tokens"], "waited_s": waited}
+    return stats | extra | {"retries": retries}
 
 
 def stream_runs(question):
     """One stream; if it had to wait out a cold start (a 503 retry), a second one measures the warm server."""
-    records = [stream(question, config.ADAPTER_NAME) | {"run": "first"}]
-    if records[0]["waited_s"] >= config.RETRY_INTERVAL_SECONDS:
-        records.append(stream(question, config.ADAPTER_NAME) | {"run": "second"})
+    first = stream(question, config.ADAPTER_NAME)
+    cold = first["retries"] > 0
+    records = [first | {"run": "cold start" if cold else "warm"}]
+    if cold:
+        records.append(stream(question, config.ADAPTER_NAME) | {"run": "warm"})
     return records
 
 
@@ -164,7 +169,7 @@ def print_stream(records):
             f"{r['run']}: first token {r['ttft_s']:.2f}s | {r['rate_tok_s']:.1f} tok/s "
             f"after the first | {r['chunks']} chunks (server counted "
             f"{r['completion_tokens']}) | longest gap {r['max_gap_s'] * 1000:.0f} ms "
-            f"| waited through 503s {r['waited_s']:.0f}s"
+            f"| waited {r['waited_s']:.0f}s through {r['retries']} 503s"
         )
 
 
@@ -180,7 +185,7 @@ def print_summary(records):
 
 
 def ask(question):
-    models, waited = call("GET", "/v1/models")
+    models, waited, _ = call("GET", "/v1/models")
     print(f"models: {[m['id'] for m in models.json()['data']]} (waited {waited:.0f}s)")
     result = complete(question, config.ADAPTER_NAME)
     choice = result["choices"][0]

@@ -114,10 +114,11 @@ def _serve(monkeypatch, statuses):
 
 def test_call_waits_through_503s_and_reports_how_long(monkeypatch):
     calls = _serve(monkeypatch, [503, 503, 200])
-    response, waited = inference.call("GET", "/v1/models")
+    response, waited, retries = inference.call("GET", "/v1/models")
     assert response.status_code == 200
     assert len(calls) == 3
     assert waited == 2 * config.RETRY_INTERVAL_SECONDS
+    assert retries == 2
 
 
 def test_call_gives_up_on_a_server_that_stays_503(monkeypatch):
@@ -168,7 +169,7 @@ def test_check_asks_both_models_and_saves_one_record_per_question(
             "choices": [{"text": reply, "finish_reason": "stop"}],
             "usage": {"prompt_tokens": 7},
         }
-        return types.SimpleNamespace(json=lambda: body), 0.0
+        return types.SimpleNamespace(json=lambda: body), 0.0, 0
 
     monkeypatch.setattr(inference, "call", fake_call)
     monkeypatch.setattr(config, "RUNS_DIR", str(tmp_path))
@@ -213,9 +214,10 @@ def test_stream_measures_ttft_and_rate_and_does_not_count_the_usage_chunk(monkey
     events += [(0.0, ""), (0.0, usage), (0.0, "data: [DONE]")]
     monkeypatch.setattr(inference, "time", clock)
     monkeypatch.setattr(
-        inference, "call", lambda *a, **k: (_FakeStream(clock, events), 0.0)
+        inference, "call", lambda *a, **k: (_FakeStream(clock, events), 0.0, 0)
     )
     result = inference.stream("Q?", config.ADAPTER_NAME)
+    assert result["retries"] == 0
     assert result["ttft_s"] == pytest.approx(2.0)
     assert result["chunks"] == 11
     assert result["rate_tok_s"] == pytest.approx(10.0)
@@ -228,18 +230,15 @@ def test_stream_stats_reports_the_longest_gap_between_chunks():
 
 
 @pytest.mark.parametrize(
-    ("waited", "runs"),
-    [
-        (0.4, ["first"]),
-        (config.RETRY_INTERVAL_SECONDS + 0.4, ["first", "second"]),
-    ],
+    ("retries", "runs"),
+    [(0, ["warm"]), (2, ["cold start", "warm"])],
     ids=["server already warm", "server was cold"],
 )
 def test_stream_runs_sends_a_second_stream_only_after_a_cold_start(
-    monkeypatch, waited, runs
+    monkeypatch, retries, runs
 ):
     monkeypatch.setattr(
-        inference, "stream", lambda question, model: {"waited_s": waited}
+        inference, "stream", lambda question, model: {"retries": retries}
     )
     assert [r["run"] for r in inference.stream_runs("Q?")] == runs
 

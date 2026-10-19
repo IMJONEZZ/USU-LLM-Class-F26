@@ -31,6 +31,6 @@ ask:
 check:
 	uv run --env-file .env python -m src.inference check assets/test_set.jsonl
 
-# streams one question and prints first-token time and tokens per second; if the server had to cold-start, streams again (second = warm); writes serving_runs/m5_stream.json
+# streams one question and prints first-token time and tokens per second; if the server had to cold-start (labelled "cold start"), streams again (labelled "warm"); writes serving_runs/m5_stream.json
 stream:
 	uv run --env-file .env python -m src.inference stream "$(QUESTION)"
