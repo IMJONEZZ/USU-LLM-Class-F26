@@ -59,4 +59,4 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - Assignment 4 — GPU inference and a ZenML pipeline (`gpu/`, `pipelines/`)
 - Assignment 5 — fine-tuning Llama 3.2 1B (`src/lm_trainer.py`, `gpu/train_app.py`)
 - Assignment 6 — fine-tuning Llama 3.2 1B to answer trick questions (`src/dataset.py`, `src/trainer.py`, `answers.ipynb`)
-- Assignment 7 — serving the fine-tuned model behind an API (`src/inference.py`, in progress)
+- Assignment 7 — serving the fine-tuned model behind an API (`src/inference.py`, `gpu/serve_app.py`)
