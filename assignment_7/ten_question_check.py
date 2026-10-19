@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import statistics
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -36,6 +37,26 @@ def protection_check(base_url: str) -> dict[str, int]:
             url, headers={"Authorization": "Bearer wrong"}, timeout=60
         ).status_code,
     }
+
+
+def speed_summary(rows: list[dict]) -> dict:
+    """Latency medians and a rough tokens-per-second estimate for each model.
+
+    The tokens-per-second figure is total completion tokens divided by total
+    request time, so it includes the fixed cost of each request. It is only an
+    estimate, and it is not fair across models whose answers differ in length.
+    """
+    summary: dict = {}
+    latencies = {}
+    for label in ("adapter", "base"):
+        times = [r[label]["latency_seconds"] for r in rows]
+        tokens = sum(r[label]["completion_tokens"] for r in rows)
+        latencies[label] = times
+        summary[f"median_latency_{label}_seconds"] = round(statistics.median(times), 3)
+        summary[f"completion_tokens_{label}"] = tokens
+        summary[f"estimated_tokens_per_second_{label}"] = round(tokens / sum(times), 1)
+    summary["max_latency_seconds"] = max(latencies["adapter"] + latencies["base"])
+    return summary
 
 
 def main() -> None:
@@ -70,8 +91,6 @@ def main() -> None:
         rows.append(row)
         print(f"Q{item['number']}: adapter match={row['adapter_matches_a6_exactly']}")
 
-    adapter_latencies = sorted(r["adapter"]["latency_seconds"] for r in rows)
-    base_latencies = sorted(r["base"]["latency_seconds"] for r in rows)
     summary = {
         "started_utc": started,
         "server_url": base_url,
@@ -79,9 +98,7 @@ def main() -> None:
         "first_request_seconds_cold_start_if_server_was_idle": cold_start_seconds,
         "protection_status_codes": protection_check(base_url),
         "exact_matches_with_a6": sum(r["adapter_matches_a6_exactly"] for r in rows),
-        "median_latency_adapter_seconds": adapter_latencies[len(rows) // 2],
-        "median_latency_base_seconds": base_latencies[len(rows) // 2],
-        "max_latency_seconds": max(adapter_latencies + base_latencies),
+        **speed_summary(rows),
         "settings": reference["settings"],
     }
     out = HERE / "results" / "ten_question_check.json"

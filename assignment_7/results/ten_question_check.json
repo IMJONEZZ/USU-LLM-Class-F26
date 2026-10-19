@@ -12,14 +12,19 @@
       "wrong_key": 401
     },
     "exact_matches_with_a6": 9,
-    "median_latency_adapter_seconds": 1.438,
-    "median_latency_base_seconds": 1.835,
+    "median_latency_adapter_seconds": 1.357,
+    "median_latency_base_seconds": 1.751,
     "max_latency_seconds": 5.836,
     "settings": {
       "do_sample": false,
       "max_new_tokens": 512,
       "system_prompt": null
-    }
+    },
+    "completion_tokens_adapter": 331,
+    "estimated_tokens_per_second_adapter": 23.0,
+    "completion_tokens_base": 1966,
+    "estimated_tokens_per_second_base": 81.4,
+    "correction_note": "Medians recomputed from the saved rows on 2026-10-18: the first version took the upper middle of ten values, not the average of the fifth and sixth."
   },
   "rows": [
     {
