@@ -186,3 +186,68 @@ def test_check_asks_both_models_and_saves_one_record_per_question(
 def test_main_rejects_an_unknown_command_instead_of_running_a_check():
     with pytest.raises(ValueError):
         inference.main("asc", "Q?")
+
+
+class _FakeStream:
+    """Stands in for a streaming response: each event is (seconds before it arrives, line)."""
+
+    def __init__(self, clock, events):
+        self.clock = clock
+        self.events = events
+
+    def iter_lines(self, **kwargs):
+        for gap, line in self.events:
+            self.clock.sleep(gap)
+            yield line
+
+
+def _data(payload):
+    return "data: " + json.dumps(payload)
+
+
+def test_stream_measures_ttft_and_rate_and_does_not_count_the_usage_chunk(monkeypatch):
+    clock = _FakeClock()
+    token = _data({"choices": [{"text": "x", "finish_reason": None}]})
+    usage = _data({"choices": [], "usage": {"completion_tokens": 11}})
+    events = [(2.0, token)] + [(0.1, token)] * 10
+    events += [(0.0, ""), (0.0, usage), (0.0, "data: [DONE]")]
+    monkeypatch.setattr(inference, "time", clock)
+    monkeypatch.setattr(
+        inference, "call", lambda *a, **k: (_FakeStream(clock, events), 0.0)
+    )
+    result = inference.stream("Q?", config.ADAPTER_NAME)
+    assert result["ttft_s"] == pytest.approx(2.0)
+    assert result["chunks"] == 11
+    assert result["rate_tok_s"] == pytest.approx(10.0)
+    assert result["completion_tokens"] == 11
+
+
+def test_stream_stats_reports_the_longest_gap_between_chunks():
+    stats = inference.stream_stats([1.0, 1.1, 6.1, 6.2])
+    assert stats["max_gap_s"] == pytest.approx(5.0)
+
+
+@pytest.mark.parametrize(
+    ("waited", "runs"),
+    [
+        (0.4, ["first"]),
+        (config.RETRY_INTERVAL_SECONDS + 0.4, ["first", "second"]),
+    ],
+    ids=["server already warm", "server was cold"],
+)
+def test_stream_runs_sends_a_second_stream_only_after_a_cold_start(
+    monkeypatch, waited, runs
+):
+    monkeypatch.setattr(
+        inference, "stream", lambda question, model: {"waited_s": waited}
+    )
+    assert [r["run"] for r in inference.stream_runs("Q?")] == runs
+
+
+def test_write_run_rounds_floats_to_two_decimals_and_leaves_other_values(
+    monkeypatch, tmp_path
+):
+    monkeypatch.setattr(config, "RUNS_DIR", str(tmp_path))
+    inference.write_run("r.json", [{"seconds": 0.123456, "count": 122, "run": "first"}])
+    saved = json.loads((tmp_path / "r.json").read_text())
+    assert saved == [{"seconds": 0.12, "count": 122, "run": "first"}]

@@ -1,6 +1,6 @@
 QUESTION ?= Where did fortune cookies originate?
 
-.PHONY: add_all modal_app_list deploy ask check test lint
+.PHONY: add_all modal_app_list deploy ask check stream test lint
 
 add_all:
 	uv run ruff check --fix .
@@ -30,3 +30,7 @@ ask:
 # the 8 test questions on the adapter and on the base; writes serving_runs/m4_correctness.json
 check:
 	uv run --env-file .env python -m src.inference check assets/test_set.jsonl
+
+# streams one question and prints first-token time and tokens per second; if the server had to cold-start, streams again (second = warm); writes serving_runs/m5_stream.json
+stream:
+	uv run --env-file .env python -m src.inference stream "$(QUESTION)"

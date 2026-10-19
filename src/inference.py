@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import time
+from itertools import pairwise
 from pathlib import Path
 
 import requests
@@ -106,10 +107,65 @@ def check(path, tokenizer):
                     "reply": choice["text"],
                 }
             )
-    Path(config.RUNS_DIR).mkdir(exist_ok=True)
-    out = Path(config.RUNS_DIR) / "m4_correctness.json"
-    out.write_text(json.dumps(records, indent=2))
+    write_run("m4_correctness.json", records)
     return records
+
+
+def write_run(name, records):
+    rounded = [
+        {k: round(v, 2) if isinstance(v, float) else v for k, v in record.items()}
+        for record in records
+    ]
+    Path(config.RUNS_DIR).mkdir(exist_ok=True)
+    (Path(config.RUNS_DIR) / name).write_text(json.dumps(rounded, indent=2))
+
+
+def stream_stats(arrivals):
+    """arrivals: seconds from sending the request to each streamed token chunk."""
+    gaps = [later - earlier for earlier, later in pairwise(arrivals)]
+    return {
+        "ttft_s": arrivals[0],
+        "chunks": len(arrivals),
+        "rate_tok_s": (len(arrivals) - 1) / (arrivals[-1] - arrivals[0]),
+        "max_gap_s": max(gaps),
+    }
+
+
+def stream(question, model):
+    body = completion_request(question, model) | {
+        "stream": True,
+        "stream_options": {"include_usage": True},
+    }
+    sent = time.perf_counter()
+    response, waited = call("POST", "/v1/completions", json=body, stream=True)
+    arrivals, usage = [], None
+    for line in response.iter_lines(decode_unicode=True):
+        if line.startswith("data: ") and line != "data: [DONE]":
+            chunk = json.loads(line[len("data: ") :])
+            if chunk["choices"]:
+                arrivals.append(time.perf_counter() - sent)
+            else:
+                usage = chunk["usage"]
+    stats = stream_stats(arrivals)
+    return stats | {"completion_tokens": usage["completion_tokens"], "waited_s": waited}
+
+
+def stream_runs(question):
+    """One stream; if it had to wait out a cold start (a 503 retry), a second one measures the warm server."""
+    records = [stream(question, config.ADAPTER_NAME) | {"run": "first"}]
+    if records[0]["waited_s"] >= config.RETRY_INTERVAL_SECONDS:
+        records.append(stream(question, config.ADAPTER_NAME) | {"run": "second"})
+    return records
+
+
+def print_stream(records):
+    for r in records:
+        print(
+            f"{r['run']}: first token {r['ttft_s']:.2f}s | {r['rate_tok_s']:.1f} tok/s "
+            f"after the first | {r['chunks']} chunks (server counted "
+            f"{r['completion_tokens']}) | longest gap {r['max_gap_s'] * 1000:.0f} ms "
+            f"| waited through 503s {r['waited_s']:.0f}s"
+        )
 
 
 def print_summary(records):
@@ -138,8 +194,12 @@ def main(command, argument):
         ask(argument)
     elif command == "check":
         print_summary(check(argument, Tokenizer.from_pretrained(config.MODEL_NAME)))
+    elif command == "stream":
+        records = stream_runs(argument)
+        write_run("m5_stream.json", records)
+        print_stream(records)
     else:
-        raise ValueError(f"unknown command {command!r}: use ask or check")
+        raise ValueError(f"unknown command {command!r}: use ask, check or stream")
 
 
 if __name__ == "__main__":
