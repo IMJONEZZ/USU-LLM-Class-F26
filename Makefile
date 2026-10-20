@@ -1,7 +1,7 @@
 QUESTION ?= Where did fortune cookies originate?
 RUN ?= coldstart
 
-.PHONY: add_all modal_app_list deploy ask check stream coldstart experiments chart test lint
+.PHONY: add_all modal_app_list deploy ask check stream coldstart experiments run5 chart test lint
 
 add_all:
 	uv run ruff check --fix .
@@ -40,10 +40,14 @@ stream:
 coldstart:
 	PYTHONPATH=$$HOME/.pythoncustomize uv run --env-file .env python -m src.stages "$(QUESTION)" $(RUN)
 
-# ALL FOUR M8 runs in order, then the chart. It first EMPTIES both cache Volumes (the model re-downloads), redeploys with FAST_BOOT on/off, and ends with FAST_BOOT on again. About 30-50 minutes.
+# ALL FIVE M8 runs in order, then the chart. It first EMPTIES both cache Volumes (the model re-downloads), redeploys with FAST_BOOT on/off, and ends with FAST_BOOT on again. About 30-50 minutes.
 experiments:
-	PYTHONPATH=$$HOME/.pythoncustomize uv run --env-file .env python -m src.experiments "$(QUESTION)"
+	PYTHONPATH=$$HOME/.pythoncustomize uv run --env-file .env python -m src.experiments all "$(QUESTION)"
 
-# redraw the chart from the four saved runs without running anything on Modal
+# ONLY run 5 (FAST_BOOT on, model and compile files cached), on the state runs 1-4 left behind, then redraws the five-run chart. Refuses if runs 1-4 are not saved or the caches are not populated.
+run5:
+	PYTHONPATH=$$HOME/.pythoncustomize uv run --env-file .env python -m src.experiments run5 "$(QUESTION)"
+
+# redraw the chart from the five saved runs without running anything on Modal
 chart:
-	uv run python -m src.chart m8_run1 m8_run2 m8_run3 m8_run4
+	uv run python -m src.chart m8_run1 m8_run2 m8_run3 m8_run4 m8_run5

@@ -25,8 +25,8 @@ def _fake_everything(monkeypatch, file_counts):
     return calls
 
 
-def test_the_four_runs_happen_in_order_with_one_change_between_neighbours(monkeypatch):
-    calls = _fake_everything(monkeypatch, [0, 0, 0, 5])
+def test_the_five_runs_happen_in_order_with_one_change_between_neighbours(monkeypatch):
+    calls = _fake_everything(monkeypatch, [0, 0, 0, 5, 5])
     experiments.run_experiments("Q?")
     assert calls == [
         "wait",
@@ -39,8 +39,19 @@ def test_the_four_runs_happen_in_order_with_one_change_between_neighbours(monkey
         "run m8_run3",
         "run m8_run4",
         "deploy fast_boot=True",
+        "run m8_run5",
+        "deploy fast_boot=True",
         "chart",
     ]
+
+
+def test_run_five_is_refused_if_the_vllm_cache_is_empty_by_then(monkeypatch):
+    calls = _fake_everything(monkeypatch, [0, 0, 0, 5, 0])
+    with pytest.raises(ValueError, match="populated"):
+        experiments.run_experiments("Q?")
+    assert "run m8_run5" not in calls
+    assert "chart" not in calls
+    assert calls[-1] == "deploy fast_boot=True"
 
 
 def test_run_four_is_refused_if_run_three_left_the_vllm_cache_empty(monkeypatch):
@@ -97,3 +108,50 @@ def test_wipe_volume_removes_every_top_level_entry_recursively(monkeypatch):
     monkeypatch.setattr(experiments.modal.Volume, "from_name", lambda name: volume)
     experiments.wipe_volume("any-volume")
     assert removed == [("hub", True), ("xet", True)]
+
+
+def _saved_runs(monkeypatch, tmp_path, names):
+    monkeypatch.setattr(config, "RUNS_DIR", str(tmp_path))
+    for name in names:
+        (tmp_path / f"{name}.json").write_text("[]")
+
+
+def test_run_five_alone_runs_only_run_five_and_redraws_the_chart(monkeypatch, tmp_path):
+    _saved_runs(monkeypatch, tmp_path, experiments.RUNS[:4])
+    calls = _fake_everything(monkeypatch, [5, 5])
+    experiments.run_five("Q?")
+    assert calls == ["deploy fast_boot=True", "run m8_run5", "chart"]
+
+
+def test_run_five_alone_is_refused_if_the_model_cache_is_empty(monkeypatch, tmp_path):
+    _saved_runs(monkeypatch, tmp_path, experiments.RUNS[:4])
+    calls = _fake_everything(monkeypatch, [0])
+    with pytest.raises(ValueError, match="populated"):
+        experiments.run_five("Q?")
+    assert calls == []
+
+
+def test_run_five_alone_is_refused_if_the_compile_cache_is_empty(monkeypatch, tmp_path):
+    _saved_runs(monkeypatch, tmp_path, experiments.RUNS[:4])
+    calls = _fake_everything(monkeypatch, [5, 0])
+    with pytest.raises(ValueError, match="populated"):
+        experiments.run_five("Q?")
+    assert "run m8_run5" not in calls
+    assert "chart" not in calls
+
+
+def test_run_five_alone_is_refused_if_an_earlier_saved_run_is_missing(
+    monkeypatch, tmp_path
+):
+    _saved_runs(monkeypatch, tmp_path, ["m8_run1", "m8_run2", "m8_run4"])
+    calls = _fake_everything(monkeypatch, [])
+    with pytest.raises(ValueError, match="m8_run3"):
+        experiments.run_five("Q?")
+    assert calls == []
+
+
+def test_main_rejects_an_unknown_command_before_touching_anything(monkeypatch):
+    calls = _fake_everything(monkeypatch, [])
+    with pytest.raises(ValueError, match="unknown"):
+        experiments.main("everything", "Q?")
+    assert calls == []
