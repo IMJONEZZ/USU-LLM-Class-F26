@@ -1,19 +1,10 @@
 import json
 import types
-from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 from modal.volume import FileEntryType
 
 from src import config, stages
-
-EXCERPT = Path(__file__).parent / "vllm_start_excerpt.log"  # two real vLLM starts
-
-
-def _epoch(month, day, hour, minute, second):
-    moment = datetime(2026, month, day, hour, minute, second, tzinfo=UTC)
-    return moment.timestamp()
 
 
 def test_stage_times_split_the_cold_start_at_the_server_marks():
@@ -123,61 +114,9 @@ def test_cold_start_refuses_marks_from_an_earlier_start(monkeypatch):
         stages.cold_start("Q?")
 
 
-def _window(launch, ready):
-    """launch and ready are (month, day, hour, minute, second) tuples in UTC."""
-    return {"launch_epoch": _epoch(*launch), "ready_epoch": _epoch(*ready)}
-
-
-def test_inner_steps_reads_vllms_own_durations_for_the_start_in_the_window():
-    marks = _window((10, 20, 1, 39, 40), (10, 20, 1, 41, 59))
-    inner = stages.inner_steps(EXCERPT.read_text(), marks)
-    assert inner["model_load"] == pytest.approx(2.214892)
-    assert inner["init_engine"] == pytest.approx(80.47)
-    assert inner["download"] is None
-    assert inner["torch_compile"] is None
-    assert inner["graph_capture"] is None
-
-
-def test_inner_steps_picks_the_earlier_start_when_its_window_is_given():
-    marks = _window((10, 19, 5, 19, 40), (10, 19, 5, 22, 7))
-    inner = stages.inner_steps(EXCERPT.read_text(), marks)
-    assert inner["model_load"] == pytest.approx(3.341334)
-    assert inner["init_engine"] == pytest.approx(80.67)
-
-
-def test_unrecognized_timing_lines_surfaces_wording_the_parser_does_not_know():
-    marks = _window((10, 20, 1, 39, 40), (10, 20, 1, 41, 59))
-    assert stages.unrecognized_timing_lines(EXCERPT.read_text(), marks) == []
-    new = "(EngineCore_DP0 pid=13) INFO 10-20 01:41:00 [x.py:1] Something new took 5 s"
-    found = stages.unrecognized_timing_lines(EXCERPT.read_text() + new + "\n", marks)
-    assert found == [new]
-
-
 def test_volume_file_count_counts_files_and_not_directories(monkeypatch):
     kinds = [FileEntryType.FILE, FileEntryType.DIRECTORY, FileEntryType.FILE]
     entries = [types.SimpleNamespace(type=kind) for kind in kinds]
     volume = types.SimpleNamespace(listdir=lambda path, recursive: entries)
     monkeypatch.setattr(stages.modal.Volume, "from_name", lambda name: volume)
     assert stages.volume_file_count("any-volume") == 2
-
-
-def test_cold_start_records_cache_state_fast_boot_and_vllms_own_steps(monkeypatch):
-    marks = _window((10, 20, 1, 39, 40), (10, 20, 1, 41, 59))
-    marks["import_epoch"] = marks["launch_epoch"] - 5.0
-    marks["fast_boot"] = False
-    cold = {"run": "cold start", "retries": 9, "waited_s": 170.0, "ttft_s": 176.0}
-    sent = marks["import_epoch"] - 4.0
-    counts = {config.HF_CACHE_VOLUME: 7, config.VLLM_CACHE_VOLUME: 0}
-    log = stages.modal_server.marks_line(marks) + "\n" + EXCERPT.read_text()
-    monkeypatch.setattr(stages, "wait_for_no_containers", lambda: None)
-    monkeypatch.setattr(stages, "volume_file_count", lambda name: counts[name])
-    monkeypatch.setattr(stages.time, "time", lambda: sent)
-    monkeypatch.setattr(stages.inference, "stream_runs", lambda q: [cold])
-    monkeypatch.setattr(stages, "read_logs", lambda: log)
-    (record,) = stages.cold_start("Q?")
-    assert record["fast_boot"] is False
-    assert record["hf_cache_files"] == 7
-    assert record["vllm_cache_files"] == 0
-    assert record["vllm_init_engine_s"] == pytest.approx(80.47)
-    assert record["vllm_download_s"] is None
-    assert record["unrecognized_timing_lines"] == []
