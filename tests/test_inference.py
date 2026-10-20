@@ -208,7 +208,7 @@ def _data(payload):
 
 def test_stream_measures_ttft_and_rate_and_does_not_count_the_usage_chunk(monkeypatch):
     clock = _FakeClock()
-    token = _data({"choices": [{"text": "x", "finish_reason": None}]})
+    token = _data({"choices": [{"text": " word", "finish_reason": None}]})
     usage = _data({"choices": [], "usage": {"completion_tokens": 11}})
     events = [(2.0, token)] + [(0.1, token)] * 10
     events += [(0.0, ""), (0.0, usage), (0.0, "data: [DONE]")]
@@ -222,6 +222,8 @@ def test_stream_measures_ttft_and_rate_and_does_not_count_the_usage_chunk(monkey
     assert result["chunks"] == 11
     assert result["rate_tok_s"] == pytest.approx(10.0)
     assert result["completion_tokens"] == 11
+    assert result["num_words"] == 11
+    assert result["wpm"] == pytest.approx(660.0)
 
 
 def test_stream_stats_reports_the_longest_gap_between_chunks():
@@ -238,7 +240,9 @@ def test_stream_runs_sends_a_second_stream_only_after_a_cold_start(
     monkeypatch, retries, runs
 ):
     monkeypatch.setattr(
-        inference, "stream", lambda question, model: {"retries": retries}
+        inference,
+        "stream",
+        lambda question, model: {"retries": retries, "rate_tok_s": 20.0},
     )
     assert [r["run"] for r in inference.stream_runs("Q?")] == runs
 
@@ -250,3 +254,37 @@ def test_write_run_rounds_floats_to_two_decimals_and_leaves_other_values(
     inference.write_run("r.json", [{"seconds": 0.123456, "count": 122, "run": "first"}])
     saved = json.loads((tmp_path / "r.json").read_text())
     assert saved == [{"seconds": 0.12, "count": 122, "run": "first"}]
+
+
+def test_gate_is_decided_from_the_unrounded_rate_not_the_saved_file(
+    monkeypatch, tmp_path
+):
+    monkeypatch.setattr(config, "RUNS_DIR", str(tmp_path))
+    monkeypatch.setattr(
+        inference,
+        "stream",
+        lambda question, model: {"retries": 0, "rate_tok_s": 8.996},
+    )
+    records = inference.stream_runs("Q?")
+    inference.write_run("r.json", records)
+    saved = json.loads((tmp_path / "r.json").read_text())
+    assert saved[-1]["rate_tok_s"] == 9.0
+    assert saved[-1]["gate_pass"] is False
+
+
+def test_gate_judges_the_warm_run_not_the_cold_start(monkeypatch):
+    runs = iter([{"retries": 2, "rate_tok_s": 5.0}, {"retries": 0, "rate_tok_s": 20.0}])
+    monkeypatch.setattr(inference, "stream", lambda question, model: next(runs))
+    cold, warm = inference.stream_runs("Q?")
+    assert "gate_pass" not in cold
+    assert warm["gate_pass"] is True
+
+
+@pytest.mark.parametrize(("rate", "passes"), [(9.0, True), (8.99, False), (23.5, True)])
+def test_gate_passes_at_exactly_the_minimum_rate(monkeypatch, rate, passes):
+    monkeypatch.setattr(
+        inference,
+        "stream",
+        lambda question, model: {"retries": 0, "rate_tok_s": rate},
+    )
+    assert inference.stream_runs("Q?")[-1]["gate_pass"] is passes

@@ -134,32 +134,40 @@ def stream_stats(arrivals):
 
 
 def stream(question, model):
-    body = completion_request(question, model) | {
-        "stream": True,
-        "stream_options": {"include_usage": True},
-    }
+    body = completion_request(question, model)
+    body["stream"] = True
+    body["stream_options"] = {"include_usage": True}
     sent = time.perf_counter()
     response, waited, retries = call("POST", "/v1/completions", json=body, stream=True)
-    arrivals, usage = [], None
+    arrivals, usage, text = [], None, ""
     for line in response.iter_lines(decode_unicode=True):
         if line.startswith("data: ") and line != "data: [DONE]":
             chunk = json.loads(line[len("data: ") :])
             if chunk["choices"]:
                 arrivals.append(time.perf_counter() - sent)
+                text += chunk["choices"][0]["text"]
             else:
                 usage = chunk["usage"]
-    stats = stream_stats(arrivals)
-    extra = {"completion_tokens": usage["completion_tokens"], "waited_s": waited}
-    return stats | extra | {"retries": retries}
+    result = stream_stats(arrivals)
+    result["completion_tokens"] = usage["completion_tokens"]
+    result["waited_s"] = waited
+    result["retries"] = retries
+    result["num_words"] = len(text.split())
+    result["wpm"] = result["num_words"] / (arrivals[-1] - arrivals[0]) * 60
+    return result
 
 
 def stream_runs(question):
     """One stream; if it had to wait out a cold start (a 503 retry), a second one measures the warm server."""
     first = stream(question, config.ADAPTER_NAME)
     cold = first["retries"] > 0
-    records = [first | {"run": "cold start" if cold else "warm"}]
+    first["run"] = "cold start" if cold else "warm"
+    records = [first]
     if cold:
-        records.append(stream(question, config.ADAPTER_NAME) | {"run": "warm"})
+        second = stream(question, config.ADAPTER_NAME)
+        second["run"] = "warm"
+        records.append(second)
+    records[-1]["gate_pass"] = records[-1]["rate_tok_s"] >= config.MIN_TOKENS_PER_SEC
     return records
 
 
@@ -168,9 +176,16 @@ def print_stream(records):
         print(
             f"{r['run']}: first token {r['ttft_s']:.2f}s | {r['rate_tok_s']:.1f} tok/s "
             f"after the first | {r['chunks']} chunks (server counted "
-            f"{r['completion_tokens']}) | longest gap {r['max_gap_s'] * 1000:.0f} ms "
-            f"| waited {r['waited_s']:.0f}s through {r['retries']} 503s"
+            f"{r['completion_tokens']}) | {r['wpm']:.0f} words/min | longest gap "
+            f"{r['max_gap_s'] * 1000:.0f} ms | waited {r['waited_s']:.0f}s through "
+            f"{r['retries']} 503s"
         )
+    warm = records[-1]
+    verdict = "PASS" if warm["gate_pass"] else "FAIL"
+    print(
+        f"gate: {verdict}, warm rate {warm['rate_tok_s']:.2f} tok/s "
+        f"(minimum {config.MIN_TOKENS_PER_SEC})"
+    )
 
 
 def print_summary(records):

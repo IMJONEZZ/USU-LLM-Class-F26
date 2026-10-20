@@ -23,4 +23,6 @@ SCALEDOWN_WINDOW = 60  # seconds idle before the container exits
 # the client retries a 503 (server still starting) every interval, up to the timeout
 RETRY_TIMEOUT_SECONDS = 300
 RETRY_INTERVAL_SECONDS = 15
+# the speed gate: steady rate of the warm run on the deployed config
+MIN_TOKENS_PER_SEC = 9
 RUNS_DIR = "serving_runs"  # gitignored; run records are written here as JSON
