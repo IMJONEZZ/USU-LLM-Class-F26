@@ -1,6 +1,7 @@
 QUESTION ?= Where did fortune cookies originate?
+RUN ?= coldstart
 
-.PHONY: add_all modal_app_list deploy ask check stream coldstart test lint
+.PHONY: add_all modal_app_list deploy ask check stream coldstart experiments chart test lint
 
 add_all:
 	uv run ruff check --fix .
@@ -35,6 +36,14 @@ check:
 stream:
 	uv run --env-file .env python -m src.inference stream "$(QUESTION)"
 
-# waits until the server has scaled to zero, then times a true cold start by stage; writes serving_runs/m7_stages.json
+# one true cold start by stage after waiting for the server to scale to zero; writes serving_runs/coldstart.json
 coldstart:
-	PYTHONPATH=$$HOME/.pythoncustomize uv run --env-file .env python -m src.stages "$(QUESTION)"
+	PYTHONPATH=$$HOME/.pythoncustomize uv run --env-file .env python -m src.stages "$(QUESTION)" $(RUN)
+
+# ALL FOUR M8 runs in order, then the chart. It first EMPTIES both cache Volumes (the model re-downloads), redeploys with FAST_BOOT on/off, and ends with FAST_BOOT on again. About 30-50 minutes.
+experiments:
+	PYTHONPATH=$$HOME/.pythoncustomize uv run --env-file .env python -m src.experiments "$(QUESTION)"
+
+# redraw the chart from the four saved runs without running anything on Modal
+chart:
+	uv run python -m src.chart m8_run1 m8_run2 m8_run3 m8_run4

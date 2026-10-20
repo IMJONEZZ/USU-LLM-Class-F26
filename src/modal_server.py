@@ -1,5 +1,6 @@
 import importlib.metadata
 import json
+import os
 import subprocess
 import time
 import urllib.request
@@ -8,9 +9,14 @@ import modal
 
 from src import config
 
+
+def fast_boot_setting(environ):
+    return environ.get("FAST_BOOT", "1") == "1"  # on unless a deploy sets FAST_BOOT=0
+
+
 IMPORT_EPOCH = time.time()  # in the container: when our module first runs
 PORT = 8000
-FAST_BOOT = True  # edit by hand between experiments, then make deploy
+FAST_BOOT = fast_boot_setting(os.environ)  # read at deploy time, baked in below
 VERSIONED_PACKAGES = [
     "vllm",
     "torch",
@@ -37,7 +43,7 @@ image = (
         "flashinfer-python==0.3.1",
         "huggingface_hub==0.35.0",
     )
-    .env({"HF_XET_HIGH_PERFORMANCE": "1"})
+    .env({"HF_XET_HIGH_PERFORMANCE": "1", "FAST_BOOT": "1" if FAST_BOOT else "0"})
     .add_local_dir("src", remote_path="/root/src")
 )
 
@@ -62,6 +68,15 @@ def vllm_command(fast_boot):
         str(PORT),
     ]
     return command + ["--enforce-eager"] if fast_boot else command
+
+
+def build_marks(launch_epoch, ready_epoch):
+    return {
+        "import_epoch": IMPORT_EPOCH,
+        "launch_epoch": launch_epoch,
+        "ready_epoch": ready_epoch,
+        "fast_boot": FAST_BOOT,
+    }
 
 
 def marks_line(marks):
@@ -95,11 +110,7 @@ class Server:
         launch_epoch = time.time()
         self.process = subprocess.Popen(vllm_command(FAST_BOOT))
         wait_until_ready()
-        marks = {
-            "import_epoch": IMPORT_EPOCH,
-            "launch_epoch": launch_epoch,
-            "ready_epoch": time.time(),
-        }
+        marks = build_marks(launch_epoch, time.time())
         print(marks_line(marks), flush=True)
 
     @modal.exit()

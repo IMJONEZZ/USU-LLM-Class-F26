@@ -1,3 +1,5 @@
+import pytest
+
 from src import config, modal_server
 from tests.helpers import value_after
 
@@ -35,3 +37,23 @@ def test_wait_until_ready_polls_health_until_it_answers(monkeypatch):
     monkeypatch.setattr(modal_server.time, "sleep", sleeps.append)
     modal_server.wait_until_ready()
     assert len(sleeps) == 2
+
+
+def test_marks_record_the_three_epochs_and_the_current_fast_boot_setting(monkeypatch):
+    monkeypatch.setattr(modal_server, "FAST_BOOT", False)
+    marks = modal_server.build_marks(launch_epoch=5.0, ready_epoch=9.0)
+    assert marks == {
+        "import_epoch": modal_server.IMPORT_EPOCH,
+        "launch_epoch": 5.0,
+        "ready_epoch": 9.0,
+        "fast_boot": False,
+    }
+
+
+@pytest.mark.parametrize(
+    ("environ", "expected"),
+    [({}, True), ({"FAST_BOOT": "1"}, True), ({"FAST_BOOT": "0"}, False)],
+    ids=["unset means on", "one means on", "zero means off"],
+)
+def test_fast_boot_setting_is_read_from_the_environment(environ, expected):
+    assert modal_server.fast_boot_setting(environ) is expected
