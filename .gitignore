@@ -179,3 +179,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Datasets
+SW_EpisodeIV_VI.json
+sports.txt
