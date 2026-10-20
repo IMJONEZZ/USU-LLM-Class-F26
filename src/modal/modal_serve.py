@@ -21,6 +21,7 @@ image = (
         {
             "HF_HOME": MODEL_CACHE_PATH,
             "VLLM_CACHE_ROOT": VLLM_CACHE_PATH,
+            "VLLM_ATTENTION_BACKEND": "TRITON_ATTN",
         }
     )
 )
