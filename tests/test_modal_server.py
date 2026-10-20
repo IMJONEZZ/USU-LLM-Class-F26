@@ -20,3 +20,24 @@ def test_fast_boot_switches_eager_mode_on_and_off():
 def test_adapter_path_sits_under_a_mounted_volume():
     mount = config.ADAPTER_PATH.rsplit("/", 1)[0]
     assert mount in modal_server.volumes
+
+
+def test_marks_file_sits_under_the_hf_cache_volume_mount():
+    path = modal_server.marks_path()
+    assert path.endswith("/" + config.MARKS_FILE)
+    assert path.rsplit("/", 1)[0] in modal_server.volumes
+
+
+def test_wait_until_ready_polls_health_until_it_answers(monkeypatch):
+    answers = iter([OSError("refused"), OSError("503"), None])
+    sleeps = []
+
+    def fake_urlopen(url, timeout):
+        answer = next(answers)
+        if answer is not None:
+            raise answer
+
+    monkeypatch.setattr(modal_server.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(modal_server.time, "sleep", sleeps.append)
+    modal_server.wait_until_ready()
+    assert len(sleeps) == 2

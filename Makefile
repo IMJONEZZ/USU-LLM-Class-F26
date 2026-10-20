@@ -1,6 +1,6 @@
 QUESTION ?= Where did fortune cookies originate?
 
-.PHONY: add_all modal_app_list deploy ask check stream test lint
+.PHONY: add_all modal_app_list deploy ask check stream coldstart test lint
 
 add_all:
 	uv run ruff check --fix .
@@ -34,3 +34,7 @@ check:
 # streams one question and prints first-token time and tokens per second; if the server had to cold-start (labelled "cold start"), streams again (labelled "warm"); writes serving_runs/m5_stream.json
 stream:
 	uv run --env-file .env python -m src.inference stream "$(QUESTION)"
+
+# waits until the server has scaled to zero, then times a true cold start by stage; writes serving_runs/m7_stages.json
+coldstart:
+	PYTHONPATH=$$HOME/.pythoncustomize uv run --env-file .env python -m src.stages "$(QUESTION)"
