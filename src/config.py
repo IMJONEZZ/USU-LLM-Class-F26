@@ -25,5 +25,6 @@ RETRY_TIMEOUT_SECONDS = 300
 RETRY_INTERVAL_SECONDS = 15
 # the speed gate: steady rate of the warm run on the deployed config
 MIN_TOKENS_PER_SEC = 9
-MARKS_FILE = "last_start_marks.json"  # the server writes this into the HF cache volume
+# the server prints one line starting with this tag when it is ready
+MARKS_TAG = "STAGE_MARKS"
 RUNS_DIR = "serving_runs"  # gitignored; run records are written here as JSON

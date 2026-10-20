@@ -22,12 +22,6 @@ def test_adapter_path_sits_under_a_mounted_volume():
     assert mount in modal_server.volumes
 
 
-def test_marks_file_sits_under_the_hf_cache_volume_mount():
-    path = modal_server.marks_path()
-    assert path.endswith("/" + config.MARKS_FILE)
-    assert path.rsplit("/", 1)[0] in modal_server.volumes
-
-
 def test_wait_until_ready_polls_health_until_it_answers(monkeypatch):
     answers = iter([OSError("refused"), OSError("503"), None])
     sleeps = []

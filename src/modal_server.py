@@ -3,7 +3,6 @@ import json
 import subprocess
 import time
 import urllib.request
-from pathlib import Path
 
 import modal
 
@@ -11,7 +10,6 @@ from src import config
 
 IMPORT_EPOCH = time.time()  # in the container: when our module first runs
 PORT = 8000
-HF_MOUNT = "/root/.cache/huggingface"
 FAST_BOOT = True  # edit by hand between experiments, then make deploy
 VERSIONED_PACKAGES = [
     "vllm",
@@ -25,7 +23,7 @@ app = modal.App("trick-question-serving")
 
 # cache volumes mount at the default Hugging Face and vLLM cache folders; adapters mount read-only
 volumes = {
-    HF_MOUNT: modal.Volume.from_name(config.HF_CACHE_VOLUME),
+    "/root/.cache/huggingface": modal.Volume.from_name(config.HF_CACHE_VOLUME),
     "/root/.cache/vllm": modal.Volume.from_name(config.VLLM_CACHE_VOLUME),
     "/adapters": modal.Volume.from_name(config.ADAPTERS_VOLUME).read_only(),
 }
@@ -66,8 +64,8 @@ def vllm_command(fast_boot):
     return command + ["--enforce-eager"] if fast_boot else command
 
 
-def marks_path():
-    return f"{HF_MOUNT}/{config.MARKS_FILE}"
+def marks_line(marks):
+    return f"{config.MARKS_TAG} {json.dumps(marks)}"
 
 
 def wait_until_ready():
@@ -102,8 +100,7 @@ class Server:
             "launch_epoch": launch_epoch,
             "ready_epoch": time.time(),
         }
-        Path(marks_path()).write_text(json.dumps(marks))
-        volumes[HF_MOUNT].commit()
+        print(marks_line(marks), flush=True)
 
     @modal.exit()
     def stop(self):
