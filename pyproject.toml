@@ -36,4 +36,4 @@ dev = [
 
 [tool.pytest.ini_options]
 # Avoid permission issues in the shared Windows pytest temp directory.
-addopts = "--cov=src --cov-fail-under=80 --basetemp=.pytest_cache/tmp"
+addopts = "--cov=src --cov-fail-under=80 --basetemp=.pytest-tmp"
