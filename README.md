@@ -30,6 +30,22 @@ If you prefer a Jupyter notebook:
 uv run --with jupyter jupyter lab
 ```
 
+For the local vector database and RAG notebook:
+
+```bash
+uv sync
+uv run marimo edit marimo_notebooks/vectordb.py
+```
+
+The project selects CUDA 12.8 PyTorch wheels on Windows and Linux. The notebook
+requires an NVIDIA GPU and checks CUDA before creating embeddings. Chroma stores
+its data locally under `data/chroma/` and saves evaluation results to
+`data/vectordb_results.json`. Model weights download on
+first use; the Llama Instruct model requires Hugging Face access and authentication
+with `uv run hf auth login`. Edit the notebook's `qa` dictionary to change the
+questions and draft answers. The cells build the database, demonstrate retrieval,
+and compare Llama Instruct answers with and without retrieved context automatically.
+
 ### Set up pre-commit (optional)
 
 CI runs the project checks for every push and pull request. To run those checks before committing, install the hooks:
