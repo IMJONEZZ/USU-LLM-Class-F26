@@ -4,7 +4,28 @@ version = "0.1.0"
 description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "chromadb>=1.0,<2",
+    # Transformers' notebook progress callback imports IPython.
+    "ipython>=9,<10",
+    "marimo>=0.25.1,<1",
+    "sentence-transformers>=5,<6",
+    "torch>=2.8,<3",
+    "transformers>=4.51,<6",
+]
+
+# Select CUDA wheels explicitly: PyPI's Windows torch wheels are CPU-only.
+[tool.uv]
+# OneDrive cannot reliably handle uv's default hardlinks.
+link-mode = "copy"
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128", marker = "sys_platform == 'win32' or sys_platform == 'linux'" }]
 
 [dependency-groups]
 dev = [
@@ -14,4 +35,5 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "--cov=src --cov-fail-under=80"
+# Avoid permission issues in the shared Windows pytest temp directory.
+addopts = "--cov=src --cov-fail-under=80 --basetemp=.pytest-tmp"
