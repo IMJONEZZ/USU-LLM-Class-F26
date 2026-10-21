@@ -4,14 +4,42 @@ version = "0.1.0"
 description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "bert-score>=0.3.13",
+    "evaluate>=0.4.6",
+    "fastapi>=0.138.2",
+    "pandas>=3.0.6",
+    "peft>=0.21.2",
+    "requests>=2.34.2",
+    "rouge-score>=0.1.2",
+    "scikit-learn>=1.9.1",
+    "torch>=2.14.0",
+    "torchao>=0.16.0",
+    "torchvision>=0.29.1",
+    "transformers>=5.17.0",
+    "uvicorn>=0.54.0",
+    "zenml[server]>=0.97.0",
+]
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.1",
+    "ipykernel>=7.4.0",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.4",
 ]
 
 [tool.pytest.ini_options]
-addopts = "--cov=src --cov-fail-under=80"
+testpaths = ["tests"]
+norecursedirs = [".git", ".venv", ".venv-training", "archive", "node_modules"]
+addopts = "--cov=src --cov-fail-under=100"
+markers = ["gpu: opt-in real Unsloth integration requiring CUDA and prepared data"]
+
+[tool.coverage.report]
+exclude_also = [
+    "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+exclude = ["notebooks"]
