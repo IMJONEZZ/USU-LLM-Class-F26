@@ -80,6 +80,8 @@ ipython_config.py
 .env
 .env.*
 .venv
+.venv-unsloth/
+unsloth_compiled_cache/
 env/
 venv/
 ENV/

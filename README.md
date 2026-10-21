@@ -48,7 +48,7 @@ model on CUDA when available; that test is skipped on CPU-only machines. ZenML
 tests exercise the real Iris training and evaluation steps and prepare the
 pipeline graph without submitting a run or requiring a server or store.
 
-Pytest measures coverage of `src` and requires at least 80% overall coverage.
+Pytest measures coverage of `src` and requires 100% overall coverage.
 
 ```bash
 uv run ruff check
@@ -70,6 +70,118 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - A5 - Training a Model (done)
 - A6 - Finetune (done)
 - A7 - Hosting (In Progress)
+
+### Assignment 7: Unsloth LoRA serving
+
+The server in [src/server.py](src/server.py) loads the final Assignment 6 LoRA
+adapter from `archive/a6_colab_results/adapters/04_focus2_FINAL/`. It attaches the
+adapter to `meta-llama/Llama-3.2-1B-Instruct`, pinned to training revision
+`9213176726f574b556790deb65791e0c5aa438b6`. No further training or adapter merging
+is needed. The base model and adapter load once during server startup. Unsloth
+patches the model for inference and `FastLanguageModel.for_inference` enables its
+generation mode. FastAPI provides the HTTP endpoints.
+
+The original Transformers/PEFT implementation is preserved in
+[src/transformers_app/](src/transformers_app/README.md). Start it with `make serve-transformers`.
+Both implementations share the API and request client; run one server at a time.
+
+From the repository root, install the locked dependencies and start the server:
+
+```bash
+uv sync --locked
+make setup-unsloth
+make serve
+```
+
+`make setup-unsloth` creates `.venv-unsloth` with Python 3.12 and installs the
+pinned `requirements-unsloth.lock`. It uses the compatible Assignment 6 stack
+(Unsloth 2026.10.1, PyTorch 2.9.1, Transformers 4.57.6) plus PEFT 0.21.2 and the
+web server packages. The root `.venv` remains the Python 3.14 environment for
+coursework checks, the client, and the original server. To update the separate
+Unsloth lock after editing `requirements-unsloth.in`, run:
+
+```bash
+uv pip compile --python-version 3.12 requirements-unsloth.in -o requirements-unsloth.lock
+```
+
+Wait for `Application startup complete`. In another terminal, send a request:
+
+```bash
+make infer
+# Or supply your own question:
+uv run python -m src.inference "How many Ls are in the word parallel?"
+```
+
+The client in [src/inference.py](src/inference.py) uses `requests.post` and prints
+the URL, JSON request, HTTP status, and JSON response. Take a screenshot of that
+terminal output for Question 3. It exits with a nonzero status on connection,
+timeout, HTTP, or invalid-JSON errors. CPU requests may take longer; the default
+timeout is 300 seconds.
+
+Open <http://127.0.0.1:8000/docs> for interactive API documentation, or inspect
+<http://127.0.0.1:8000/health> to confirm the model, revision, adapter path, and
+device. The `backend` field identifies `unsloth` or `transformers-peft`.
+Stop the server with Ctrl+C in its terminal. The `/docs` page remains a developer
+API interface; changing the inference engine does not add a chat frontend.
+
+`POST /generate` accepts:
+
+```json
+{"prompt": "How many Ls are in the word parallel?", "max_new_tokens": 128}
+```
+
+Its response contains `text`, `prompt_tokens`, `generated_tokens`, and
+`elapsed_seconds`. Generation is greedy, uses the adapter's saved chat template,
+and returns only the new answer text. Requests must contain a nonblank prompt
+of at most 8,000 characters and at most 1,024 tokens after chat formatting.
+`max_new_tokens` defaults to 128 and must be an integer from 1 to 256. Invalid
+requests return HTTP 422. Generation requests run one at a time to limit memory
+use; `/health` remains available while an answer is being generated.
+
+The Unsloth implementation requires NVIDIA CUDA and uses FP16 base weights with
+the existing LoRA adapter. Quantization is disabled. `DEVICE=auto` and
+`DEVICE=cuda` both use CUDA; a missing GPU stops startup. For CPU operation use
+the preserved original server, which also supports automatic CUDA selection:
+
+```bash
+DEVICE=cpu make serve-transformers
+DEVICE=cuda make serve
+ADAPTER_PATH=/absolute/path/to/04_focus2_FINAL make serve
+```
+
+An explicit CUDA request fails if CUDA is unavailable. An adapter override must
+be a complete saved adapter/tokenizer directory for the same base model revision.
+Missing adapter files stop startup instead of serving the unmodified base model.
+The adapter is in ignored `archive/`; a fresh clone needs a local copy of it.
+Keep model weights and credentials out of Git.
+
+The base weights are already cached on the development machine. To use only
+cached files, run `HF_HUB_OFFLINE=1 make serve`. On a fresh machine, download
+requires access to the gated Llama model through your Hugging Face account and
+an existing login or `HF_TOKEN` environment variable.
+
+`make serve` binds to `127.0.0.1:8000` with one Uvicorn worker. This setup is for
+local use and has no authentication. Multiple workers would each load a separate
+copy of the model. To use another port, run the equivalent command directly:
+
+```bash
+.venv-unsloth/bin/python -m uvicorn src.server:app --host 127.0.0.1 --port 8001 --workers 1
+uv run python -m src.inference --url http://127.0.0.1:8001 --max-new-tokens 64
+```
+
+Tests cover request validation, answer extraction, startup/shutdown, missing or
+incompatible adapters, device selection, and client failures. A tiny local Llama
+checkpoint with real LoRA weights verifies adapter loading and generation through
+the preserved API without downloading the full model or requiring a GPU. Unsloth
+loader tests check the pinned base, saved adapter attachment, inference mode,
+and CUDA requirements with mocks; a real GPU request is a separate manual check.
+Run the usual checks with `make`; all source files retain the 100% coverage
+requirement. No inference speedup is assumed without a comparative benchmark.
+
+Implementation references: [FastAPI lifespan](https://fastapi.tiangolo.com/advanced/events/),
+[Unsloth inference](https://unsloth.ai/docs/basics/inference-and-deployment/unsloth-inference),
+[PEFT model loading](https://huggingface.co/docs/peft/main/en/package_reference/peft_model),
+and [Transformers chat templates](https://huggingface.co/docs/transformers/main/en/chat_templating).
 
 ## Additional Usage
 

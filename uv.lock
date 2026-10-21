@@ -3258,20 +3258,24 @@ source = { virtual = "." }
 dependencies = [
     { name = "bert-score" },
     { name = "evaluate" },
+    { name = "fastapi" },
     { name = "pandas" },
+    { name = "peft" },
+    { name = "requests" },
     { name = "rouge-score" },
     { name = "scikit-learn" },
     { name = "torch" },
     { name = "torchao" },
     { name = "torchvision" },
     { name = "transformers" },
+    { name = "uvicorn" },
     { name = "zenml", extra = ["server"] },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "httpx" },
     { name = "ipykernel" },
-    { name = "peft" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
@@ -3281,20 +3285,24 @@ dev = [
 requires-dist = [
     { name = "bert-score", specifier = ">=0.3.13" },
     { name = "evaluate", specifier = ">=0.4.6" },
+    { name = "fastapi", specifier = ">=0.138.2" },
     { name = "pandas", specifier = ">=3.0.6" },
+    { name = "peft", specifier = ">=0.21.2" },
+    { name = "requests", specifier = ">=2.34.2" },
     { name = "rouge-score", specifier = ">=0.1.2" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
     { name = "torch", specifier = ">=2.14.0" },
     { name = "torchao", specifier = ">=0.16.0" },
     { name = "torchvision", specifier = ">=0.29.1" },
     { name = "transformers", specifier = ">=5.17.0" },
+    { name = "uvicorn", specifier = ">=0.54.0" },
     { name = "zenml", extras = ["server"], specifier = ">=0.97.0" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "ipykernel", specifier = ">=7.4.0" },
-    { name = "peft", specifier = ">=0.21.2" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
     { name = "ruff", specifier = ">=0.16.4" },
