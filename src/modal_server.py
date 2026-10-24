@@ -1,6 +1,4 @@
 import importlib.metadata
-import json
-import os
 import subprocess
 import time
 import urllib.request
@@ -9,14 +7,7 @@ import modal
 
 from src import config
 
-
-def fast_boot_setting(environ):
-    return environ.get("FAST_BOOT", "1") == "1"  # on unless a deploy sets FAST_BOOT=0
-
-
-IMPORT_EPOCH = time.time()  # in the container: when our module first runs
 PORT = 8000
-FAST_BOOT = fast_boot_setting(os.environ)  # read at deploy time, baked in below
 VERSIONED_PACKAGES = [
     "vllm",
     "torch",
@@ -27,11 +18,10 @@ VERSIONED_PACKAGES = [
 
 app = modal.App("trick-question-serving")
 
-# cache volumes mount at the default Hugging Face and vLLM cache folders; adapters mount read-only
+# cache volumes mount at the default Hugging Face and vLLM cache folders
 volumes = {
     "/root/.cache/huggingface": modal.Volume.from_name(config.HF_CACHE_VOLUME),
     "/root/.cache/vllm": modal.Volume.from_name(config.VLLM_CACHE_VOLUME),
-    "/adapters": modal.Volume.from_name(config.ADAPTERS_VOLUME).read_only(),
 }
 
 image = (
@@ -43,44 +33,26 @@ image = (
         "flashinfer-python==0.3.1",
         "huggingface_hub==0.35.0",
     )
-    .env({"HF_XET_HIGH_PERFORMANCE": "1", "FAST_BOOT": "1" if FAST_BOOT else "0"})
+    .env({"HF_XET_HIGH_PERFORMANCE": "1"})
     .add_local_dir("src", remote_path="/root/src")
 )
 
 
-def vllm_command(fast_boot):
-    command = [
+def vllm_command():
+    return [
         "vllm",
         "serve",
         config.MODEL_NAME,
         "--served-model-name",
         config.SERVED_BASE_NAME,
-        "--enable-lora",
-        "--lora-modules",
-        f"{config.ADAPTER_NAME}={config.ADAPTER_PATH}",
-        "--max-lora-rank",
-        str(config.LORA_R),
         "--max-model-len",
         str(config.EVAL_MAX_SEQ_LENGTH),
         "--host",
         "0.0.0.0",
         "--port",
         str(PORT),
+        "--enforce-eager",  # skips CUDA graph capture, so the server boots faster
     ]
-    return command + ["--enforce-eager"] if fast_boot else command
-
-
-def build_marks(launch_epoch, ready_epoch):
-    return {
-        "import_epoch": IMPORT_EPOCH,
-        "launch_epoch": launch_epoch,
-        "ready_epoch": ready_epoch,
-        "fast_boot": FAST_BOOT,
-    }
-
-
-def marks_line(marks):
-    return f"{config.MARKS_TAG} {json.dumps(marks)}"
 
 
 def wait_until_ready():
@@ -106,12 +78,9 @@ class Server:
         versions = {
             name: importlib.metadata.version(name) for name in VERSIONED_PACKAGES
         }
-        print("versions:", versions, "| FAST_BOOT:", FAST_BOOT)
-        launch_epoch = time.time()
-        self.process = subprocess.Popen(vllm_command(FAST_BOOT))
+        print("versions:", versions)
+        self.process = subprocess.Popen(vllm_command())
         wait_until_ready()
-        marks = build_marks(launch_epoch, time.time())
-        print(marks_line(marks), flush=True)
 
     @modal.exit()
     def stop(self):
