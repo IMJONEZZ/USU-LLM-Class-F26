@@ -1,3 +1,6 @@
+# ---- data ----
+QUESTION_COUNT = 10  # a silent drop would shrink the extra-credit score
+
 # ---- model ----
 MODEL_NAME = "unsloth/Llama-3.2-1B"
 
