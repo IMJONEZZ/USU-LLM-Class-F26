@@ -61,6 +61,9 @@ cache = modal.Volume.from_name("hw8-base-cache", create_if_missing=True)
     secrets=[modal.Secret.from_name("hw7-api-key")],
 )
 @modal.concurrent(max_inputs=4)
+# Twice the startup window last assignment used. That one mounted a GGUF that
+# was already sitting on a volume; this one may have to pull 800MB off Hugging
+# Face before llama.cpp can open it, and only the first boot pays that.
 @modal.web_server(PORT, startup_timeout=600)
 def serve():
     import os
