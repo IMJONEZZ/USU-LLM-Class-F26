@@ -8,7 +8,7 @@ CPU and gives 384 dimensions.
 The corpus is the same dialogue I've been using since assignment 1, except this
 time the speaker comes along with it. Assignment 2 threw the character names
 away on purpose, because folding "THREEPIO:" into training text teaches a model
-to type it out as if it were speech. Here it's payload rather than training
+to type it out as if it were speech. Here it's payload, not training
 data, so keeping it costs nothing and makes a result readable.
 
 Both the client and the encoder are arguments. The tests pass fakes, which is
@@ -27,11 +27,63 @@ EMBED_MODEL = "BAAI/bge-small-en-v1.5"
 
 # bge-small is 384 dimensions. Qdrant wants that up front when the collection
 # is created and will reject every vector that doesn't match, so it's a
-# constant rather than something inferred at upsert time.
+# constant instead of something worked out at upsert time.
 VECTOR_SIZE = 384
 
 SCRIPT_COLLECTION = "star-wars"
+QA_COLLECTION = "trick-questions"
 BATCH_SIZE = 256
+
+# The ten questions from assignment 6 with the answers they should have had.
+# The extra credit is to see whether handing these to the base model through
+# retrieval gets them right, so these are the documents that go in the second
+# collection. I wrote them, which means a wrong one here turns into a
+# confidently wrong answer out the other end, so the two I was least sure
+# about I went and checked: knuckle cracking has no demonstrated link to
+# arthritis, and Talos was made by Hephaestus, not the Cyclopes that
+# the model kept insisting on.
+QA_CORPUS = [
+    (
+        "If it takes 1 hour for 60 people to play an Opera, how many hours will it take 600 people to play the same opera?",
+        "It still takes 1 hour. An opera runs as long as it runs, and adding more performers doesn't make the piece shorter.",
+    ),
+    (
+        "Is a pound of feathers or a British pound heavier?",
+        "A pound of feathers. A pound of feathers is a unit of weight, while a British pound is money and has no weight of its own.",
+    ),
+    (
+        "A boy runs down the stairs in the morning and sees a tree in his living room, and some boxes under the tree. What's going on?",
+        "It's Christmas morning. A decorated tree indoors with wrapped boxes underneath it is a Christmas tree and presents.",
+    ),
+    (
+        "What happens if you crack your knuckles a lot?",
+        "Nothing much happens. Cracking your knuckles has not been shown to cause arthritis, and studies comparing habitual crackers with non-crackers find the same rates of hand osteoarthritis.",
+    ),
+    (
+        "If there is a shark in the pool of my basement, is it safe to go upstairs?",
+        "Yes, it's safe. A shark can't survive out of water or climb a staircase, so it can't follow you upstairs.",
+    ),
+    (
+        "How much wood could a wood chuck chuck if there were only 5 pounds of wood in the world?",
+        "At most 5 pounds, because that is all the wood there is. It cannot chuck more wood than exists.",
+    ),
+    (
+        "Who is the current President of the United States?",
+        "Donald Trump is the current President of the United States. He was inaugurated for a second term in January 2025.",
+    ),
+    (
+        "Was Talos alive?",
+        "Not in the biological sense. Talos was a giant bronze automaton built by Hephaestus to guard Crete. He moved and acted, but he was a made object rather than a living creature, and Medea destroyed him by releasing the ichor from the single vein in his ankle.",
+    ),
+    (
+        "How many Ls are in the word parallel?",
+        "There are 3. Spelling it out, p-a-r-a-l-l-e-l, the Ls are the 5th, 6th and 8th letters.",
+    ),
+    (
+        "What is the riddle of the sphinx, and what are all possible answers satisfying all conditions?",
+        "The riddle is: what walks on four legs in the morning, two legs at noon, and three legs in the evening? The answer is a human being, who crawls on all fours as a baby, walks upright as an adult, and leans on a cane in old age.",
+    ),
+]
 
 
 def load_script(path=DEFAULT_DATASET):
@@ -142,6 +194,26 @@ def search(client, query, encoder, name=SCRIPT_COLLECTION, limit=3):
         {"score": hit.score, "text": hit.payload.get("text", ""), **hit.payload}
         for hit in hits
     ]
+
+
+def qa_documents(corpus=None):
+    """Turn the question and answer pairs into documents.
+
+    Only the question gets embedded, not the answer. The thing being matched
+    against is somebody asking a question, so burying it in a paragraph of
+    answer text just dilutes the part that has to match.
+    """
+    corpus = QA_CORPUS if corpus is None else corpus
+    return [
+        {"text": question, "question": question, "answer": answer}
+        for question, answer in corpus
+    ]
+
+
+def build_qa(client, encoder, corpus=None, name=QA_COLLECTION):
+    """Load the trick questions into their own collection."""
+    create_collection(client, name)
+    return upsert_documents(client, qa_documents(corpus), encoder, name)
 
 
 def build(client, encoder, path=DEFAULT_DATASET, name=SCRIPT_COLLECTION):

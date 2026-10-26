@@ -15,12 +15,16 @@ import json
 import pytest
 
 from src.vectordb import (
+    QA_COLLECTION,
+    QA_CORPUS,
     SCRIPT_COLLECTION,
     VECTOR_SIZE,
     build,
+    build_qa,
     create_collection,
     embed,
     load_script,
+    qa_documents,
     search,
     to_documents,
     upsert_documents,
@@ -285,3 +289,38 @@ def test_build_then_search_finds_the_right_line(script_file):
     assert search(client, "tell me about the Force", FakeEncoder())[0]["text"] == (
         "LUKE: The Force?"
     )
+
+
+# --- the trick question collection, for the extra credit ----------------------
+
+
+def test_qa_documents_embed_the_question_not_the_answer():
+    """Retrieval matches somebody asking a question.
+
+    Embedding the answer alongside it dilutes the part that actually has to
+    match, since the answer is usually the longer half.
+    """
+    docs = qa_documents([("How many Ls?", "There are 3.")])
+    assert docs[0]["text"] == "How many Ls?"
+    assert docs[0]["answer"] == "There are 3."
+
+
+def test_qa_corpus_covers_all_ten_graded_questions():
+    """The corpus has to be the ten questions, not nine or a paraphrase."""
+    from src.dataset import HOMEWORK_QUESTIONS
+
+    assert [q for q, _ in QA_CORPUS] == HOMEWORK_QUESTIONS
+
+
+def test_every_qa_entry_has_a_real_answer():
+    # An empty answer would retrieve fine and then give the model nothing,
+    # which looks like a model failure rather than a corpus one.
+    assert all(len(a.strip()) > 20 for _, a in QA_CORPUS)
+
+
+def test_build_qa_uses_its_own_collection():
+    """Kept apart from the dialogue so a miss is retrieval, not interference."""
+    client = FakeClient()
+    assert build_qa(client, FakeEncoder(), corpus=[("q", "a")]) == 1
+    assert client.created[0]["name"] == QA_COLLECTION
+    assert QA_COLLECTION != SCRIPT_COLLECTION
