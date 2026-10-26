@@ -1,0 +1,82 @@
+[
+  {
+    "question": "If it takes 1 hour for 60 people to play an Opera, how many hours will it take 600 people to play the same opera?",
+    "answer": "If it takes 1 hour for 60 people to play an Opera, it means the opera is designed to be played by 60 people in 1 hour. Therefore, the number of hours it takes to play the opera remains the same, regardless of the number of people playing it.",
+    "retrieved": [
+      "If it takes 1 hour for 60 people to play an Opera, how many hours will it take 600 people to play the same opera?"
+    ],
+    "retrieval_correct": true
+  },
+  {
+    "question": "Is a pound of feathers or a British pound heavier?",
+    "answer": "Since a pound of feathers is a unit of weight, and a British pound is money, they have different units of measurement. A pound of feathers is a unit of weight, while a British pound is a unit of currency. Therefore, a pound of feathers is not heavier than a British pound.",
+    "retrieved": [
+      "Is a pound of feathers or a British pound heavier?"
+    ],
+    "retrieval_correct": true
+  },
+  {
+    "question": "A boy runs down the stairs in the morning and sees a tree in his living room, and some boxes under the tree. What's going on?",
+    "answer": "It seems like there might be some confusion in the question. The scenario you've described doesn't match the typical scenario of a boy running down the stairs in the morning and seeing a tree in his living room, and some boxes under the tree. \n\nA more likely scenario is that the boy is running down the stairs to get to the living room, where he finds a decorated tree (likely a Christmas tree) and presents (boxes) under it. This would be a common Christmas morning scene.",
+    "retrieved": [
+      "A boy runs down the stairs in the morning and sees a tree in his living room, and some boxes under the tree. What's going on?"
+    ],
+    "retrieval_correct": true
+  },
+  {
+    "question": "What happens if you crack your knuckles a lot?",
+    "answer": "Cracking your knuckles a lot is unlikely to cause any significant harm or long-term damage.",
+    "retrieved": [
+      "What happens if you crack your knuckles a lot?"
+    ],
+    "retrieval_correct": true
+  },
+  {
+    "question": "If there is a shark in the pool of my basement, is it safe to go upstairs?",
+    "answer": "A: No, it's not safe to go upstairs if there is a shark in the pool of your basement.",
+    "retrieved": [
+      "If there is a shark in the pool of my basement, is it safe to go upstairs?"
+    ],
+    "retrieval_correct": true
+  },
+  {
+    "question": "How much wood could a wood chuck chuck if there were only 5 pounds of wood in the world?",
+    "answer": "If there were only 5 pounds of wood in the world, a woodchuck would chuck as much wood as there is, because the question states \"at most 5 pounds\".",
+    "retrieved": [
+      "How much wood could a wood chuck chuck if there were only 5 pounds of wood in the world?"
+    ],
+    "retrieval_correct": true
+  },
+  {
+    "question": "Who is the current President of the United States?",
+    "answer": "I can provide you with the most accurate and up-to-date information. As of my knowledge cutoff in December 2023, the current President of the United States is Joe Biden. He was inaugurated for a first term in January 2021. However, please note that the information may have changed since my knowledge cutoff date.",
+    "retrieved": [
+      "Who is the current President of the United States?"
+    ],
+    "retrieval_correct": true
+  },
+  {
+    "question": "Was Talos alive?",
+    "answer": "No, Talos was not alive in the biological sense.",
+    "retrieved": [
+      "Was Talos alive?"
+    ],
+    "retrieval_correct": true
+  },
+  {
+    "question": "How many Ls are in the word parallel?",
+    "answer": "There are 3 Ls in the word parallel.",
+    "retrieved": [
+      "How many Ls are in the word parallel?"
+    ],
+    "retrieval_correct": true
+  },
+  {
+    "question": "What is the riddle of the sphinx, and what are all possible answers satisfying all conditions?",
+    "answer": "The riddle of the Sphinx is a classic enigma that has puzzled people for centuries. Here's the answer:\n\nThe riddle of the Sphinx is: \"What is it that is blind, yet sees; silent, yet speaks; and is born, yet dies?\"\n\nPossible answers satisfying all conditions:\n\n1. A river: A river is blind, yet it sees the world around it through its waters. It is silent, yet it speaks through its gentle flow. And it is born, yet dies, as it flows into the sea.\n2. A tree: A tree is blind, yet it sees the world through its leaves. It is silent, yet it speaks through its bark. And it is born, yet dies, as it grows and dies seasonally.\n3. A person: A person is blind, yet they see the world around them through their senses. They are silent, yet they speak through their words and actions. And they are born, yet die, as they grow and age.\n4. A shadow: A shadow is blind, yet it sees the world around it through the light. It is silent, yet it speaks through the darkness. And it is born, yet dies, as it moves across the surface it follows.\n5. A mirror: A mirror is blind, yet it sees the world around it through reflection. It is silent, yet it speaks through its surface. And it is born, yet dies, as it reflects the image of the world.\n\nThese are just a few possible answers that satisfy all the conditions of the riddle. There may be other answers as well.",
+    "retrieved": [
+      "What is the riddle of the sphinx, and what are all possible answers satisfying all conditions?"
+    ],
+    "retrieval_correct": true
+  }
+]
