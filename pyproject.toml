@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "bert-score>=0.3.13",
+    "chromadb>=1.5.9",
     "evaluate>=0.4.6",
     "fastapi>=0.138.2",
     "pandas>=3.0.6",
