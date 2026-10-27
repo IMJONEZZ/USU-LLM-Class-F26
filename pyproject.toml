@@ -6,11 +6,13 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "accelerate>=1.15.0",
+    "chromadb>=1.5.9",
     "datasets>=5.0.1",
     "distilabel[hf-inference-endpoints]>=1.5.3",
     "evaluate>=0.4.6",
     "numpy>=2.5.3",
     "scikit-learn>=1.9.1",
+    "sentence-transformers>=6.2.0",
     "torch>=2.14.0",
     "transformers>=5.17.0",
     "trl<0.20.0",
