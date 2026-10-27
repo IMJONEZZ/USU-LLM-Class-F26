@@ -70,7 +70,7 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - A5 - Training a Model (done)
 - A6 - Finetune (done)
 - A7 - Hosting (done)
-- A8 - Database (In progress)
+- A8 - Database (done)
 
 ### Assignment 7: Unsloth LoRA serving
 
