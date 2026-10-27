@@ -179,3 +179,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+data/
+data/star_wars_script.jsonl
+outputs/
+"data/trick_question_training.jsonl"
+chroma_db/
