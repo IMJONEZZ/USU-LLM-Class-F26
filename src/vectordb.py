@@ -1,4 +1,4 @@
-"""Create and query a small Chroma vector database."""  # pragma: no cover
+"""Create and query a small Chroma vector database."""
 
 from pathlib import Path
 
