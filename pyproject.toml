@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4>=4.15.0",
+    "chromadb>=1.0.0",
     "colorama>=0.4.6",
     "datasets>=3.0",
     "distilabel[openai]>=1.5.3",
@@ -15,6 +16,7 @@ dependencies = [
     "modal>=1.5.5",
     "openai>=1,<2",
     "scipy>=1.18.1",
+    "sentence-transformers>=5.0.0",
     "spacy>=3.8.16",
     "textblob>=0.20.1",
     "torch>=2.14.0",
