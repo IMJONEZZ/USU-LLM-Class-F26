@@ -4,9 +4,6 @@ from uuid import uuid4
 from pinecone import Pinecone, ServerlessSpec
 from sentence_transformers import SentenceTransformer
 
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-pc = Pinecone(api_key=PINECONE_API_KEY)
-
 
 class ESPNArticleIngestion:
     def __init__(
@@ -93,6 +90,8 @@ def run_pipeline(pc, files):
 
 
 if __name__ == "__main__":
+    PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+    pc = Pinecone(api_key=PINECONE_API_KEY)
     files = ["../data/article1.txt", "../data/article2.txt"]
     results = run_pipeline(pc, files)
 
