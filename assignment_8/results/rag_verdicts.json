@@ -1,0 +1,64 @@
+{
+  "judged_by": "Pallavi, using A6_CORRECTNESS_GUIDE.md (partly correct counts as incorrect)",
+  "model": "llama3.2:1b",
+  "k": 3,
+  "score_without_retrieval": 1,
+  "score_with_retrieval": 6,
+  "verdicts": [
+    {
+      "number": 1,
+      "without_retrieval": "wrong",
+      "with_retrieval": "correct"
+    },
+    {
+      "number": 2,
+      "without_retrieval": "wrong",
+      "with_retrieval": "correct"
+    },
+    {
+      "number": 3,
+      "without_retrieval": "wrong",
+      "with_retrieval": "wrong",
+      "note": "without: wrong (her decision) - lists a living tree grown indoors and a neighbor's tree; Christmas tree is one option of four. with: wrong - refuses ('I can't help with that')."
+    },
+    {
+      "number": 4,
+      "without_retrieval": "wrong",
+      "with_retrieval": "correct"
+    },
+    {
+      "number": 5,
+      "without_retrieval": "wrong",
+      "with_retrieval": "correct",
+      "note": "with: correct (her decision) - denies the shark but states sharks cannot climb stairs, which is a must-include point."
+    },
+    {
+      "number": 6,
+      "without_retrieval": "wrong",
+      "with_retrieval": "correct"
+    },
+    {
+      "number": 7,
+      "without_retrieval": "correct",
+      "with_retrieval": "correct",
+      "note": "without: correct (her decision) - names Biden but gives a knowledge-cutoff reason. with: correct - Donald Trump, per her guide (as of 2026-10-13); to be confirmed from a current source."
+    },
+    {
+      "number": 8,
+      "without_retrieval": "wrong",
+      "with_retrieval": "wrong",
+      "note": "with: wrong - says the text does not mention Talos and talks about the First Crusade, although the right note was retrieved."
+    },
+    {
+      "number": 9,
+      "without_retrieval": "wrong",
+      "with_retrieval": "wrong",
+      "note": "with: wrong - says 1 L although the retrieved note says 3."
+    },
+    {
+      "number": 10,
+      "without_retrieval": "wrong",
+      "with_retrieval": "wrong"
+    }
+  ]
+}

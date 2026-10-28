@@ -179,3 +179,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Assignment 8 local data (downloaded SQuAD copy and the Chroma folder)
+data/
+chroma_db/
