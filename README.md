@@ -49,3 +49,8 @@ uv run pytest
 ### AI assistance
 
 The course supports Claude Code and Codex. Both assistants follow the same student-learning and academic-integrity expectations in [AGENTS.md](AGENTS.md).
+
+## Grammar-constrained website generator
+
+See [the assignment project](src/website_generator/README.md) for the local vLLM,
+FastAPI and vanilla JavaScript implementation, setup commands and verification status.
