@@ -71,6 +71,7 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - A6 - Finetune (done)
 - A7 - Hosting (done)
 - A8 - Database (done)
+- A9 - HTML Structured Output (In Progress)
 
 ### Assignment 7: Unsloth LoRA serving
 
