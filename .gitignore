@@ -179,3 +179,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+.env
+
+/assets
+chroma_db/

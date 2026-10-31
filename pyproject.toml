@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "modal>=1.6.1",
+    "prek>=0.5.5",
+    "pydantic",
+]
 
 [dependency-groups]
 dev = [
@@ -13,5 +17,15 @@ dev = [
     "ruff>=0.16.4",
 ]
 
+[tool.ruff.lint]
+extend-select = ["C901", "PLR0912", "PLR0913", "PLR0915"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-statements = 50
+
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"
+markers = ["slow: loads a real model or tokenizer"]
