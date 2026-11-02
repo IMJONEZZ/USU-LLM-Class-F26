@@ -28,8 +28,5 @@ PROMPTS = [
 
 # ---- serving ----
 GPU_TYPE = "L4"
-EVAL_MAX_SEQ_LENGTH = 2048
-SERVED_BASE_NAME = "llama-3.2-1b-base"
 HF_CACHE_VOLUME = "serving-hf-cache"
-VLLM_CACHE_VOLUME = "serving-vllm-cache"
-SCALEDOWN_WINDOW = 1200  # seconds idle before the container exits; assumed Modal's max
+SCALEDOWN_WINDOW = 1200  # seconds idle before the container exits; 20 min is Modal's documented max (modal.com/docs/guide/cold-start)

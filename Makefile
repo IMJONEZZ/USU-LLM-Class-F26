@@ -1,4 +1,4 @@
-.PHONY: add_all modal_app_list deploy test lint
+.PHONY: add_all modal_app_list deploy test lint smoke
 
 add_all:
 	uv run ruff check --fix .
@@ -20,3 +20,7 @@ modal_app_list:
 
 deploy:
 	PYTHONPATH=$$HOME/.pythoncustomize uv run modal deploy -m src.modal_server
+
+# loads the model on an L4, prints VRAM vs estimate, runs 2 generations and the Guidance check; writes results/m4_probe.json
+smoke:
+	PYTHONPATH=$$HOME/.pythoncustomize uv run modal run -m src.modal_server::smoke
