@@ -7,7 +7,7 @@ from pathlib import Path
 
 import modal
 
-from src import config
+from src import benchmark, config, methods
 
 VERSIONED_PACKAGES = ["torch", "transformers", "accelerate", "guidance", "pydantic"]
 PROBE_PATH = "results/m4_probe.json"
@@ -17,10 +17,16 @@ app = modal.App("webpage-benchmark")
 
 hf_volume = modal.Volume.from_name(config.HF_CACHE_VOLUME, create_if_missing=True)
 
-# shortcut: packages are unpinned; the versions are printed at container start, pin them after the first good run
+# pinned to the versions the last successful smoke run printed (results/m4_probe.json)
 image = (
     modal.Image.debian_slim(python_version="3.11")
-    .uv_pip_install("torch", "transformers", "accelerate", "guidance", "pydantic")
+    .uv_pip_install(
+        "torch==2.15.0",
+        "transformers==5.22.1",
+        "accelerate==1.15.0",
+        "guidance==0.3.1",
+        "pydantic==2.14.2",
+    )
     .add_local_dir("src", remote_path="/root/src")
 )
 
@@ -33,14 +39,6 @@ def kv_cache_mib(layers, kv_heads, head_dim, tokens, bytes_per_value=2):
 def is_truncated(token_ids, eos_ids, cap):
     """True when generation stopped because it hit the cap, not because the model ended its turn."""
     return len(token_ids) >= cap and token_ids[-1] not in eos_ids
-
-
-def guidance_answer(model, tokenizer):  # pragma: no cover - needs a GPU machine
-    from guidance import gen, models
-
-    lm = models.Transformers(model, tokenizer)
-    lm += "The capital of France is " + gen("answer", max_tokens=5, temperature=0.0)
-    return lm["answer"]
 
 
 @app.cls(
@@ -67,11 +65,17 @@ class Generator:
         )
         hf_volume.commit()  # keep the downloaded weights for the next cold start
         self.versions = versions
+        self.gpu = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
         self.container_id = os.environ.get("MODAL_TASK_ID", "unknown")
         self.started = time.time()
         self.calls = {}
 
-    def meta(self, method):  # pragma: no cover - needs a GPU machine
+    def meta(self, method):
         before = self.calls.get(method, 0)
         self.calls[method] = before + 1
         return {
@@ -80,29 +84,25 @@ class Generator:
             "calls_before": before,
         }
 
-    def encode(self, text):  # pragma: no cover - needs a GPU machine
-        chat = self.tokenizer.apply_chat_template(
+    def chat_text(self, text):
+        """The one chat-formatted prompt string both methods start from."""
+        return self.tokenizer.apply_chat_template(
             [{"role": "user", "content": text}],
             add_generation_prompt=True,
             tokenize=False,
         )
+
+    def encode(self, text):  # pragma: no cover - needs a GPU machine
         # the chat template already holds the start token
-        return self.tokenizer(chat, return_tensors="pt", add_special_tokens=False).to(
-            "cuda"
-        )
+        return self.tokenizer(
+            self.chat_text(text), return_tensors="pt", add_special_tokens=False
+        ).to("cuda")
 
     @modal.method()
     def probe(self):  # pragma: no cover - needs a GPU machine
         import torch
 
-        from src.schema import WebPage
-
-        # assumed shape of Method B's prompt (M6 writes the real builder): base template + schema text
-        schema_text = json.dumps(WebPage.model_json_schema())
-        prompts = [
-            config.BASE_PROMPT_TEMPLATE.format(request=p) + "\n" + schema_text
-            for p in config.PROMPTS
-        ]
+        prompts = [methods.build_prompt(p) for p in config.PROMPTS]
         prompt_tokens = max(self.encode(p)["input_ids"].shape[1] for p in prompts)
         total_tokens = prompt_tokens + config.MAX_NEW_TOKENS
         cfg = self.model.config
@@ -111,12 +111,6 @@ class Generator:
         )
         params = sum(p.numel() for p in self.model.parameters())
         element_bytes = next(self.model.parameters()).element_size()
-        gpu_name = subprocess.run(
-            ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
         estimate_weights = params * element_bytes / MIB
         estimate_kv = kv_cache_mib(
             cfg.num_hidden_layers,
@@ -127,7 +121,7 @@ class Generator:
         )
         return {
             "model": config.MODEL_NAME,
-            "gpu": gpu_name,
+            "gpu": self.gpu,
             "gpu_total_mib": round(
                 torch.cuda.get_device_properties(0).total_memory / MIB, 2
             ),
@@ -142,11 +136,10 @@ class Generator:
             "measured_peak_mib": round(torch.cuda.max_memory_allocated() / MIB, 2),
         }
 
-    @modal.method()
-    def generate(self, prompt):  # pragma: no cover - needs a GPU machine
+    def complete(self, prompt):  # pragma: no cover - needs a GPU machine
+        """Method B's model call: one plain transformers generation."""
         import torch
 
-        start = time.perf_counter()
         inputs = self.encode(prompt)
         sampling = {"temperature": config.TEMPERATURE} if config.TEMPERATURE > 0 else {}
         with torch.no_grad():
@@ -157,43 +150,85 @@ class Generator:
                 **sampling,
             )
         new_ids = output[0][inputs["input_ids"].shape[1] :].tolist()
-        seconds = time.perf_counter() - start
         eos = self.model.generation_config.eos_token_id
         eos_ids = set(eos if isinstance(eos, list) else [eos])
+        text = self.tokenizer.decode(new_ids, skip_special_tokens=True)
+        return text, len(new_ids), is_truncated(new_ids, eos_ids, config.MAX_NEW_TOKENS)
+
+    def record(self, method, outcome, html, result, seconds):
+        bucket, reason = outcome
         return {
-            "text": self.tokenizer.decode(new_ids, skip_special_tokens=True),
-            "new_tokens": len(new_ids),
-            "hit_cap": is_truncated(new_ids, eos_ids, config.MAX_NEW_TOKENS),
+            "method": method,
+            "bucket": bucket,
+            "reason": reason,
+            "html": html,
+            **result,
             "seconds": round(seconds, 2),
-            **self.meta("generate"),
+            "model": config.MODEL_NAME,
+            "gpu": self.gpu,
+            **self.meta(method),
         }
 
     @modal.method()
-    def guidance_check(self):  # pragma: no cover - needs a GPU machine
-        """Can Guidance drive this model? Failures are left to surface."""
-        return guidance_answer(self.model, self.tokenizer)
+    def warm_state(self):
+        return dict(self.calls)
+
+    @modal.method()
+    def run_guidance(self, request):
+        """Method A. Timed from request start to the finished, classified string; includes grammar construction."""
+        start = time.perf_counter()
+        chat = self.chat_text(config.BASE_PROMPT_TEMPLATE.format(request=request))
+        out = methods.run_guidance(self.model, self.tokenizer, chat)
+        outcome = methods.classify_html(out["text"], out["hit_cap"])
+        seconds = time.perf_counter() - start
+        html = out["text"] if outcome[0] == "valid" else None
+        return self.record("guidance", outcome, html, out, seconds)
+
+    @modal.method()
+    def run_coercion(self, request):
+        """Method B. Timed the same way; includes parsing the JSON and assembling the HTML."""
+        start = time.perf_counter()
+        text, new_tokens, hit_cap = self.complete(methods.build_prompt(request))
+        outcome = methods.classify_json(text, hit_cap)
+        seconds = time.perf_counter() - start
+        html = methods.json_to_html(text) if outcome[0] == "valid" else None
+        result = {"text": text, "new_tokens": new_tokens, "hit_cap": hit_cap}
+        return self.record("coercion", outcome, html, result, seconds)
 
 
 @app.local_entrypoint()
-def smoke():  # pragma: no cover - needs Modal and a GPU
+def smoke():
+    """Informal check: memory vs estimate, then both methods on 2 prompts through the real harness."""
     generator = Generator()
     info = generator.probe.remote()
     print(json.dumps(info, indent=2))
-    samples = [generator.generate.remote(p) for p in config.PROMPTS[:2]]
-    for sample in samples:
+    result = benchmark.run_benchmark(generator, config.PROMPTS[:2])
+    for r in result["records"]:
         print(
-            sample["new_tokens"],
+            r["prompt_id"],
+            r["method"],
+            r["bucket"],
+            r["seconds"],
+            "s",
+            r["new_tokens"],
             "tokens",
-            sample["seconds"],
-            "s hit_cap:",
-            sample["hit_cap"],
+            r["reason"],
         )
-        print(sample["text"][:400])
-    answer = generator.guidance_check.remote()
-    print("guidance answer:", answer)
     Path(PROBE_PATH).parent.mkdir(exist_ok=True)
-    Path(PROBE_PATH).write_text(
-        json.dumps(
-            {"probe": info, "samples": samples, "guidance_answer": answer}, indent=2
+    Path(PROBE_PATH).write_text(json.dumps({"probe": info, **result}, indent=2))
+
+
+@app.local_entrypoint()
+def run(name: str):
+    """The benchmark: every prompt through both methods on the warm container. Never overwrites a run."""
+    path = Path(f"results/benchmark_{name}.json")
+    if path.exists():
+        raise SystemExit(
+            f"{path} exists; use a new name (a re-run never reuses an earlier run's file)"
         )
-    )
+    generator = Generator()
+    info = generator.probe.remote()
+    result = benchmark.run_benchmark(generator, config.PROMPTS)
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(json.dumps({"probe": info, **result}, indent=2))
+    print("wrote", path)

@@ -15,6 +15,7 @@ BASE_PROMPT_TEMPLATE = (
     "Write a simple web page. Use only a title, headings and paragraphs.\n"
     "Request: {request}"
 )
+SCHEMA_INSTRUCTION = "Reply with only a JSON object that matches this JSON schema:"
 PROMPTS = [
     "A page introducing a neighborhood bakery and its morning specials.",
     "A page explaining how to care for a houseplant through the seasons.",

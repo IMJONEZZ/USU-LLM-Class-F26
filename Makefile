@@ -1,4 +1,4 @@
-.PHONY: add_all modal_app_list deploy test lint smoke
+.PHONY: add_all modal_app_list deploy test lint smoke benchmark summary
 
 add_all:
 	uv run ruff check --fix .
@@ -21,6 +21,15 @@ modal_app_list:
 deploy:
 	PYTHONPATH=$$HOME/.pythoncustomize uv run modal deploy -m src.modal_server
 
-# loads the model on an L4 (falls back to an A10 if none is free), prints VRAM vs estimate, runs 2 generations and the Guidance check; writes results/m4_probe.json
+# loads the model on an L4 (falls back to an A10 if none is free), prints VRAM vs estimate, runs both methods on 2 prompts; writes results/m4_probe.json
 smoke:
 	GPUS=L4,A10 PYTHONPATH=$$HOME/.pythoncustomize uv run modal run -m src.modal_server::smoke
+
+# the benchmark: all prompts through both methods on L4 alone; usage: make benchmark NAME=run1 (never overwrites)
+NAME ?= run1
+benchmark:
+	PYTHONPATH=$$HOME/.pythoncustomize uv run modal run -m src.modal_server::run --name $(NAME)
+
+# summary table, summary JSON and the rendered gallery for a finished run: make summary NAME=run1
+summary:
+	uv run python -m src.benchmark results/benchmark_$(NAME).json
