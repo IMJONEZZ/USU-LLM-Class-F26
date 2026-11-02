@@ -176,8 +176,7 @@ class Generator:
 
 @app.local_entrypoint()
 def smoke():  # pragma: no cover - needs Modal and a GPU
-    # smoke only: fall back to an A10 if no L4 is free; the benchmark uses the class default (L4)
-    generator = Generator.with_options(gpu=["L4", "A10"])()
+    generator = Generator()
     info = generator.probe.remote()
     print(json.dumps(info, indent=2))
     samples = [generator.generate.remote(p) for p in config.PROMPTS[:2]]

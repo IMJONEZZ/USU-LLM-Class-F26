@@ -21,6 +21,6 @@ modal_app_list:
 deploy:
 	PYTHONPATH=$$HOME/.pythoncustomize uv run modal deploy -m src.modal_server
 
-# loads the model on an L4, prints VRAM vs estimate, runs 2 generations and the Guidance check; writes results/m4_probe.json
+# loads the model on an L4 (falls back to an A10 if none is free), prints VRAM vs estimate, runs 2 generations and the Guidance check; writes results/m4_probe.json
 smoke:
-	PYTHONPATH=$$HOME/.pythoncustomize uv run modal run -m src.modal_server::smoke
+	GPUS=L4,A10 PYTHONPATH=$$HOME/.pythoncustomize uv run modal run -m src.modal_server::smoke

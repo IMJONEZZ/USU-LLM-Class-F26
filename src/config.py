@@ -1,3 +1,5 @@
+import os
+
 # ---- model ----
 MODEL_NAME = "unsloth/Llama-3.2-3B-Instruct"
 
@@ -27,6 +29,8 @@ PROMPTS = [
 ]
 
 # ---- serving ----
-GPU_TYPE = "L4"
+# the benchmark runs on L4 alone; `make smoke` sets GPUS=L4,A10 so the informal smoke test can fall back
+_gpus = os.environ.get("GPUS", "L4").split(",")
+GPU_TYPE = _gpus[0] if len(_gpus) == 1 else _gpus
 HF_CACHE_VOLUME = "serving-hf-cache"
 SCALEDOWN_WINDOW = 1200  # seconds idle before the container exits; 20 min is Modal's documented max (modal.com/docs/guide/cold-start)
