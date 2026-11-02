@@ -144,8 +144,9 @@ def show(question, **kwargs):
     )
     print("REQUEST")
     print(f"  POST {kwargs.get('url', BASE_URL)}/v1/chat/completions")
-    # Redacted. The key is in the PR comment because whoever grades this
-    # needs it, but a screenshot is forever and that's a different thing.
+    # Redacted, and the key isn't in the PR comment any more either. I put a
+    # live one there in assignment 7 and had to rotate it, so now it's a
+    # message away instead of sitting on a public repo.
     print("  Authorization: Bearer ****")
     print("  Content-Type: application/json")
     for line in json.dumps(payload, indent=2).splitlines():
