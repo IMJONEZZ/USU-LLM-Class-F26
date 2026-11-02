@@ -16,6 +16,7 @@ from src.html_output import (
     BASE_URL,
     COLD_START_ATTEMPTS,
     COLD_START_SECONDS,
+    GRAMMAR_FILE,
     MODEL,
     generate,
     grammar_tags,
@@ -50,6 +51,52 @@ def test_the_grammar_and_the_validator_allow_the_same_tags():
     # starts emitting markup this module calls invalid, and the failure shows
     # up as a confusing runtime error instead of a failing test.
     assert grammar_tags() == set(ALLOWED_TAGS)
+
+
+def read_grammar_rules():
+    """Split gpu/html.gbnf into the rules it defines and the ones it uses.
+
+    Character classes come out before quoted literals, because the class
+    `[^<>&"\\n\\r]` has a quote inside it and stripping literals first eats
+    half the file.
+    """
+    import re
+
+    text = GRAMMAR_FILE.read_text(encoding="utf-8")
+    body = "\n".join(
+        line for line in text.splitlines() if not line.lstrip().startswith("#")
+    )
+    defined, used = set(), set()
+    for line in body.splitlines():
+        if "::=" not in line:
+            continue
+        lhs, rhs = line.split("::=", 1)
+        defined.add(lhs.strip())
+        rhs = re.sub(r"\[\^?(?:[^\]\\]|\\.)*\]", " ", rhs)
+        rhs = re.sub(r'"(?:[^"\\]|\\.)*"', " ", rhs)
+        used |= set(re.findall(r"[A-Za-z_][A-Za-z0-9_-]*", rhs))
+    return defined, used
+
+
+def test_the_grammar_has_no_undefined_rules():
+    # A typo in a rule name here doesn't fail a test, it makes llama-server
+    # refuse to start, and I find out from a deploy that comes up dead. This
+    # is the cheapest possible version of compiling the grammar.
+    defined, used = read_grammar_rules()
+    assert used - defined == set()
+    assert defined - used - {"root"} == set()
+
+
+def test_the_grammar_text_rule_cannot_open_a_tag():
+    # The whole safety argument is that text can't contain a < , so the model
+    # can't invent a tag I didn't allow. If that character class ever loosens
+    # up, the grammar stops being a guarantee and this should go red.
+    grammar = GRAMMAR_FILE.read_text(encoding="utf-8")
+    char_rule = next(
+        line for line in grammar.splitlines() if line.startswith("char ::=")
+    )
+    for forbidden in ("<", ">", "&", '"'):
+        assert forbidden in char_rule.split("[^", 1)[1].split("]", 1)[0]
 
 
 def test_an_unclosed_tag_is_caught():
