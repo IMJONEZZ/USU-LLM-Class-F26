@@ -187,6 +187,9 @@ SW_EpisodeIV_VI.json
 bpe_vocab.json
 qdrant_data/
 
+# Generated training data (regenerate with: uv run modal run gpu/paraphrase_app.py)
+data/paraphrases.json
+
 # macOS
 .DS_Store
 
