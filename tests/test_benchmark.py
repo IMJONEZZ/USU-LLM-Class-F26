@@ -144,3 +144,15 @@ def test_running_the_module_as_a_script_summarizes_the_file_it_is_given(
     monkeypatch.setattr(sys, "argv", ["benchmark", str(results_file(tmp_path))])
     runpy.run_module("src.benchmark", run_name="__main__")
     assert (tmp_path / "summary_t1.json").exists()
+
+
+def test_results_path_refuses_an_existing_run_unless_asked(tmp_path):
+    import pytest
+
+    path = benchmark.results_path(tmp_path, "t1")
+    assert path == tmp_path / "benchmark_t1.json"
+    assert benchmark.save_results(path, {"records": []}) == str(path)
+    assert json.loads(path.read_text()) == {"records": []}
+    with pytest.raises(FileExistsError):
+        benchmark.results_path(tmp_path, "t1")
+    assert benchmark.results_path(tmp_path, "t1", overwrite=True) == path

@@ -1,4 +1,4 @@
-.PHONY: add_all modal_app_list deploy test lint smoke benchmark summary
+.PHONY: add_all modal_app_list deploy test lint smoke benchmark fetch summary
 
 add_all:
 	uv run ruff check --fix .
@@ -21,14 +21,19 @@ modal_app_list:
 deploy:
 	PYTHONPATH=$$HOME/.pythoncustomize uv run modal deploy -m src.modal_server
 
-# loads the model on an L4 (falls back to an A10 if none is free), prints VRAM vs estimate, runs both methods on 2 prompts; writes results/m4_probe.json
+# loads the model on an L4 (falls back to an A10 if none is free), prints VRAM vs estimate, runs both methods on 2 prompts; saves to the Modal results volume as benchmark_smoke.json (fetch it with: make fetch NAME=smoke)
 smoke:
-	GPUS=L4,A10 PYTHONPATH=$$HOME/.pythoncustomize uv run modal run -m src.modal_server::smoke
+	GPUS=L4,A10 PYTHONPATH=$$HOME/.pythoncustomize uv run modal run --detach -m src.modal_server::smoke
 
-# the benchmark: all prompts through both methods on L4 alone; usage: make benchmark NAME=run1 (never overwrites)
+# the benchmark: all prompts through both methods on L4 alone, run inside the container with --detach so a sleeping
+# laptop cannot stop it; saved to the Modal results volume; usage: make benchmark NAME=run1 (never overwrites)
 NAME ?= run1
 benchmark:
-	PYTHONPATH=$$HOME/.pythoncustomize uv run modal run -m src.modal_server::run --name $(NAME)
+	PYTHONPATH=$$HOME/.pythoncustomize uv run modal run --detach -m src.modal_server::run --name $(NAME)
+
+# copy a finished run from the Modal results volume to results/ (the volume name must match config.RESULTS_VOLUME)
+fetch:
+	PYTHONPATH=$$HOME/.pythoncustomize uv run modal volume get --force webpage-benchmark-results benchmark_$(NAME).json results/
 
 # summary table, summary JSON and the rendered gallery for a finished run: make summary NAME=run1
 summary:

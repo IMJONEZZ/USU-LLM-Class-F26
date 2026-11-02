@@ -34,4 +34,7 @@ PROMPTS = [
 _gpus = os.environ.get("GPUS", "L4").split(",")
 GPU_TYPE = _gpus[0] if len(_gpus) == 1 else _gpus
 HF_CACHE_VOLUME = "serving-hf-cache"
+RESULTS_VOLUME = (
+    "webpage-benchmark-results"  # the Makefile fetch target uses the same name
+)
 SCALEDOWN_WINDOW = 1200  # seconds idle before the container exits; 20 min is Modal's documented max (modal.com/docs/guide/cold-start)

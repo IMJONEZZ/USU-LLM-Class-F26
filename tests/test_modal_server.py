@@ -60,10 +60,6 @@ def generator():
     return obj
 
 
-def method(name):
-    return getattr(modal_server.Generator._get_user_cls(), name)._get_raw_f()
-
-
 def test_meta_counts_calls_for_each_method_separately():
     obj = generator()
     first, second = obj.meta("guidance"), obj.meta("guidance")
@@ -79,7 +75,7 @@ def test_meta_counts_calls_for_each_method_separately():
 def test_warm_state_reports_the_counts_as_a_copy():
     obj = generator()
     obj.meta("guidance")
-    state = method("warm_state")(obj)
+    state = obj.warm_state()
     assert state == {"guidance": 1}
     state["guidance"] = 99
     assert obj.calls == {"guidance": 1}
@@ -100,7 +96,7 @@ def test_method_a_starts_from_the_shared_chat_prompt_and_keeps_html_only_when_va
 
     monkeypatch.setattr(methods, "run_guidance", fake_run_guidance)
     obj = generator()
-    record = method("run_guidance")(obj, "a bakery")
+    record = obj.run_guidance("a bakery")
     assert seen == [
         obj.chat_text(config.BASE_PROMPT_TEMPLATE.format(request="a bakery"))
     ]
@@ -123,7 +119,7 @@ def test_method_a_cut_off_by_the_cap_is_truncated_and_has_no_html(monkeypatch):
         "run_guidance",
         lambda m, t, c: {"text": "<html><head>", "new_tokens": 500, "hit_cap": True},
     )
-    record = method("run_guidance")(generator(), "a bakery")
+    record = generator().run_guidance("a bakery")
     assert (record["bucket"], record["html"], record["hit_cap"]) == (
         "truncated",
         None,
@@ -134,7 +130,7 @@ def test_method_a_cut_off_by_the_cap_is_truncated_and_has_no_html(monkeypatch):
 def test_method_b_sends_the_schema_prompt_and_assembles_html_from_valid_json():
     obj, prompts = generator(), []
     obj.complete = lambda prompt: (prompts.append(prompt), GOOD_JSON, 30, False)[1:]
-    record = method("run_coercion")(obj, "a bakery")
+    record = obj.run_coercion("a bakery")
     assert prompts == [methods.build_prompt("a bakery")]
     assert (record["method"], record["bucket"]) == ("coercion", "valid")
     assert record["html"] == to_html(WebPage.model_validate_json(GOOD_JSON))
@@ -144,41 +140,92 @@ def test_method_b_sends_the_schema_prompt_and_assembles_html_from_valid_json():
 def test_method_b_markdown_fence_is_malformed_and_has_no_html():
     obj = generator()
     obj.complete = lambda prompt: (f"```json\n{GOOD_JSON}\n```", 30, False)
-    record = method("run_coercion")(obj, "a bakery")
+    record = obj.run_coercion("a bakery")
     assert (record["bucket"], record["html"]) == ("malformed", None)
 
 
-class FakeModal:
-    """Stands in for the Modal class in the entrypoints: every remote call returns a full record."""
+class FakeVolume:
+    """Stands in for the Modal results volume and remembers the order of reload and commit."""
 
     def __init__(self):
-        full = lambda m: lambda request: {
-            "method": m, "bucket": "valid", "reason": "", "html": "<html></html>", "text": "x",
-            "new_tokens": 1, "hit_cap": False, "seconds": 1.0,
-        }  # fmt: skip
-        self.probe = SimpleNamespace(remote=lambda: {"gpu": "Fake GPU"})
-        self.warm_state = SimpleNamespace(remote=lambda: {"guidance": 1, "coercion": 1})
-        self.run_guidance = SimpleNamespace(remote=full("guidance"))
-        self.run_coercion = SimpleNamespace(remote=full("coercion"))
+        self.events = []
+
+    def reload(self):
+        self.events.append("reload")
+
+    def commit(self):
+        self.events.append("commit")
 
 
-def test_run_writes_one_record_per_prompt_per_method_and_never_overwrites(
+def full_record(method):
+    return {
+        "method": method, "bucket": "valid", "reason": "", "html": "<html></html>", "text": "x",
+        "new_tokens": 1, "hit_cap": False, "seconds": 1.0,
+    }  # fmt: skip
+
+
+def run_all_on_a_fake_container(tmp_path, monkeypatch):
+    """The whole loop runs inside the container, so it is driven here with fake calls and a fake volume."""
+    volume = FakeVolume()
+    monkeypatch.setattr(modal_server, "results_volume", volume)
+    monkeypatch.setattr(modal_server, "RESULTS_DIR", str(tmp_path))
+    obj = generator()
+    obj.probe = lambda: {"gpu": "Fake GPU"}
+    obj.calls_made = []
+    obj.run_guidance = lambda request: (
+        obj.calls_made.append(request),
+        full_record("guidance"),
+    )[1]
+    obj.run_coercion = lambda request: (
+        obj.calls_made.append(request),
+        full_record("coercion"),
+    )[1]
+    run_all = modal_server.Generator._get_user_cls().run_all._get_raw_f()
+    return volume, obj, lambda name, count, **kw: run_all(obj, name, count, **kw)
+
+
+def test_run_all_runs_every_prompt_through_both_methods_and_saves_to_the_volume(
     tmp_path, monkeypatch
 ):
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(modal_server, "Generator", FakeModal)
-    run = modal_server.run.info.raw_f
-    run("t1")
-    data = json.loads((tmp_path / "results/benchmark_t1.json").read_text())
-    assert len(data["records"]) == 2 * len(config.PROMPTS)
-    assert data["probe"]["gpu"] == "Fake GPU" and data["warmups"] == []
-    with pytest.raises(SystemExit):
-        run("t1")
+    volume, _, run_all = run_all_on_a_fake_container(tmp_path, monkeypatch)
+    summary = run_all("t1", 3)
+    data = json.loads((tmp_path / "benchmark_t1.json").read_text())
+    assert len(data["records"]) == 6 and data["probe"]["gpu"] == "Fake GPU"
+    assert len(data["warmups"]) == 2  # a fresh container warms each method up once
+    assert summary == {"path": str(tmp_path / "benchmark_t1.json"), "records": 6}
+    assert volume.events == ["reload", "commit"]
 
 
-def test_smoke_runs_two_prompts_through_both_methods(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(modal_server, "Generator", FakeModal)
+def test_run_all_never_overwrites_a_run_unless_asked(tmp_path, monkeypatch):
+    _, obj, run_all = run_all_on_a_fake_container(tmp_path, monkeypatch)
+    run_all("t1", 1)
+    calls = len(obj.calls_made)
+    with pytest.raises(FileExistsError):
+        run_all("t1", 1)
+    assert len(obj.calls_made) == calls  # refused before spending any GPU time
+    run_all("t1", 2, overwrite=True)
+    assert len(json.loads((tmp_path / "benchmark_t1.json").read_text())["records"]) == 4
+
+
+class FakeGenerator:
+    def __init__(self):
+        self.calls = []
+        self.run_all = SimpleNamespace(remote=self.remote)
+
+    def remote(self, name, count, overwrite=False):
+        self.calls.append((name, count, overwrite))
+        return {"path": f"/results/benchmark_{name}.json", "records": 2 * count}
+
+
+def test_run_asks_for_every_prompt_and_forbids_overwriting(monkeypatch):
+    fake = FakeGenerator()
+    monkeypatch.setattr(modal_server, "Generator", lambda: fake)
+    modal_server.run.info.raw_f("run1")
+    assert fake.calls == [("run1", len(config.PROMPTS), False)]
+
+
+def test_smoke_asks_for_two_prompts_and_may_overwrite_its_own_file(monkeypatch):
+    fake = FakeGenerator()
+    monkeypatch.setattr(modal_server, "Generator", lambda: fake)
     modal_server.smoke.info.raw_f()
-    data = json.loads((tmp_path / modal_server.PROBE_PATH).read_text())
-    assert len(data["records"]) == 4 and data["probe"]["gpu"] == "Fake GPU"
+    assert fake.calls == [("smoke", 2, True)]

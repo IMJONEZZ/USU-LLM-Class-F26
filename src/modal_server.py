@@ -1,21 +1,21 @@
 import importlib.metadata
-import json
 import os
 import subprocess
 import time
-from pathlib import Path
+from types import SimpleNamespace
 
 import modal
 
 from src import benchmark, config, methods
 
 VERSIONED_PACKAGES = ["torch", "transformers", "accelerate", "guidance", "pydantic"]
-PROBE_PATH = "results/m4_probe.json"
+RESULTS_DIR = "/results"  # where the results volume is mounted in the container
 MIB = 2**20
 
 app = modal.App("webpage-benchmark")
 
 hf_volume = modal.Volume.from_name(config.HF_CACHE_VOLUME, create_if_missing=True)
+results_volume = modal.Volume.from_name(config.RESULTS_VOLUME, create_if_missing=True)
 
 # pinned to the versions the last successful smoke run printed (results/m4_probe.json)
 image = (
@@ -44,7 +44,7 @@ def is_truncated(token_ids, eos_ids, cap):
 @app.cls(
     image=image,
     gpu=config.GPU_TYPE,
-    volumes={"/root/.cache/huggingface": hf_volume},
+    volumes={"/root/.cache/huggingface": hf_volume, RESULTS_DIR: results_volume},
     scaledown_window=config.SCALEDOWN_WINDOW,
     timeout=20 * 60,
 )
@@ -98,7 +98,6 @@ class Generator:
             self.chat_text(text), return_tensors="pt", add_special_tokens=False
         ).to("cuda")
 
-    @modal.method()
     def probe(self):  # pragma: no cover - needs a GPU machine
         import torch
 
@@ -169,11 +168,9 @@ class Generator:
             **self.meta(method),
         }
 
-    @modal.method()
     def warm_state(self):
         return dict(self.calls)
 
-    @modal.method()
     def run_guidance(self, request):
         """Method A. Timed from request start to the finished, classified string; includes grammar construction."""
         start = time.perf_counter()
@@ -184,7 +181,6 @@ class Generator:
         html = out["text"] if outcome[0] == "valid" else None
         return self.record("guidance", outcome, html, out, seconds)
 
-    @modal.method()
     def run_coercion(self, request):
         """Method B. Timed the same way; includes parsing the JSON and assembling the HTML."""
         start = time.perf_counter()
@@ -195,40 +191,29 @@ class Generator:
         result = {"text": text, "new_tokens": new_tokens, "hit_cap": hit_cap}
         return self.record("coercion", outcome, html, result, seconds)
 
+    @modal.method()
+    def run_all(self, name, count, overwrite=False):
+        """The whole benchmark inside the container, saved to the results volume. Fetch it with `make fetch`."""
+        results_volume.reload()  # see runs saved by earlier containers before checking for overwriting
+        path = benchmark.results_path(RESULTS_DIR, name, overwrite)
+        generator = SimpleNamespace(
+            warm_state=SimpleNamespace(remote=self.warm_state),
+            run_guidance=SimpleNamespace(remote=self.run_guidance),
+            run_coercion=SimpleNamespace(remote=self.run_coercion),
+        )
+        result = benchmark.run_benchmark(generator, config.PROMPTS[:count])
+        saved = benchmark.save_results(path, {"probe": self.probe(), **result})
+        results_volume.commit()
+        return {"path": saved, "records": len(result["records"])}
+
 
 @app.local_entrypoint()
 def smoke():
-    """Informal check: memory vs estimate, then both methods on 2 prompts through the real harness."""
-    generator = Generator()
-    info = generator.probe.remote()
-    print(json.dumps(info, indent=2))
-    result = benchmark.run_benchmark(generator, config.PROMPTS[:2])
-    for r in result["records"]:
-        print(
-            r["prompt_id"],
-            r["method"],
-            r["bucket"],
-            r["seconds"],
-            "s",
-            r["new_tokens"],
-            "tokens",
-            r["reason"],
-        )
-    Path(PROBE_PATH).parent.mkdir(exist_ok=True)
-    Path(PROBE_PATH).write_text(json.dumps({"probe": info, **result}, indent=2))
+    """Informal check on whichever GPU is free: both methods on 2 prompts, run inside the container."""
+    print(Generator().run_all.remote("smoke", 2, True))
 
 
 @app.local_entrypoint()
 def run(name: str):
-    """The benchmark: every prompt through both methods on the warm container. Never overwrites a run."""
-    path = Path(f"results/benchmark_{name}.json")
-    if path.exists():
-        raise SystemExit(
-            f"{path} exists; use a new name (a re-run never reuses an earlier run's file)"
-        )
-    generator = Generator()
-    info = generator.probe.remote()
-    result = benchmark.run_benchmark(generator, config.PROMPTS)
-    path.parent.mkdir(exist_ok=True)
-    path.write_text(json.dumps({"probe": info, **result}, indent=2))
-    print("wrote", path)
+    """The benchmark: every prompt through both methods, run inside the container so a sleeping laptop cannot stop it."""
+    print(Generator().run_all.remote(name, len(config.PROMPTS), False))

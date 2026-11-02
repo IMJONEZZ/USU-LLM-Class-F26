@@ -11,6 +11,22 @@ METHODS = [
 ]  # order of calls within each prompt: Method A, then Method B
 
 
+def results_path(directory, name, overwrite=False):
+    """Where a run is saved. A run never reuses an earlier run's file unless overwrite is asked for."""
+    path = Path(directory) / f"benchmark_{name}.json"
+    if path.exists() and not overwrite:
+        raise FileExistsError(
+            f"{path} exists; use a new name (a re-run never reuses an earlier run's file)"
+        )
+    return path
+
+
+def save_results(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2))
+    return str(path)
+
+
 def call(generator, method, request):
     return getattr(generator, f"run_{method}").remote(request)
 
