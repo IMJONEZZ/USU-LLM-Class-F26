@@ -106,20 +106,12 @@ def test_run_guidance_returns_the_whole_page_without_the_prompt(
 
 
 def test_run_guidance_stops_at_the_cap_and_says_so(mock_model, monkeypatch):
-    monkeypatch.setattr(config, "MAX_NEW_TOKENS", 100)
-    out = methods.run_guidance(None, CharTokenizer(), "PROMPT TEXT:")
-    assert out["hit_cap"] is True and out["new_tokens"] >= 100
-    assert not out["text"].rstrip().endswith("</html>")
-
-
-def test_a_page_that_finishes_exactly_at_the_cap_is_not_truncated(
-    mock_model, monkeypatch
-):
     monkeypatch.setattr(config, "MAX_NEW_TOKENS", 10**6)
-    length = len(methods.run_guidance(None, CharTokenizer(), "PROMPT TEXT:")["text"])
-    monkeypatch.setattr(config, "MAX_NEW_TOKENS", length)
-    out = methods.run_guidance(None, CharTokenizer(), "PROMPT TEXT:")
-    assert out["hit_cap"] is False and out["text"].rstrip().endswith("</html>")
+    full = methods.run_guidance(None, CharTokenizer(), "PROMPT TEXT:")
+    monkeypatch.setattr(config, "MAX_NEW_TOKENS", 100)
+    capped = methods.run_guidance(None, CharTokenizer(), "PROMPT TEXT:")
+    assert capped["hit_cap"] is True and not capped["text"].rstrip().endswith("</html>")
+    assert 0 < capped["new_tokens"] < full["new_tokens"]
 
 
 def test_json_to_html_gives_the_assembled_page_only_for_valid_json():

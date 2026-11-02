@@ -1,6 +1,6 @@
 import json
 
-from guidance import models
+from guidance import models, token_limit
 from pydantic import ValidationError
 
 from src import config, guidance_html
@@ -12,22 +12,17 @@ def run_guidance(model, tokenizer, chat):
     string Method B starts from. Returns the generated HTML and whether the token cap stopped it
     before the page was complete."""
     lm = models.Transformers(model, tokenizer, echo=False)
-    generated = ""
-    page = guidance_html.make_html(name="html_text", temperature=config.TEMPERATURE)
-    for state in lm.stream() + (chat + page):
-        generated = str(state)[len(chat) :]
-        if (
-            len(tokenizer.encode(generated, add_special_tokens=False))
-            >= config.MAX_NEW_TOKENS
-        ):
-            break
-    new_tokens = len(tokenizer.encode(generated, add_special_tokens=False))
-    # a page that finishes exactly at the cap is complete, not truncated
+    # Guidance's own limit around the whole page (gen's max_tokens would cap each text node, not the page)
+    page = token_limit(
+        guidance_html.make_html(name="html_text", temperature=config.TEMPERATURE),
+        config.MAX_NEW_TOKENS,
+    )
+    generated = str(lm + (chat + page))[len(chat) :]
     return {
         "text": generated,
-        "new_tokens": new_tokens,
-        "hit_cap": new_tokens >= config.MAX_NEW_TOKENS
-        and not generated.rstrip().endswith("</html>"),
+        "new_tokens": len(tokenizer.encode(generated, add_special_tokens=False)),
+        # the grammar can only stop early because of the limit, so an unfinished page was cut off
+        "hit_cap": not generated.rstrip().endswith("</html>"),
     }
 
 
