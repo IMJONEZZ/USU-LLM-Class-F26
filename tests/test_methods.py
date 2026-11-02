@@ -13,12 +13,26 @@ GOOD_JSON = (
 GOOD_HTML = "<html><head><title>t</title></head><body><h1>h</h1></body></html>"
 
 
-def test_method_b_prompt_is_method_a_prompt_plus_the_schema():
+def test_method_b_prompt_puts_the_schema_first_the_rules_next_and_the_request_last():
     request = config.PROMPTS[0]
     prompt = methods.build_prompt(request)
-    assert prompt.startswith(config.BASE_PROMPT_TEMPLATE.format(request=request))
-    assert json.dumps(WebPage.model_json_schema()) in prompt
-    assert config.SCHEMA_INSTRUCTION in prompt
+    a_prompt = config.BASE_PROMPT_TEMPLATE.format(request=request)
+    schema_text = json.dumps(WebPage.model_json_schema())
+    positions = [
+        prompt.index(part)
+        for part in (
+            config.SCHEMA_INSTRUCTION,
+            schema_text,
+            config.JSON_RULES,
+            a_prompt,
+        )
+    ]
+    assert positions == sorted(positions)
+    assert prompt.endswith(a_prompt) and prompt.count(request) == 1
+    assert (
+        "Do not repeat the schema" in config.JSON_RULES
+        and "markdown" in config.JSON_RULES
+    )
 
 
 @pytest.mark.parametrize(

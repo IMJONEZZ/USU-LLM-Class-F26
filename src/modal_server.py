@@ -214,6 +214,7 @@ def smoke():
 
 
 @app.local_entrypoint()
-def run(name: str):
-    """The benchmark: every prompt through both methods, run inside the container so a sleeping laptop cannot stop it."""
-    print(Generator().run_all.remote(name, len(config.PROMPTS), False))
+def run(name: str, count: int = 0):
+    """The benchmark: the first `count` prompts (0 means all) through both methods, run inside the container
+    so a sleeping laptop cannot stop it."""
+    print(Generator().run_all.remote(name, count or len(config.PROMPTS), False))

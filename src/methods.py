@@ -27,10 +27,12 @@ def run_guidance(model, tokenizer, chat):
 
 
 def build_prompt(request):
-    """Method B's prompt: exactly Method A's prompt, plus the schema text."""
+    """Method B's prompt: the schema first, then the rules, then Method A's prompt (the request) last."""
     schema_text = json.dumps(WebPage.model_json_schema())
     base = config.BASE_PROMPT_TEMPLATE.format(request=request)
-    return f"{base}\n\n{config.SCHEMA_INSTRUCTION}\n{schema_text}"
+    return (
+        f"{config.SCHEMA_INSTRUCTION}\n{schema_text}\n\n{config.JSON_RULES}\n\n{base}"
+    )
 
 
 def bucket_for(problems, hit_cap):

@@ -21,15 +21,15 @@ modal_app_list:
 deploy:
 	PYTHONPATH=$$HOME/.pythoncustomize uv run modal deploy -m src.modal_server
 
-# loads the model on an L4 (falls back to an A10 if none is free), prints VRAM vs estimate, runs both methods on 2 prompts; saves to the Modal results volume as benchmark_smoke.json (fetch it with: make fetch NAME=smoke)
+# 2 prompts through both methods (L4 first, then A10 if none is free); saves to the Modal results volume as benchmark_smoke.json (fetch it with: make fetch NAME=smoke)
 smoke:
-	GPUS=L4,A10 PYTHONPATH=$$HOME/.pythoncustomize uv run modal run --detach -m src.modal_server::smoke
+	PYTHONPATH=$$HOME/.pythoncustomize uv run modal run --detach -m src.modal_server::smoke
 
-# the benchmark: all prompts through both methods on L4 alone, run inside the container with --detach so a sleeping
-# laptop cannot stop it; saved to the Modal results volume; usage: make benchmark NAME=run1 (never overwrites)
+# the benchmark: all prompts through both methods (L4 first, then A10 if none is free), run inside the container with --detach so a sleeping
+# laptop cannot stop it; saved to the Modal results volume; usage: make benchmark NAME=run1 (never overwrites); add COUNT=3 for only the first 3 prompts
 NAME ?= run1
 benchmark:
-	PYTHONPATH=$$HOME/.pythoncustomize uv run modal run --detach -m src.modal_server::run --name $(NAME)
+	PYTHONPATH=$$HOME/.pythoncustomize uv run modal run --detach -m src.modal_server::run --name $(NAME)$(if $(COUNT), --count $(COUNT))
 
 # copy a finished run from the Modal results volume to results/ (the volume name must match config.RESULTS_VOLUME)
 fetch:

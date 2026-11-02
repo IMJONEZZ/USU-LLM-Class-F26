@@ -217,6 +217,13 @@ class FakeGenerator:
         return {"path": f"/results/benchmark_{name}.json", "records": 2 * count}
 
 
+def test_run_can_be_limited_to_the_first_few_prompts(monkeypatch):
+    fake = FakeGenerator()
+    monkeypatch.setattr(modal_server, "Generator", lambda: fake)
+    modal_server.run.info.raw_f("diag1", 3)
+    assert fake.calls == [("diag1", 3, False)]
+
+
 def test_run_asks_for_every_prompt_and_forbids_overwriting(monkeypatch):
     fake = FakeGenerator()
     monkeypatch.setattr(modal_server, "Generator", lambda: fake)

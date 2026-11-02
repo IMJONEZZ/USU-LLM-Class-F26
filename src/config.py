@@ -1,10 +1,8 @@
-import os
-
 # ---- model ----
 MODEL_NAME = "unsloth/Llama-3.2-3B-Instruct"
 
 # ---- generation (shared by both methods) ----
-MAX_NEW_TOKENS = 500
+MAX_NEW_TOKENS = 1000
 TEMPERATURE = 0.0
 BLOCK_CAP = (
     5  # most headings + paragraphs Guidance's one_or_more may emit; assumed, not tuned
@@ -15,7 +13,12 @@ BASE_PROMPT_TEMPLATE = (
     "Write a simple web page. Use only a title, headings and paragraphs.\n"
     "Request: {request}"
 )
-SCHEMA_INSTRUCTION = "Reply with only a JSON object that matches this JSON schema:"
+SCHEMA_INSTRUCTION = "Here is a JSON schema that describes a web page:"
+JSON_RULES = (
+    "Write one JSON object that follows this schema, for the request below. "
+    "Do not repeat the schema. Reply with only the JSON object, "
+    "with no markdown fences and no other text."
+)
 PROMPTS = [
     "A page introducing a neighborhood bakery and its morning specials.",
     "A page explaining how to care for a houseplant through the seasons.",
@@ -30,9 +33,8 @@ PROMPTS = [
 ]
 
 # ---- serving ----
-# the benchmark runs on L4 alone; `make smoke` sets GPUS=L4,A10 so the informal smoke test can fall back
-_gpus = os.environ.get("GPUS", "L4").split(",")
-GPU_TYPE = _gpus[0] if len(_gpus) == 1 else _gpus
+# tries an L4 first and falls back to an A10; the whole benchmark runs in one container, so a run stays on one GPU
+GPU_TYPE = ["L4", "A10"]
 HF_CACHE_VOLUME = "serving-hf-cache"
 RESULTS_VOLUME = (
     "webpage-benchmark-results"  # the Makefile fetch target uses the same name
