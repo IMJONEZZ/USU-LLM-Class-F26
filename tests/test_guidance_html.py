@@ -3,7 +3,7 @@ from pathlib import Path
 from guidance import models
 
 from src import config, guidance_html
-from src.schema import CONTENT_TAGS, PAGE_TAGS, html_problems
+from src.html import ALLOWED_CHILDREN, html_problems
 
 
 def mock_page():
@@ -23,11 +23,9 @@ def test_the_block_cap_keeps_the_page_finite():
 
 
 def test_grammar_source_mentions_every_tag_the_schema_allows():
-    """Drift guard: schema.py's tag lists are the source of truth for both methods."""
+    """Drift guard: schema.py's ALLOWED_CHILDREN is the source of truth for both methods."""
     source = Path(guidance_html.__file__).read_text()
     missing = [
-        t
-        for t in PAGE_TAGS + CONTENT_TAGS
-        if f"<{t}" not in source and f'"{t}"' not in source
+        t for t in ALLOWED_CHILDREN if f"<{t}" not in source and f'"{t}"' not in source
     ]
     assert missing == []

@@ -4,7 +4,8 @@ from guidance import models, token_limit
 from pydantic import ValidationError
 
 from src import config, guidance_html
-from src.schema import WebPage, html_problems, to_html
+from src.html import html_problems, to_html
+from src.schema import WebPage
 
 
 def run_guidance(model, tokenizer, chat):
@@ -33,6 +34,11 @@ def build_prompt(request):
     return (
         f"{config.SCHEMA_INSTRUCTION}\n{schema_text}\n\n{config.JSON_RULES}\n\n{base}"
     )
+
+
+def is_truncated(token_ids, eos_ids, cap):
+    """True when generation stopped because it hit the cap, not because the model ended its turn."""
+    return len(token_ids) >= cap and token_ids[-1] not in eos_ids
 
 
 def bucket_for(problems, hit_cap):

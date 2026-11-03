@@ -1,31 +1,31 @@
-from types import SimpleNamespace
-
 from src import benchmark
 
 
-class FakeGenerator:
+class FakeRunners:
     """Stands in for the Modal class: records every call and returns one record per call."""
 
     def __init__(self, warm):
         self.calls = []
-        self.warm_state = SimpleNamespace(remote=lambda: warm)
-        self.run_guidance = SimpleNamespace(remote=self.make("guidance"))
-        self.run_coercion = SimpleNamespace(remote=self.make("coercion"))
+        self.warm = warm
+        self.runners = {m: self.make(m) for m in ("guidance", "coercion")}
 
     def make(self, method):
-        def remote(request):
+        def run(request):
             self.calls.append((method, request))
             return {"method": method, "bucket": "valid", "seconds": 1.0}
 
-        return remote
+        return run
+
+    def run(self, prompts):
+        return benchmark.run_benchmark(self.runners, lambda: self.warm, prompts)
 
 
 PROMPTS = ["first", "second", "third"]
 
 
 def test_one_record_per_prompt_per_method_in_order_a_then_b():
-    generator = FakeGenerator({"guidance": 1, "coercion": 1})
-    records = benchmark.run_benchmark(generator, PROMPTS)["records"]
+    fake = FakeRunners({"guidance": 1, "coercion": 1})
+    records = fake.run(PROMPTS)["records"]
     assert [(r["prompt_id"], r["method"]) for r in records] == [
         (0, "guidance"), (0, "coercion"),
         (1, "guidance"), (1, "coercion"),
@@ -35,24 +35,23 @@ def test_one_record_per_prompt_per_method_in_order_a_then_b():
 
 
 def test_a_cold_container_gets_one_discarded_warmup_per_method():
-    generator = FakeGenerator({})
-    result = benchmark.run_benchmark(generator, PROMPTS)
+    fake = FakeRunners({})
+    result = fake.run(PROMPTS)
     assert len(result["records"]) == 6
     assert len(result["warmups"]) == 2
-    assert generator.calls[:2] == [("guidance", "first"), ("coercion", "first")]
-    assert len(generator.calls) == 2 + 6
+    assert fake.calls[:2] == [("guidance", "first"), ("coercion", "first")]
+    assert len(fake.calls) == 2 + 6
 
 
 def test_an_already_warm_container_skips_the_warmup():
-    generator = FakeGenerator({"guidance": 3, "coercion": 3})
-    result = benchmark.run_benchmark(generator, PROMPTS)
+    fake = FakeRunners({"guidance": 3, "coercion": 3})
+    result = fake.run(PROMPTS)
     assert result["warmups"] == []
-    assert len(generator.calls) == 6
+    assert len(fake.calls) == 6
 
 
 def test_only_the_method_that_is_cold_is_warmed_up():
-    generator = FakeGenerator({"guidance": 5})
-    result = benchmark.run_benchmark(generator, PROMPTS)
+    result = FakeRunners({"guidance": 5}).run(PROMPTS)
     assert [w["method"] for w in result["warmups"]] == ["coercion"]
 
 

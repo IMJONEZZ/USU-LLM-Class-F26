@@ -31,9 +31,10 @@ NAME ?= run1
 benchmark:
 	PYTHONPATH=$$HOME/.pythoncustomize uv run modal run --detach -m src.modal_server::run --name $(NAME)$(if $(COUNT), --count $(COUNT))
 
-# copy a finished run from the Modal results volume to results/ (the volume name must match config.RESULTS_VOLUME)
+# copy a finished run from the Modal results volume to results/ (the volume name comes from config.py)
+RESULTS_VOLUME = $(shell uv run python -c "from src import config; print(config.RESULTS_VOLUME)")
 fetch:
-	PYTHONPATH=$$HOME/.pythoncustomize uv run modal volume get --force webpage-benchmark-results benchmark_$(NAME).json results/
+	PYTHONPATH=$$HOME/.pythoncustomize uv run modal volume get --force $(RESULTS_VOLUME) benchmark_$(NAME).json results/
 
 # summary table, summary JSON and the rendered gallery for a finished run: make summary NAME=run1
 summary:

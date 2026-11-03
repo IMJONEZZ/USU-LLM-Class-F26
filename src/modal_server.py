@@ -2,7 +2,6 @@ import importlib.metadata
 import os
 import subprocess
 import time
-from types import SimpleNamespace
 
 import modal
 
@@ -34,11 +33,6 @@ image = (
 def kv_cache_mib(layers, kv_heads, head_dim, tokens, bytes_per_value=2):
     """Memory for the attention cache: one key and one value vector per layer, kv head and token."""
     return 2 * layers * kv_heads * head_dim * bytes_per_value * tokens / MIB
-
-
-def is_truncated(token_ids, eos_ids, cap):
-    """True when generation stopped because it hit the cap, not because the model ended its turn."""
-    return len(token_ids) >= cap and token_ids[-1] not in eos_ids
 
 
 @app.cls(
@@ -102,7 +96,12 @@ class Generator:
         import torch
 
         prompts = [methods.build_prompt(p) for p in config.PROMPTS]
-        prompt_tokens = max(self.encode(p)["input_ids"].shape[1] for p in prompts)
+        prompt_tokens = max(
+            len(
+                self.tokenizer(self.chat_text(p), add_special_tokens=False)["input_ids"]
+            )
+            for p in prompts
+        )
         total_tokens = prompt_tokens + config.MAX_NEW_TOKENS
         cfg = self.model.config
         head_dim = (
@@ -152,7 +151,11 @@ class Generator:
         eos = self.model.generation_config.eos_token_id
         eos_ids = set(eos if isinstance(eos, list) else [eos])
         text = self.tokenizer.decode(new_ids, skip_special_tokens=True)
-        return text, len(new_ids), is_truncated(new_ids, eos_ids, config.MAX_NEW_TOKENS)
+        return (
+            text,
+            len(new_ids),
+            methods.is_truncated(new_ids, eos_ids, config.MAX_NEW_TOKENS),
+        )
 
     def record(self, method, outcome, html, result, seconds):
         bucket, reason = outcome
@@ -196,12 +199,10 @@ class Generator:
         """The whole benchmark inside the container, saved to the results volume. Fetch it with `make fetch`."""
         results_volume.reload()  # see runs saved by earlier containers before checking for overwriting
         path = benchmark.results_path(RESULTS_DIR, name, overwrite)
-        generator = SimpleNamespace(
-            warm_state=SimpleNamespace(remote=self.warm_state),
-            run_guidance=SimpleNamespace(remote=self.run_guidance),
-            run_coercion=SimpleNamespace(remote=self.run_coercion),
+        runners = {"guidance": self.run_guidance, "coercion": self.run_coercion}
+        result = benchmark.run_benchmark(
+            runners, self.warm_state, config.PROMPTS[:count]
         )
-        result = benchmark.run_benchmark(generator, config.PROMPTS[:count])
         saved = benchmark.save_results(path, {"probe": self.probe(), **result})
         results_volume.commit()
         return {"path": saved, "records": len(result["records"])}

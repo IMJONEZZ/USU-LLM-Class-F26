@@ -36,7 +36,5 @@ PROMPTS = [
 # tries an L4 first and falls back to an A10; the whole benchmark runs in one container, so a run stays on one GPU
 GPU_TYPE = ["L4", "A10"]
 HF_CACHE_VOLUME = "serving-hf-cache"
-RESULTS_VOLUME = (
-    "webpage-benchmark-results"  # the Makefile fetch target uses the same name
-)
+RESULTS_VOLUME = "webpage-benchmark-results"
 SCALEDOWN_WINDOW = 1200  # seconds idle before the container exits; 20 min is Modal's documented max (modal.com/docs/guide/cold-start)

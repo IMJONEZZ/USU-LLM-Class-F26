@@ -129,10 +129,31 @@ def test_run_guidance_stops_at_the_cap_and_says_so(mock_model, monkeypatch):
 
 
 def test_json_to_html_gives_the_assembled_page_only_for_valid_json():
-    from src.schema import to_html
+    from src.html import to_html
 
     assert methods.json_to_html(GOOD_JSON) == to_html(
         WebPage.model_validate_json(GOOD_JSON)
     )
     assert methods.json_to_html("not json") is None
     assert methods.json_to_html(f"```json\n{GOOD_JSON}\n```") is None
+
+
+EOS_IDS = {128001, 128009}
+
+
+@pytest.mark.parametrize(
+    ("token_ids", "expected"),
+    [
+        ([1, 2, 3, 4], True),  # hit the cap without ending
+        (
+            [1, 2, 3, 128009],
+            False,
+        ),  # hit the cap but the last token is end-of-turn: it finished
+        ([1, 2, 3], False),  # stopped below the cap
+        ([], False),
+    ],
+)
+def test_is_truncated_only_when_the_cap_is_hit_without_an_end_token(
+    token_ids, expected
+):
+    assert methods.is_truncated(token_ids, EOS_IDS, cap=4) is expected

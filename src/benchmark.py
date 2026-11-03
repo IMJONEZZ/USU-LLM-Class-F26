@@ -27,23 +27,16 @@ def save_results(path, data):
     return str(path)
 
 
-def call(generator, method, request):
-    return getattr(generator, f"run_{method}").remote(request)
-
-
-def run_benchmark(generator, prompts):
-    """One discarded warm-up per method that is still cold in this container, then A and B on every prompt."""
-    warm = generator.warm_state.remote()
-    warmups = [call(generator, m, prompts[0]) for m in METHODS if warm.get(m, 0) == 0]
+def run_benchmark(runners, warm_counts, prompts):
+    """One discarded warm-up per method that is still cold in this container, then A and B on every prompt.
+    `runners` maps a method name to a function that takes a request; `warm_counts()` says how often each has run."""
+    warm = warm_counts()
+    warmups = [runners[m](prompts[0]) for m in METHODS if warm.get(m, 0) == 0]
     records = []
     for prompt_id, prompt in enumerate(prompts):
         for method in METHODS:
             records.append(
-                {
-                    "prompt_id": prompt_id,
-                    "prompt": prompt,
-                    **call(generator, method, prompt),
-                }
+                {"prompt_id": prompt_id, "prompt": prompt, **runners[method](prompt)}
             )
     return {"warmups": warmups, "records": records}
 
