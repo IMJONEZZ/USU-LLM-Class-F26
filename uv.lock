@@ -670,6 +670,15 @@ wheels = [
 ]
 
 [[package]]
+name = "diskcache"
+version = "5.6.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/3f/21/1c1ffc1a039ddcc459db43cc108658f32c57d271d7289a2794e401d0fdb6/diskcache-5.6.3.tar.gz", hash = "sha256:2c3a3fa2743d8535d832ec61c2054a1641f41775aa7c556758a109941e33e4fc", size = 67916, upload-time = "2023-08-31T06:12:00.316Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3f/27/4570e78fc0bf5ea0ca45eb1de3818a23787af9b390c0b0a0033a1b8236f9/diskcache-5.6.3-py3-none-any.whl", hash = "sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19", size = 45550, upload-time = "2023-08-31T06:11:58.822Z" },
+]
+
+[[package]]
 name = "distilabel"
 version = "1.5.3"
 source = { registry = "https://pypi.org/simple" }
@@ -810,6 +819,15 @@ wheels = [
 [package.optional-dependencies]
 http = [
     { name = "aiohttp" },
+]
+
+[[package]]
+name = "genson"
+version = "1.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/53/de162dc8e03fccd9ebe59d17c7812378fe8bd2b604f6b1b94d00165140ac/genson-1.4.0.tar.gz", hash = "sha256:bc7f1c1bae87a21ca44d81149aec95a3f4468d676de9b8b08caa064f3c50b3da", size = 47908, upload-time = "2026-07-06T08:21:50.331Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/16/02/767f744ab6d4cb7761e5008acc3d534b7a0481af62563d52e391fbcb2140/genson-1.4.0-py3-none-any.whl", hash = "sha256:03bc71bbe52defde70660cc4dcd1ea1097997da5a1cbb90a9dbd3acc7c9e1b65", size = 24484, upload-time = "2026-07-06T08:21:49.046Z" },
 ]
 
 [[package]]
@@ -1856,6 +1874,42 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/0a/2e/1c13552d8b0241083116de02b2f284ee38501ef06ebfb79893f741538168/orjson-3.13.0-cp315-cp315-musllinux_1_2_x86_64.whl", hash = "sha256:c5e3ccaac3106e8fa6e2f2f6962449d7c757d7b067e41b395a19d6f0d6cec892", size = 126711, upload-time = "2026-10-07T14:09:20.645Z" },
     { url = "https://files.pythonhosted.org/packages/85/f8/d4ece953a519d064cf690adaa68cd389d5b64fd261726334841b32978d6a/orjson-3.13.0-cp315-cp315-win_amd64.whl", hash = "sha256:7804dd1d6161da0e53b284c2aebf20f23e78eaac617300803e1467d1828d987f", size = 121496, upload-time = "2026-10-07T14:09:22.359Z" },
     { url = "https://files.pythonhosted.org/packages/70/cf/f691388c4a9bc4af7dcc1648c4b40845869908b517d7c0009d005c7d1fa1/orjson-3.13.0-cp315-cp315-win_arm64.whl", hash = "sha256:f5c05a8fee59309f537590a1ff12d3c1009c485e96a50a9ac60dd085c09d0fc0", size = 126260, upload-time = "2026-10-07T14:09:23.928Z" },
+]
+
+[[package]]
+name = "outlines"
+version = "1.3.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cloudpickle" },
+    { name = "diskcache" },
+    { name = "genson" },
+    { name = "jinja2" },
+    { name = "jsonschema" },
+    { name = "outlines-core" },
+    { name = "pillow" },
+    { name = "pydantic" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a2/0f/95627aba2d038f8ba24c31b689609b153386806a46448abf4c27029b0001/outlines-1.3.3.tar.gz", hash = "sha256:5dcd1b9d261ced1337042d6b1fd2bb4e706a09a0121957bcd9eb331d1ea6940c", size = 2898295, upload-time = "2026-08-06T12:27:14.921Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2b/2d/54727dcaa15ceb8279e0bcd9c06eb6f30e1b0147004359bf5a78f12cd85e/outlines-1.3.3-py3-none-any.whl", hash = "sha256:0e185dd5a0cfeb62e0268018972d3c22bb9b7d43db3dc1f39f3b754175a82c54", size = 114733, upload-time = "2026-08-06T12:27:13.488Z" },
+]
+
+[[package]]
+name = "outlines-core"
+version = "0.2.14"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6a/04/4a0812eb27c086cfd2e66e7ec9150f33e105912a9b7f8b335e3479f03a06/outlines_core-0.2.14.tar.gz", hash = "sha256:64808deed1591ca3029ff64346ceb974cd5d780c916ea82504951fe83523039e", size = 191539, upload-time = "2026-01-09T15:59:10.016Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1b/28/22fe8ee3bdf9cf13ab88a9d9b96729d9966c791c25227d0b7ca45c8d118f/outlines_core-0.2.14-cp314-cp314-macosx_14_0_arm64.whl", hash = "sha256:69410e5b55bcbaad8c865d94bd01e7bff8a57996dcd2251b7d50dec70d7d9a63", size = 2050470, upload-time = "2026-01-09T15:58:49.217Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/3e/30ce0b13e4c4c82de606c8bbf60775ac6fca1978efa54cd553893795fd0b/outlines_core-0.2.14-cp314-cp314-macosx_14_0_x86_64.whl", hash = "sha256:adf96395759d7fdf6efeb8a67d3f36f520c1546bfd4df0752306db8c7cb7d6c5", size = 2202138, upload-time = "2026-01-09T15:58:50.281Z" },
+    { url = "https://files.pythonhosted.org/packages/53/13/bd2ff9e90b28fa0dcc345c9196731ed9126e366733c8ccbc559149e34893/outlines_core-0.2.14-cp314-cp314-macosx_15_0_arm64.whl", hash = "sha256:b02bb0fc21c5e23e2ff9b2d1459db2c1c3e813a7646c9d5db091c6931edb9c85", size = 2050325, upload-time = "2026-01-09T15:58:51.596Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/25/fc0ae7d04345d17267d4dd5c693ed9e86c7f44419cc04ad92348472781be/outlines_core-0.2.14-cp314-cp314-macosx_15_0_x86_64.whl", hash = "sha256:e75395b1cccecdf85d8d8265aba28841ddeb1e8da406f4b1e0135df5a6e9960f", size = 2199081, upload-time = "2026-01-09T15:58:53.17Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/63/dfa000239e46f17b47e6dc9bec3aab8a8136fe400312f1916320e02c8f38/outlines_core-0.2.14-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d1776ae984574461f249fe590314a439992eb9b883f4091b8fa7fc56f29f3717", size = 2343210, upload-time = "2026-01-09T15:58:54.282Z" },
+    { url = "https://files.pythonhosted.org/packages/36/4f/0e63da06c6054f154ef22b5ef3c6b9030cb22da9c03d2d2dd82836a1e795/outlines_core-0.2.14-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:7eba2b41dac03d6e6e8d5ea0aecbbc03dacb4c57de3b1fc944d0bafb022941f7", size = 2238206, upload-time = "2026-01-09T15:58:55.705Z" },
+    { url = "https://files.pythonhosted.org/packages/74/4e/382271ab5ffe768055f11dddb50e82a0c46487f3766bf08a06cfcd35388b/outlines_core-0.2.14-cp314-cp314-win32.whl", hash = "sha256:0cd8ce3ce61df44fd9c5450d9744e2280586c2a6e6e3dfefa0dab1944764b424", size = 1845364, upload-time = "2026-01-09T15:58:56.795Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/11/13adf2d02c681b599c1eb550b0dbd763d1b818a106a13bd693019bdb5637/outlines_core-0.2.14-cp314-cp314-win_amd64.whl", hash = "sha256:3e67fc23b1a3ac9562488fb50f409c171538b76f64aa5f7e25d9b0bf14770204", size = 2139979, upload-time = "2026-01-09T15:58:57.984Z" },
 ]
 
 [[package]]
@@ -3210,6 +3264,7 @@ dependencies = [
     { name = "distilabel", extra = ["hf-inference-endpoints"] },
     { name = "evaluate" },
     { name = "numpy" },
+    { name = "outlines" },
     { name = "scikit-learn" },
     { name = "sentence-transformers" },
     { name = "torch" },
@@ -3234,6 +3289,7 @@ requires-dist = [
     { name = "distilabel", extras = ["hf-inference-endpoints"], specifier = ">=1.5.3" },
     { name = "evaluate", specifier = ">=0.4.6" },
     { name = "numpy", specifier = ">=2.5.3" },
+    { name = "outlines", specifier = ">=1.3.3" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
     { name = "sentence-transformers", specifier = ">=6.2.0" },
     { name = "torch", specifier = ">=2.14.0", index = "https://download.pytorch.org/whl/cu130" },
