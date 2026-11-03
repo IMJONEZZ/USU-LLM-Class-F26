@@ -1,0 +1,73 @@
+{
+  "builder_name": "parquet",
+  "citation": "",
+  "config_name": "text_generation_0",
+  "dataset_name": "parquet",
+  "dataset_size": 59955,
+  "description": "",
+  "download_size": 41308,
+  "features": {
+    "category": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "instruction": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "generation": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "distilabel_metadata": {
+      "raw_output_text_generation_0": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "raw_input_text_generation_0": {
+        "feature": {
+          "role": {
+            "dtype": "string",
+            "_type": "Value"
+          },
+          "content": {
+            "dtype": "string",
+            "_type": "Value"
+          }
+        },
+        "_type": "List"
+      },
+      "statistics_text_generation_0": {
+        "input_tokens": {
+          "dtype": "int64",
+          "_type": "Value"
+        },
+        "output_tokens": {
+          "dtype": "int64",
+          "_type": "Value"
+        }
+      }
+    },
+    "model_name": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 101263,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 59955,
+      "num_examples": 24,
+      "dataset_name": "parquet"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}
