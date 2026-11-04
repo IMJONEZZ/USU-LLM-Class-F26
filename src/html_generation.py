@@ -1,4 +1,4 @@
-"""Generate an HTML answer with Outlines and vLLM on Modal."""  # pragma:no cover
+"""Generate an HTML answer with Outlines and vLLM on Modal."""
 
 from outlines.types import CFG
 
