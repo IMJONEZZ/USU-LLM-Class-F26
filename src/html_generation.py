@@ -4,6 +4,8 @@ from outlines.types import CFG
 
 import modal
 
+# Force the model to include the HTML tags in the output.
+# Only give the model flexibility in title_text, heading_text, and paragraph_text.
 HTML_GRAMMAR = r"""
 start: doctype html_open head_open meta title_open title_text title_close head_close body_open h1_open heading_text h1_close p_open paragraph_text p_close body_close html_close
 
@@ -25,6 +27,8 @@ p_close: "</p>"
 body_close: "</body>"
 html_close: "</html>"
 
+# This regex allows the model to generate any text that does not contain < or >.
+# This is to prevent the model from generating additional HTML tags or breaking the structure of the document.
 HTML_TEXT: /[^<>]+/
 """
 
@@ -48,6 +52,7 @@ image = (
 app = modal.App("html-answer")
 
 
+# Create a Modal class to use Modal GPUs for generation.
 @app.cls(
     image=image,
     gpu="T4",
@@ -74,6 +79,7 @@ class HtmlAnswerGenerator:
         from outlines.inputs import Chat
         from vllm import SamplingParams
 
+        # Combine the system prompt and user question into a single prompt.
         prompt = Chat(
             [
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -81,6 +87,7 @@ class HtmlAnswerGenerator:
             ]
         )
         sampling_params = SamplingParams(max_tokens=512)
+        # Force the model output to follow the HTML_OUTPUT_FORMAT grammar.
         return self.model(
             prompt,
             HTML_OUTPUT_FORMAT,
