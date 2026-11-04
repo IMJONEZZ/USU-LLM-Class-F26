@@ -1,0 +1,39 @@
+{
+  "note": "lenient check; the strict result is the official one",
+  "runs": {
+    "constrained": {
+      "valid": 10,
+      "total": 10,
+      "valid_percent": 100.0,
+      "per_page": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    "unconstrained": {
+      "valid": 8,
+      "total": 10,
+      "valid_percent": 80.0,
+      "per_page": [
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true
+      ]
+    }
+  }
+}

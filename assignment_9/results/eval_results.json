@@ -1,0 +1,249 @@
+{
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "max_new_tokens": 800,
+  "runs": {
+    "constrained": {
+      "valid": 10,
+      "total": 10,
+      "valid_percent": 100.0,
+      "mean_seconds": 21.84,
+      "pages": [
+        {
+          "prompt": "Write a small HTML page about the planet Mars.",
+          "constrained": true,
+          "html": "<html><head><title>Mars: The Red Planet</title></head><body><h1>Mars: The Red Planet</h1><p>Mars is the fourth planet from the Sun and the second-smallest planet in the Solar System, after Mercury.</p><p>It is often called the \"Red Planet\" due to its reddish appearance as seen from Earth. This coloration comes from iron oxide, also known as rust, which covers much of its surface.</p><p>Mars has two moons, Phobos (the larger one) and Deimos (the smaller one). It has polar ice caps made of water ice and carbon dioxide ice that expand and contract seasonally.</p><p>The Martian atmosphere is thin compared to Earth's, consisting mostly of\u4e8c\u6c27\u5316\u78b3\uff08CO2\uff09and\u5c11\u91cf\u7684\u6c2e\u6c14\uff08N2\uff09\u3001\u6c29\u6c14\uff08Ar\uff09\u548c\u5fae\u91cf\u7684\u6c27\u6c14\uff08O2\uff09\u3002\u706b\u661f\u7684\u5927\u6c14\u5bc6\u5ea6\u4ec5\u4e3a\u5730\u7403\u76841%\u5de6\u53f3\u3002</p><p>Mars has a strong magnetic field, which helps protect it from harmful solar radiation. However, this field is weaker than Earth's, leading to less protection for the planet.</p><p>Mars has a very cold climate, with average temperatures ranging from -63\u00b0C (-81\u00b0F) at the equator to -95\u00b0C (-137\u00b0F) at the poles.</p><p>Mars has seasons like Earth does, but they last longer because of its greater distance from the Sun. The planet experiences four distinct seasons each year, with winter lasting up to 204 days near the poles.</p><p>Mars has no native life as far as we know, although there have been indications of microbial life on certain types of rock on the planet's surface.</p></body></html>",
+          "valid": true,
+          "errors": [],
+          "seconds": 35.28
+        },
+        {
+          "prompt": "Write a small HTML page about how bees make honey.",
+          "constrained": true,
+          "html": "<html><head><title>How Bees Make Honey</title></head><body><h1>How Bees Make Honey</h1><p>Bees produce honey as a food source for their colony during times of abundant nectar and pollen. The process begins when worker bees find flowers that contain high amounts of sugar.</p><p>The bees then collect this sugary liquid from the flower using their long, tube-like tongue called a proboscis. They store this in special cells within their hive known as honeycomb.</p><p>Honeycomb is made up of hexagonal (six-sided) cells that provide an efficient way to store honey while also allowing bees to move around inside the hive. As the honey fills each cell, wax secreted by the bees hardens around it, creating a solid structure.</p><p>To ensure they have enough honey for winter, colonies will often store excess nectar into honeycombs throughout the year. When temperatures drop, these stored supplies can be tapped for energy.</p><p>Bees continue to work on producing more honey until spring rolls around again, at which point new sources of nectar may become available. This cycle repeats itself season after season, making beekeeping one of nature's most fascinating processes.</p></body></html>",
+          "valid": true,
+          "errors": [],
+          "seconds": 27.82
+        },
+        {
+          "prompt": "Write a small HTML page listing three tips for studying.",
+          "constrained": true,
+          "html": "<html><head><title>Study Tips</title></head><body><h1>Three Tips for Studying</h1><ul><li>Plan your study schedule in advance.</li><li>Focus on one task at a time to avoid distractions.</li><li>Take breaks and stay hydrated to maintain focus.</li></ul></body></html>",
+          "valid": true,
+          "errors": [],
+          "seconds": 7.04
+        },
+        {
+          "prompt": "Write a small HTML page about the history of the bicycle.",
+          "constrained": true,
+          "html": "<html><head><title>Bicycle History</title></head><body><h1>The Birth and Evolution of Bicycles</h1><p>The modern bicycle is a relatively recent invention, but its roots trace back to ancient times.</p><p>One of the earliest forms of human-powered transportation was the \"dron\" or \"drone,\" which originated in China around 200 BC. This device had two wheels and used a crank system for propulsion.</p><p>In the 19th century, James Starley developed the Rover bicycle, which featured an overdrive mechanism that increased speed without adding weight. This design became very popular and led to the creation of many other models.</p><p>Later on, the safety bicycle was introduced in the late 1800s, featuring solid rubber tires instead of pneumatic ones. This design improved comfort and made bicycles safer for riders.</p><p>The development of internal combustion engines in the early 20th century revolutionized cycling. The first mass-produced tricycle powered by an engine appeared in Germany in 1914.</p><p>Today's bicycles continue to evolve, incorporating new materials, technologies, and designs to meet changing needs and preferences.</p></body></html>",
+          "valid": true,
+          "errors": [],
+          "seconds": 22.81
+        },
+        {
+          "prompt": "Write a small HTML page about the city of Logan, Utah.",
+          "constrained": true,
+          "html": "<html><head><title>Logan, Utah</title></head><body><h1>Welcome to Logan, Utah</h1><p>Logan is a vibrant city located in southwestern Utah.</p><p>The city was founded in 1876 and has since grown into a thriving community known for its outdoor activities and natural beauty.</p><p>Some popular attractions include the Logan Canyon Dam Recreation Area, which offers hiking trails, fishing, and camping opportunities. The Logan Canyon Scenic Byway also provides scenic views along the way.</p><p>In addition to its recreational offerings, Logan is home to several educational institutions, including the University of Utah's Marriott School of Management and Brigham Young University.</p></body></html>",
+          "valid": true,
+          "errors": [],
+          "seconds": 15.4
+        },
+        {
+          "prompt": "Write a small HTML page about why the sky is blue.",
+          "constrained": true,
+          "html": "<html><head><title>Why the Sky is Blue</title></head><body><h1>The Mystery of Blue Skies</h1><p>The sky appears blue because of a phenomenon called Rayleigh scattering. When sunlight enters Earth's atmosphere, it encounters nitrogen and oxygen molecules in the air.</p><p>Nitrogen and oxygen molecules scatter light more efficiently when the wavelengths of visible light are shorter, such as those that make up blue and violet colors. This causes these shorter-wavelength colors to be scattered more than longer-wavelength colors like red and orange.</p><p>This process is known as Rayleigh scattering, named after Lord Rayleigh who first described this effect over 150 years ago. As the sun sets or rises above the horizon, the angle at which the light travels through the atmosphere increases. This means that less blue light reaches our eyes, making the sky appear redder.</p><p>So, the next time you look up at the sky on a clear day, take a moment to appreciate the beauty of Rayleigh scattering and how it creates the iconic blue color we see every morning and evening.</p></body></html>",
+          "valid": true,
+          "errors": [],
+          "seconds": 20.44
+        },
+        {
+          "prompt": "Write a small HTML page with a recipe for pancakes.",
+          "constrained": true,
+          "html": "<html><head><title>Pancake Recipe</title></head><body><h1>Simple Pancake Recipe</h1><p>Welcome to our pancake making guide! Here's a simple recipe that will have you enjoying delicious pancakes in no time.</p><h2>Ingredients:</h2><ul><li>1 cup all-purpose flour</li><li>3/4 teaspoon baking powder</li><li>1/4 teaspoon salt</li><li>1 tablespoon sugar</li><li>1 and 1/2 cups milk (or water)</li><li>1 large egg</li><li>Salt to taste</li><li>Butter or oil for cooking</li></ul><h2>Instructions:</h2><ul><li>In a large bowl, whisk together the flour, baking powder, salt, and sugar.</li><li>Add the milk, egg, and a pinch of salt to the dry ingredients. Mix until just combined.</li><li>Melt butter or heat oil in a non-stick skillet over medium heat.</li><li>To make the pancakes, pour about 1/4 cup batter onto the hot skillet per pancake.</li><li>Fold the edges of each pancake into half to form a triangle shape.</li><li>Cook for about 2-3 minutes on one side, then flip and cook for another 2-3 minutes until golden brown.</li><li>Lift with a spatula and transfer to a plate lined with paper towels to drain excess fat.</li></ul><h2>Tips:</h2><ul><li>You can add any flavorings like chocolate chips, nuts, or fruit to your batter.</li><li>If you prefer thicker pancakes, use less liquid.</li><li>For a healthier option, substitute some of the flour with whole wheat flour.</li></ul><p>Enjoy your homemade pancakes!</p></body></html>",
+          "valid": true,
+          "errors": [],
+          "seconds": 34.12
+        },
+        {
+          "prompt": "Write a small HTML page about how vaccines work.",
+          "constrained": true,
+          "html": "<html><head><title>Vaccines Work</title></head><body><h1>How Vaccines Work</h1><p>Vaccines are used to stimulate an immune response in the body against specific pathogens such as viruses or bacteria.</p><p>The process of vaccination involves introducing a weakened form of the pathogen into the body through a vaccine shot. This weakens the pathogen enough for the body's immune system to recognize it and produce antibodies against it.</p><p>When the vaccinated individual is exposed to the actual pathogen later on, their immune system will be prepared and able to quickly neutralize the virus before it can cause any harm.</p><p>Vaccines have been instrumental in reducing the incidence of many deadly diseases throughout history and continue to play a vital role in global health today.</p></body></html>",
+          "valid": true,
+          "errors": [],
+          "seconds": 14.2
+        },
+        {
+          "prompt": "Write a small HTML page about the moon landing.",
+          "constrained": true,
+          "html": "<html><head><title>History of Moon Landing</title></head><body><h1>The Moon Landing: A Historic Event</h1><p>The Moon Landing was an event that took place on July 20, 1969, when astronauts Neil Armstrong and Buzz Aldrin became the first humans to set foot on the lunar surface.</p><p>This historic mission was part of NASA's Apollo program, which aimed to land Americans on the Moon and return them safely to Earth. The mission was led by NASA's Mission Control center in Houston, Texas.</p><p>Apollo 11 spacecraft launched from Kennedy Space Center in Florida and traveled over 240,000 miles (385,000 km) to reach the Moon. After several days of orbiting the Moon, the crew made their descent towards the lunar surface.</p><p>On July 20, 1969, at 20:17 UTC, Armstrong stepped off the Lunar Module Eagle and said \"That's one small step for man, one giant leap for mankind.\" He then planted the American flag on the Moon's surface.</p><p>Buzz Aldrin followed shortly after and completed his own spacewalk. They spent two hours outside the spacecraft before rejoining it. During this time, they collected rocks and soil samples for scientific analysis back on Earth.</p><p>The Moon Landing marked a significant achievement in human history and demonstrated the capabilities of modern technology. It also helped boost public morale during the Cold War era between the United States and the Soviet Union.</p></body></html>",
+          "valid": true,
+          "errors": [],
+          "seconds": 26.28
+        },
+        {
+          "prompt": "Write a small HTML page about learning to play the guitar.",
+          "constrained": true,
+          "html": "<html><head><title>Learning to Play the Guitar</title></head><body><h1>Welcome to Learning to Play the Guitar!</h1><p>Guitar is an ancient instrument that has been around for centuries. It's a versatile and fun musical instrument that can be played in many different styles.</p><p>If you're interested in learning to play the guitar, there are plenty of resources available online or at local music stores. Some popular methods include traditional books, video tutorials on YouTube, and even apps like Guitar Pro.</p><p>With practice and dedication, anyone can learn to play the guitar. Start with some basic chords and try playing simple songs. As you progress, you'll find yourself developing your own style and enjoying the process of creating music.</p><p>So what are you waiting for? Grab your guitar and start exploring the world of guitar-playing today!</p></body></html>",
+          "valid": true,
+          "errors": [],
+          "seconds": 15.02
+        }
+      ]
+    },
+    "unconstrained": {
+      "valid": 0,
+      "total": 10,
+      "valid_percent": 0.0,
+      "mean_seconds": 19.33,
+      "pages": [
+        {
+          "prompt": "Write a small HTML page about the planet Mars.",
+          "constrained": false,
+          "html": "<!DOCTYPE html>\n<html>\n<head>\n\t<title>Mars: The Red Planet</title>\n</head>\n<body>\n\t<h1>Mars: The Red Planet</h1>\n\t<p>Known as the \"Red Planet,\" Mars is one of the four terrestrial planets in our solar system and is often compared to Earth due to its similarity in size and composition.</p>\n\t<img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Mars_2018.jpg/640px-Mars_2018.jpg\" alt=\"Mars\">\n\t<p>Mars has been the subject of much speculation and fascination for centuries, thanks to its unique appearance and potential for supporting life. It's also home to some of the most dramatic weather patterns in the solar system, including dust storms that can cover the entire planet!</p>\n</body>\n</html>",
+          "valid": false,
+          "errors": [
+            "does not start with <html>",
+            "tag not allowed: <img>",
+            "expected </img> but found </body>"
+          ],
+          "seconds": 10.74
+        },
+        {
+          "prompt": "Write a small HTML page about how bees make honey.",
+          "constrained": false,
+          "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>How Bees Make Honey</title>\n</head>\n<body>\n    <h1>The Amazing Process of Beekeeping and Honey Production</h1>\n    <p>Beekeepers use their knowledge to ensure that the hive is healthy and thriving. The process starts with the queen bee laying eggs in the cells of the comb. As the larvae develop, they receive food from nurse bees who feed them royal jelly for the first few days. After several days, the larva enters the pupal stage and continues to grow until it is fully formed.</p>\n\n    <p>When the adult bee emerges, it immediately begins its role as an active worker bee. Its main job is to gather nectar from flowers, which it stores in its honey stomach. Worker bees then regurgitate the nectar into wax honeycombs where it is evaporated dry to concentrate the sugar content.</p>\n\n    <p>Once the honey has been processed, it is stored in honeycomb cells within the hive. When needed, the worker bees will take the honey back to the colony to feed themselves or other members of the hive. This natural process of making honey is a delicate balance between the needs of the bees and the survival of the hive.</p>\n\n    <p>In conclusion, the process of making honey involves a complex interplay between the queen bee, her workers, and the environment around them. By understanding this process, we can appreciate the hard work and dedication of these tiny creatures and perhaps even enjoy a delicious cup of honey ourselves!</p>\n</body>\n</html>",
+          "valid": false,
+          "errors": [
+            "does not start with <html>",
+            "tag not allowed: <meta>",
+            "expected </meta> but found </head>"
+          ],
+          "seconds": 19.5
+        },
+        {
+          "prompt": "Write a small HTML page listing three tips for studying.",
+          "constrained": false,
+          "html": "```html\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Study Tips</title>\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            margin: 20px;\n        }\n        h1 {\n            color: #333;\n        }\n        ul {\n            list-style-type: disc;\n            padding-left: 20px;\n        }\n        li {\n            background-color: #f4f4f4;\n            border-radius: 5px;\n            padding: 10px;\n            margin-bottom: 10px;\n        }\n    </style>\n</head>\n<body>\n\n<h1>Three Tips for Effective Studying</h1>\n\n<ul>\n    <li><strong>Create a Study Schedule:</strong> Plan your time wisely to cover all subjects and topics effectively.</li>\n    <li><strong>Use Active Learning Techniques:</strong> Engage in discussions, take notes, or use flashcards to reinforce understanding.</li>\n    <li><strong>Practice Regularly:</strong> Consistent practice helps build knowledge retention over time.</li>\n</ul>\n\n</body>\n</html>\n```",
+          "valid": false,
+          "errors": [
+            "does not start with <html>",
+            "does not end with </html>",
+            "tag not allowed: <meta>",
+            "tag not allowed: <meta>",
+            "tag not allowed: <style>",
+            "expected </meta> but found </head>",
+            "tag not allowed: <strong>",
+            "tag not allowed: <strong>",
+            "tag not allowed: <strong>"
+          ],
+          "seconds": 15.51
+        },
+        {
+          "prompt": "Write a small HTML page about the history of the bicycle.",
+          "constrained": false,
+          "html": "<!DOCTYPE html>\n<html>\n<head>\n\t<title>The History of the Bicycle</title>\n</head>\n<body>\n\t<h1>History of the Bicycle</h1>\n\t\n\t<p>The bicycle is an invention that has revolutionized transportation and sports since its introduction in the mid-19th century.</p>\n\t\n\t<ol>\n\t\t<li><strong>First Models:</strong> The first bicycles were introduced around 1860 by German engineer Karl von Drais, who called his invention \"The Human Carriage.\"</li>\n\t\t\n\t\t<li><strong>Modernization:</strong> In the late 19th century, the bicycle began to change from being primarily a mode of transportation for wealthy people to becoming more accessible through improvements in materials and design.</li>\n\t\t\n\t\t<li><strong>Racing Bicycles:</strong> By the early 20th century, racing bicycles became popular among athletes competing in track cycling events.</li>\n\t\t\n\t\t<li><strong>Mass Production:</strong> During World War I, mass production techniques allowed bicycle manufacturers to produce large quantities of bikes at lower costs, making them more affordable to the general public.</li>\n\t\t\n\t\t<li><strong>Sports and Recreation:</strong> As bicycle manufacturing expanded, so did the sport of cycling. The Tour de France was established in 1903 as one of the world's premier bicycle races.</li>\n\t\t\n\t\t<li><strong>Invention of the Safety Bicycle:</strong> In 1885, John Kemp Starley invented the safety bicycle, which had two wheels of equal size, allowing it to be pedaled faster and without fear of falling off.</li>\n\t\t\n\t\t<li><strong>Electric Bicycles:</strong> Around 1970, electric bicycles (e-bikes) were introduced, providing additional power for riders who might struggle with hills or uneven terrain.</li>\n\t\t\n\t\t<li><strong>Modern Bicycles:</strong> Today, there are countless variations of bicycles available, including mountain bikes, road bikes, hybrid bikes, and others designed for specific purposes such as commuting, touring, or racing.</li>\n\t</ol>\n\n\t<p>Bicycles have become integral to modern life, serving as a means of transportation, recreation, fitness, and even as a form of artistic expression.</p>\n</body>\n</html>",
+          "valid": false,
+          "errors": [
+            "does not start with <html>",
+            "tag not allowed: <ol>",
+            "tag not allowed: <strong>",
+            "tag not allowed: <strong>",
+            "tag not allowed: <strong>",
+            "tag not allowed: <strong>",
+            "tag not allowed: <strong>",
+            "tag not allowed: <strong>",
+            "tag not allowed: <strong>",
+            "tag not allowed: <strong>"
+          ],
+          "seconds": 28.0
+        },
+        {
+          "prompt": "Write a small HTML page about the city of Logan, Utah.",
+          "constrained": false,
+          "html": "<!DOCTYPE html>\n<html>\n<head>\n\t<title>Logan, Utah</title>\n</head>\n<body>\n\t<h1>Welcome to Logan, Utah</h1>\n\t<p>Logan is a charming city located in western Utah, United States.</p>\n\t<img src=\"logan.jpg\" alt=\"Logan, Utah\">\n\t<p>The city is known for its beautiful natural scenery, including the Great Salt Lake and the Wasatch Mountains.</p>\n\t<p>Logan is also home to Utah State University, which offers many programs and attracts students from all over the world.</p>\n\t<p>Whether you're looking for outdoor activities like hiking or fishing, or want to explore the history of the area, Logan has something for everyone.</p>\n</body>\n</html>",
+          "valid": false,
+          "errors": [
+            "does not start with <html>",
+            "tag not allowed: <img>",
+            "expected </img> but found </body>"
+          ],
+          "seconds": 9.69
+        },
+        {
+          "prompt": "Write a small HTML page about why the sky is blue.",
+          "constrained": false,
+          "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>The Color of Blue Sky</title>\n</head>\n<body>\n    <h1>The Color of Blue Sky</h1>\n    \n    <p>Have you ever wondered why the sky appears blue? The answer lies in how light travels through the atmosphere and interacts with particles in the air.</p>\n\n    <p>The sun emits light that contains all colors of the rainbow: red, orange, yellow, green, blue, indigo, and violet. When this sunlight enters our atmosphere, it encounters tiny particles such as dust, water droplets, and other gases like nitrogen and oxygen.</p>\n\n    <p>Skywatchers have observed that these particles scatter shorter wavelengths (colors) more effectively than longer ones. This means that when sunlight reaches Earth's surface, it tends to scatter away from us toward the edges of the atmosphere. As a result, we see mostly blue light because it has the shortest wavelength among visible light.</p>\n\n    <p>This scattering effect happens for both day and night skies since the Sun is always shining somewhere on Earth at any given moment. However, during sunrise or sunset, the angle between the Sun and the horizon changes, causing the scattered light to reach our eyes directly instead of being reflected off the ground.</p>\n\n    <p>Therefore, while the color of the sky varies throughout the day due to atmospheric conditions, the overall appearance remains predominantly blue thanks to this fascinating optical phenomenon.</p>\n</body>\n</html>",
+          "valid": false,
+          "errors": [
+            "does not start with <html>",
+            "tag not allowed: <meta>",
+            "expected </meta> but found </head>"
+          ],
+          "seconds": 18.7
+        },
+        {
+          "prompt": "Write a small HTML page with a recipe for pancakes.",
+          "constrained": false,
+          "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Pancake Recipe</title>\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            margin: 20px;\n        }\n        h1 {\n            color: #333;\n        }\n        .recipe-card {\n            background-color: #f9f9f9;\n            border-radius: 5px;\n            padding: 20px;\n            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);\n        }\n        img {\n            max-width: 100%;\n            height: auto;\n        }\n    </style>\n</head>\n<body>\n    <h1>Pancake Recipe</h1>\n    \n    <div class=\"recipe-card\">\n        <img src=\"https://images.pexels.com/photos/76449/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2\" alt=\"Pancakes on a plate\">\n        <h2>Ingredients</h2>\n        <ul>\n            <li>1 cup all-purpose flour</li>\n            <li>2 tsp baking powder</li>\n            <li>1/2 tsp salt</li>\n            <li>1/4 cup milk</li>\n            <li>1 egg</li>\n            <li>1 tbsp melted butter or oil</li>\n        </ul>\n        \n        <h2>Instructions</h2>\n        <ol>\n            <li>In a medium bowl, whisk together the flour, baking powder, and salt.</li>\n            <li>In another bowl, beat the eggs until light and frothy.</li>\n            <li>Add the milk to the eggs and mix well.</li>\n            <li>Melt the butter in a skillet over medium heat.</li>\n            <li>Sift the dry ingredients into the wet mixture alternately with the milk mixture, starting and ending with the dry ingredients.</li>\n            <li>Stir gently to combine.</li>\n            <li>Heat the skillet until hot but not smoking.</li>\n            <li>Gently pour batter onto the skillet, using about 1/4 cup per pancake.</li>\n            <li>Cook until bubbles form on the surface and the edges start to lift, about 2 minutes.</li>\n            <li>Flip the pancakes and cook for an additional minute until golden brown.</li>\n            <li>Ladle the pancakes onto a plate and serve warm.</li>\n        </ol>\n    </div>\n\n    <p><strong>Note:</strong> Pancakes can be made ahead of time and stored in an airtight container at room temperature for up to one week.</p>\n</body>\n</html>",
+          "valid": false,
+          "errors": [
+            "does not start with <html>",
+            "tag not allowed: <meta>",
+            "tag not allowed: <meta>",
+            "tag not allowed: <style>",
+            "expected </meta> but found </head>",
+            "tag not allowed: <div>",
+            "tag not allowed: <img>",
+            "tag not allowed: <ol>",
+            "expected </img> but found </div>",
+            "tag not allowed: <strong>"
+          ],
+          "seconds": 35.62
+        },
+        {
+          "prompt": "Write a small HTML page about how vaccines work.",
+          "constrained": false,
+          "html": "```html\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Vaccines: How They Work</title>\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            line-height: 1.6;\n            margin: 20px;\n        }\n        h1, p {\n            text-align: center;\n        }\n        .container {\n            max-width: 800px;\n            margin: auto;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <h1>How Vaccines Work</h1>\n        \n        <p>Vaccines are used to protect people from dangerous diseases. When you get vaccinated against a particular disease, your immune system learns to recognize that specific germ and is prepared to fight it off if you ever encounter it again.</p>\n\n        <p>The vaccine introduces a harmless part of the germ into your body in a way that makes your immune system react to it without causing illness. This reaction helps build immunity so that when you do come across the real germ later on, your immune system can quickly respond and stop the disease before it starts.</p>\n\n        <p>This process is called immunization, and it's what allows us to be protected from many common illnesses like measles, mumps, and polio. The more people who get vaccinated for a certain disease, the less likely any one person will have to deal with it directly because they've been exposed to enough people who are already immune.</p>\n\n        <p>It's important to note that while vaccinations help prevent serious health issues, they're not a guarantee that you'll never get sick. Some individuals may still contract an illness even after being vaccinated, but their chances of becoming severely ill or spreading the infection to others are much lower.</p>\n\n        <p>Make sure to follow all instructions given by healthcare professionals regarding vaccination schedules and proper administration techniques to ensure maximum effectiveness and safety.</p>\n    </div>\n</body>\n</html>\n```",
+          "valid": false,
+          "errors": [
+            "does not start with <html>",
+            "does not end with </html>",
+            "tag not allowed: <meta>",
+            "tag not allowed: <meta>",
+            "tag not allowed: <style>",
+            "expected </meta> but found </head>",
+            "tag not allowed: <div>"
+          ],
+          "seconds": 25.35
+        },
+        {
+          "prompt": "Write a small HTML page about the moon landing.",
+          "constrained": false,
+          "html": "<!DOCTYPE html>\n<html>\n<head>\n\t<title>History of Moon Landing</title>\n</head>\n<body>\n\t<h1>The Moon Landing: A Historic Event</h1>\n\t<p>The Apollo 11 mission, which landed on the moon in July 1969, was one of the most significant events in human history.</p>\n\t<ul>\n\t\t<li><strong>Launch Date:</strong> July 16, 1969</li>\n\t\t<li><strong>Landing Site:</strong> Mare Tranquillitatis</li>\n\t\t<li><strong>Astronauts:</strong> Neil Armstrong and Buzz Aldrin</li>\n\t\t<li><strong>Mission Duration:</strong> About two hours and 38 minutes</li>\n\t\t<li><strong>First to Walk on the Moon:</strong> Neil Armstrong</li>\n\t</ul>\n\t<p>The moon landing was not just an achievement for NASA but also a symbol of American strength and determination. It inspired generations of people around the world and showed that humans were capable of achieving incredible things.</p>\n</body>\n</html>",
+          "valid": false,
+          "errors": [
+            "does not start with <html>",
+            "tag not allowed: <strong>",
+            "tag not allowed: <strong>",
+            "tag not allowed: <strong>",
+            "tag not allowed: <strong>",
+            "tag not allowed: <strong>"
+          ],
+          "seconds": 13.59
+        },
+        {
+          "prompt": "Write a small HTML page about learning to play the guitar.",
+          "constrained": false,
+          "html": "<!DOCTYPE html>\n<html>\n<head>\n\t<title>Learning to Play Guitar</title>\n</head>\n<body>\n\t<h1>Welcome to Learning to Play the Guitar!</h1>\n\t\n\t<p>Guitar is one of the most popular instruments in the world. It has a rich history and a wide range of genres that it can be used for.</p>\n\t\n\t<h2>Benefits of Playing Guitar</h2>\n\t\n\t<ul>\n\t\t<li>Improves hand-eye coordination</li>\n\t\t<li>Enhances memory and concentration</li>\n\t\t<li>Increases physical fitness through finger exercises</li>\n\t\t<li>Encourages creativity and self-expression</li>\n\t</ul>\n\t\n\t<h2>Getting Started</h2>\n\t\n\t<ol>\n\t\t<li>Choose a suitable guitar</li>\n\t\t<li>Learn basic chords and scales</li>\n\t\t<li>Practice regularly to build muscle memory</li>\n\t\t<li>Join a local music group or take lessons from an instructor</li>\n\t</ol>\n\t\n\t<h2>Tips for Beginners</h2>\n\t\n\t<blockquote>\"The best way to learn anything is to practice every day.\"</blockquote>\n\t\n\t<p>Remember, playing the guitar requires patience and dedication. With time and effort, you'll develop your skills and enjoy the beautiful sounds it produces.</p>\n</body>\n</html>",
+          "valid": false,
+          "errors": [
+            "does not start with <html>",
+            "tag not allowed: <ol>",
+            "tag not allowed: <blockquote>"
+          ],
+          "seconds": 16.59
+        }
+      ]
+    }
+  }
+}
