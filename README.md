@@ -2,50 +2,58 @@
 
 Homework-submission repository for USU LLM Class DSAI-5810/6810.
 
-> Assignments and course materials will be added throughout the Fall 2026 semester.
+## Setup
 
-## Contributing
-
-### Set up your environment
-
-Install `uv` using the instructions found here: <https://docs.astral.sh/uv/getting-started/installation/>
-
-Then sync the project:
+Requires Python 3.14+.
 
 ```bash
-uv sync
+uv sync --group dev
 ```
 
-### Start experimenting
+Checks: `make` (ruff + pytest).
 
-Run the entrypoint script:
+## Progress
+
+- A0–A8 — done (prior branches)
+- A9 — HTML Structured Output (in progress)
+
+## Assignment 9: Constrained HTML output
+
+**Primary path (Action Plan):** Colab Pro GPU + [Guidance](https://github.com/guidance-ai/guidance)
++ `Qwen/Qwen2.5-1.5B-Instruct`. Constrained HTML grammar during decoding
+(`gen(max_tokens=...)` / `repeat(max=...)`); then `html_grammar().match(...)`
++ whitelist validation. API returns raw `text/html`.
+
+### Run on Colab (default / primary)
+
+Needs [`colab`](https://pypi.org/project/google-colab-cli/) CLI authenticated.
+`make colab` **always** requests a GPU (never CPU). Default is **T4** — smallest
+Colab GPU that safely runs `Qwen2.5-1.5B-Instruct` in 4-bit (a few GB VRAM; T4 has
+16GB), and free-tier accounts can get it. If T4 is unavailable it walks
+T4 → L4 → A100 → G4 → H100.
 
 ```bash
-uv run src/main.py
+make colab
+# Pro / bigger card if you want:
+make colab GPU=A100 PROMPT='Short page about Aggie Ice Cream'
 ```
 
-If you prefer a Jupyter notebook:
+Output: `artifacts/colab/a9_output.html` — screenshot that for the PR.
+
+### Local secondary (optional)
 
 ```bash
-uv run --with jupyter jupyter lab
+A9_LOAD_IN_4BIT=true make serve
+make infer   # or open http://127.0.0.1:8000/
 ```
 
-### Set up pre-commit (optional)
+Env knobs: `A9_MODEL_ID`, `A9_LOAD_IN_4BIT`, `A9_COLAB_GPU`.
 
-CI runs the project checks for every push and pull request. To run those checks before committing, install the hooks:
+CI uses mocked generators in `tests/test_html.py`.
 
-```bash
-uvx prek install
-```
+Allowed tags: `html`, `head`, `title`, `body`, `h1`, `h2`, `p`, `ul`, `ol`,
+`li`, `strong`, `em`, `br`. No attributes.
 
-### Run checks locally
+## AI assistance
 
-```bash
-uv run ruff check
-uv run ruff format --check .
-uv run pytest
-```
-
-### AI assistance
-
-The course supports Claude Code and Codex. Both assistants follow the same student-learning and academic-integrity expectations in [AGENTS.md](AGENTS.md).
+Claude Code and Codex follow [AGENTS.md](AGENTS.md).
