@@ -22,6 +22,7 @@ from src.html_service import (
     evaluate,
     generate_page,
     main,
+    rescore_lenient,
     validate_html,
 )
 
@@ -245,3 +246,58 @@ def test_real_model_with_grammar_returns_valid_html():
     result = generate_page(model, "Write a small HTML page about the planet Mars.")
     assert result["valid"], result["errors"]
     assert result["html"].startswith("<html>")
+
+
+# ---- lenient check (fairer extra measure) ---------------------------------------
+
+ORDINARY = (
+    "<!DOCTYPE html>\n<html>\n<head>\n<meta charset='utf-8'>\n<title>T</title>\n</head>\n"
+    "<body><div><h1>Hi</h1><img src='a.png'><br/><p>Text</p></div></body>\n</html>"
+)
+
+
+def test_strict_rejects_ordinary_html_but_lenient_accepts_it():
+    assert validate_html(ORDINARY)
+    assert validate_html(ORDINARY, strict=False) == []
+
+
+def test_strict_start_check_is_still_exact():
+    assert validate_html('<html lang="en"></html>')  # strict wants plain <html>
+    assert any("does not start" in e for e in validate_html("<p>hi</p>", strict=False))
+
+
+@pytest.mark.parametrize(
+    "text, fragment",
+    [
+        ("", "empty output"),
+        ("<!DOCTYPE html>", "empty output"),
+        ("<html><body><p>x</body></html>", "expected </p> but found </body>"),
+        ("<html><body><p>x</p></body>", "does not end with </html>"),
+    ],
+)
+def test_lenient_still_rejects_broken_pages(text, fragment):
+    assert any(fragment in e for e in validate_html(text, strict=False))
+
+
+def test_rescore_lenient_uses_saved_pages():
+    results = {
+        "runs": {
+            "constrained": {"pages": [{"html": GOOD}]},
+            "unconstrained": {"pages": [{"html": ORDINARY}, {"html": TRUNCATED}]},
+            "empty": {"pages": []},
+        }
+    }
+    out = rescore_lenient(results)["runs"]
+    assert out["constrained"]["valid"] == 1
+    assert out["unconstrained"]["valid"] == 1
+    assert out["unconstrained"]["per_page"] == [True, False]
+    assert out["empty"]["valid_percent"] == 0.0
+
+
+def test_cli_rescore_writes_file(tmp_path, capsys):
+    saved = tmp_path / "eval.json"
+    saved.write_text(json.dumps({"runs": {"x": {"pages": [{"html": GOOD}]}}}))
+    out = tmp_path / "lenient.json"
+    assert main(["rescore", "--results", str(saved), "--out", str(out)]) == 0
+    assert json.loads(out.read_text())["runs"]["x"]["valid"] == 1
+    assert "lenient x: 1/1 valid (100.0%)" in capsys.readouterr().out

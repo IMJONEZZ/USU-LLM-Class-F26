@@ -8,6 +8,7 @@ libraries, and it does so lazily.
 
 import argparse
 import json
+import re
 import time
 from html.parser import HTMLParser
 from typing import Protocol
@@ -19,6 +20,12 @@ MAX_NEW_TOKENS = 800
 # except "<", ">" and "&" (which could start a stray tag or character code) and
 # control characters (tabs, line breaks, other invisible characters).
 ALLOWED_TAGS = ("html", "head", "title", "body", "h1", "h2", "p", "ul", "li")
+
+# Tags that never have a closing tag in ordinary HTML. Only the lenient check
+# knows about them; the strict check allows none of them.
+VOID_TAGS = frozenset(
+    {"area", "base", "br", "col", "hr", "img", "input", "link", "meta"}
+)
 
 HTML_GRAMMAR = r"""
 start: "<html>" head body "</html>"
@@ -61,8 +68,9 @@ class Generator(Protocol):
 class _TagChecker(HTMLParser):
     """Collects structural problems: unknown tags, bad nesting, stray text."""
 
-    def __init__(self) -> None:
+    def __init__(self, strict: bool = True) -> None:
         super().__init__()
+        self.strict = strict
         self.stack: list[str] = []
         self.errors: list[str] = []
         self.first_tag: str | None = None
@@ -70,11 +78,15 @@ class _TagChecker(HTMLParser):
     def handle_starttag(self, tag, attrs):
         if self.first_tag is None:
             self.first_tag = tag
-        if tag not in ALLOWED_TAGS:
+        if self.strict and tag not in ALLOWED_TAGS:
             self.errors.append(f"tag not allowed: <{tag}>")
+        if not self.strict and tag in VOID_TAGS:
+            return
         self.stack.append(tag)
 
     def handle_endtag(self, tag):
+        if not self.strict and tag in VOID_TAGS:
+            return
         if not self.stack:
             self.errors.append(f"closing </{tag}> with nothing open")
         elif self.stack[-1] != tag:
@@ -86,28 +98,54 @@ class _TagChecker(HTMLParser):
             self.stack.pop()
 
 
-def validate_html(text: str) -> list[str]:
+def validate_html(text: str, strict: bool = True) -> list[str]:
     """Return a list of problems; an empty list means the page is valid.
 
-    Valid means: starts with <html>, ends with </html>, uses only allowed tags,
-    and every tag is closed in the right order. (Python's HTMLParser alone
-    accepts anything, so the tag stack is what makes this a real check.)
+    Strict (the check from my plan): starts with <html>, ends with </html>, uses
+    only the allowed tags, and every tag is closed in the right order.
+
+    Lenient (``strict=False``, a fairer extra check): also accepts a leading
+    <!DOCTYPE html>, any tag name, and tags that never close (<meta>, <img>...).
+    (Python's HTMLParser alone accepts anything, so the tag stack is what makes
+    this a real check.)
     """
     errors: list[str] = []
     stripped = text.strip()
+    if not strict:
+        stripped = re.sub(r"^<!doctype html>\s*", "", stripped, flags=re.IGNORECASE)
     if not stripped:
         return ["empty output"]
-    if not stripped.startswith("<html>"):
+    if not stripped.startswith("<html>" if strict else "<html"):
         errors.append("does not start with <html>")
     if not stripped.endswith("</html>"):
         errors.append("does not end with </html>")
-    checker = _TagChecker()
+    checker = _TagChecker(strict)
     checker.feed(stripped)
     checker.close()
     errors.extend(checker.errors)
     if checker.stack:
         errors.append("unclosed tags: " + ", ".join(checker.stack))
     return errors
+
+
+def rescore_lenient(results: dict) -> dict:
+    """Re-score saved eval pages with the lenient check (no model needed)."""
+    out: dict = {
+        "note": "lenient check; the strict result is the official one",
+        "runs": {},
+    }
+    for mode, run in results["runs"].items():
+        verdicts = [
+            not validate_html(page["html"], strict=False) for page in run["pages"]
+        ]
+        valid = sum(verdicts)
+        out["runs"][mode] = {
+            "valid": valid,
+            "total": len(verdicts),
+            "valid_percent": round(100 * valid / len(verdicts), 1) if verdicts else 0.0,
+            "per_page": verdicts,
+        }
+    return out
 
 
 def generate_page(
@@ -199,7 +237,20 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     ev = sub.add_parser("eval", help="constrained vs unconstrained on 10 prompts")
     ev.add_argument("--out", default="assignment_9/results/eval_results.json")
+    rs = sub.add_parser("rescore", help="re-score saved eval pages leniently")
+    rs.add_argument("--results", default="assignment_9/results/eval_results.json")
+    rs.add_argument("--out", default="assignment_9/results/lenient_rescore.json")
     args = parser.parse_args(argv)
+    if args.command == "rescore":
+        with open(args.results) as handle:
+            rescored = rescore_lenient(json.load(handle))
+        with open(args.out, "w") as handle:
+            json.dump(rescored, handle, indent=2)
+        for mode, run in rescored["runs"].items():
+            print(
+                f"lenient {mode}: {run['valid']}/{run['total']} valid ({run['valid_percent']}%)"
+            )
+        return 0
     if args.command == "eval":
         result = evaluate(load_model())
         with open(args.out, "w") as handle:
