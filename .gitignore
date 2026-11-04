@@ -5,6 +5,9 @@
 # Local datasets and ChromaDB persistence (not submitted to CI)
 /data/
 
+# Generated Colab / local demo outputs
+/artifacts/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -84,7 +87,9 @@ ipython_config.py
 .env.*
 .venv
 .venv-unsloth/
+.venv-training/
 unsloth_compiled_cache/
+.uv-cache/
 env/
 venv/
 ENV/

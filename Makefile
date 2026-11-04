@@ -3,11 +3,17 @@ SHELL := /bin/bash
 .ONESHELL:
 .DEFAULT_GOAL := all
 
-# /tmp on this host often hits quota during CUDA wheel extract; keep uv temp on $HOME.
 export TMPDIR ?= $(HOME)/.cache/uv-tmp
 export UV_CACHE_DIR ?= $(HOME)/.cache/uv
 
-.PHONY: all help sync setup-unsloth serve serve-transformers infer
+# Primary demo path = Colab GPU + Guidance (see Action Plan).
+# Always request a GPU. Default T4 (fits 3B 4-bit on free tier); Pro can use A100.
+GPU ?= T4
+PROMPT ?=
+MODEL_ID ?=
+KEEP ?=
+
+.PHONY: all help sync serve infer colab colab-keep
 
 all:
 	uv run ruff check .
@@ -18,26 +24,31 @@ sync:
 	mkdir -p "$(TMPDIR)" "$(UV_CACHE_DIR)"
 	uv sync --group dev
 
-setup-unsloth:
-	mkdir -p "$(TMPDIR)" "$(UV_CACHE_DIR)"
-	uv venv --no-project --python 3.12 --allow-existing .venv-unsloth
-	uv pip sync --python .venv-unsloth/bin/python requirements-unsloth.lock
-
 serve:
-	.venv-unsloth/bin/python -m uvicorn src.server:app --host 127.0.0.1 --port 8000 --workers 1
-
-serve-transformers:
-	uv run uvicorn src.transformers_app.server:app --host 127.0.0.1 --port 8000 --workers 1
+	uv run uvicorn src.server:app --host 127.0.0.1 --port 8000 --workers 1
 
 infer:
-	uv run python -m src.inference
+	uv run python -c "import requests; \
+r=requests.post('http://127.0.0.1:8000/generate-html', json={'prompt':'Short page about USU'}); \
+print(r.status_code, r.headers.get('content-type')); print(r.text)"
+
+# Always passes --gpu (never CPU). Falls back T4→L4→A100→G4→H100 if needed.
+colab:
+	@args=(--gpu "$(GPU)"); \
+	if [[ -n "$(PROMPT)" ]]; then args+=(--prompt "$(PROMPT)"); fi; \
+	if [[ -n "$(MODEL_ID)" ]]; then args+=(--model-id "$(MODEL_ID)"); fi; \
+	if [[ -n "$(KEEP)" ]]; then args+=(--keep); fi; \
+	python3 scripts/run_colab_a9.py "$${args[@]}"
+
+colab-keep:
+	$(MAKE) colab KEEP=1
 
 help:
 	@printf '%s\n' \
-	  'Default: make (or make all) runs ruff check, ruff format --check, then pytest' \
-	  'make sync          Recreate/repair .venv (uses $$HOME cache; avoids /tmp quota)' \
-	  'make setup-unsloth Install the separate Python 3.12 Unsloth environment' \
-	  'make serve         Serve the final LoRA adapter with Unsloth at localhost:8000' \
-	  'make serve-transformers Run the preserved Transformers/PEFT server (CPU or CUDA)' \
-	  'make infer         Print an example API request and response' \
-	  'Assignment 6 focused branch — older A5 make targets live in archive/pre_a6_coursework/root_files/Makefile'
+	  'make / make all   ruff + pytest' \
+	  'make sync         recreate .venv' \
+	  'make serve        local FastAPI on :8000 (secondary)' \
+	  'make infer        POST /generate-html (local server must be up)' \
+	  'make colab        PRIMARY: Colab GPU (default T4) + Guidance + Qwen 1.5B 4-bit' \
+	  'make colab GPU=A100 PROMPT="..." MODEL_ID=Qwen/Qwen2.5-1.5B-Instruct' \
+	  'make colab-keep   same as colab but leave the VM running'
