@@ -15,7 +15,7 @@ Checks: `make` (ruff + pytest).
 ## Progress
 
 - A0–A8 — done (prior branches)
-- A9 — HTML Structured Output (in progress)
+- A9 — HTML Structured Output (Done)
 
 ## Assignment 9: Constrained HTML output
 
