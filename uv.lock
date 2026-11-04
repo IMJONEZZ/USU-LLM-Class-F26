@@ -1407,6 +1407,36 @@ wheels = [
 ]
 
 [[package]]
+name = "guidance"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "guidance-stitch" },
+    { name = "jinja2" },
+    { name = "llguidance" },
+    { name = "numpy" },
+    { name = "psutil" },
+    { name = "pydantic" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3b/2e/d6f0e4f7cf330d81ab92a8b0399fb49261ed7f8a2becbf326079afa16a40/guidance-0.3.1.tar.gz", hash = "sha256:60fe7e308596aecb7676d9165a14630992ee3eeb48f0dd086ce2ea9d40e01ca8", size = 3913526 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/4e/16aa0a837623ed41499ebb00972bb5fbcea6eeeb71f522c220c23e468f52/guidance-0.3.1-py3-none-any.whl", hash = "sha256:6d69dee7fb9ca3d5d50928571a5a34a6fb4de92d454c6dcfccd805501ee6987f", size = 3930325 },
+]
+
+[[package]]
+name = "guidance-stitch"
+version = "0.1.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ipywidgets" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f8/ff/324130d5dd970c005fb54f633e20da532d6bb5eae8e1176c8be4bab894b8/guidance_stitch-0.1.5.tar.gz", hash = "sha256:2a0d0ede865db387857d494a7bcb1a903621c13f571869cde1109c2c5569cd95", size = 185391 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/6f/24a042f87de344d707a4c9bb11235b54df1b6f5dc5d641935deb2fb01428/guidance_stitch-0.1.5-py3-none-any.whl", hash = "sha256:22ab8c5e9b5db36eeb0d54822797d02c8de658595dea3b9662708edb2274f6d1", size = 108802 },
+]
+
+[[package]]
 name = "h11"
 version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1818,6 +1848,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ca/57/b07b96353f902aa1bdbe00e878e3a12a137977d03a962479785576aa8ec9/kubernetes-36.0.3.tar.gz", hash = "sha256:36993ed25ce59b789c9341473a228fcf268504a2fec7c2b2b1531d73072e5ce7", size = 2337528 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5b/30/a96d47df739689ac0001ade0afefc16e3b477fc2fb426b568515fdc8afce/kubernetes-36.0.3-py2.py3-none-any.whl", hash = "sha256:8fde9241c4b298e6374a069dcf728359b4e72c2fb29489a975ba4e1c047cf10f", size = 4618066 },
+]
+
+[[package]]
+name = "llguidance"
+version = "1.5.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/35/61/a184f88bc3439f3e59cf369f975723fb16149c5f9fa548f3943b33d3611b/llguidance-1.5.0.tar.gz", hash = "sha256:2ea30af852590449dce8acf7fed809a3aeccbc890bb90e446654c26d812a17f6", size = 1086056 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3e/9b/72b1fd3a0fffbebbbbd25a51337571a66b6c438b7a489f7a1bed03721feb/llguidance-1.5.0-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:c4aa5ae0ebdfacd574cfd8d38dec40aed2b105eb08bcc547399f1901cf81f4b1", size = 3240052 },
+    { url = "https://files.pythonhosted.org/packages/e3/6b/179a05119381b1910f3164297ed41e1f97b5410798707cd5fc57b4ab3e62/llguidance-1.5.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:69440dcc9ce5a545828fb69e8378da81fa828cbcef71a7f9767ff06299edd22d", size = 3144659 },
+    { url = "https://files.pythonhosted.org/packages/ba/9d/839267e97dbed432c1b5792b2f3df107f60fc3dc73fbfaed4767fdd11b34/llguidance-1.5.0-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d7070530eacf00fa1c320f4c4457238e3519ba7331e2f33d8cfbc05954af14f4", size = 2889108 },
+    { url = "https://files.pythonhosted.org/packages/ea/6c/3137168f82ca363669ae4d30964daef679ea5fad8a523d352ab4525134c1/llguidance-1.5.0-cp39-abi3-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:4466228fb826c7eaf94e7388340ad89f01724292fa09d349c7056cb4d16f7665", size = 3332758 },
+    { url = "https://files.pythonhosted.org/packages/30/6f/f01dbb43fd7ce76dd848ef3937a911f02df9d4dc7596851ccb1b9629ad2b/llguidance-1.5.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c8242348a26cb2cc9eae97598117a63ee71c6811b4b3af50c48e8c1be36c5190", size = 3071499 },
+    { url = "https://files.pythonhosted.org/packages/ed/c4/36e665721c7fdf2d48f394796ab08e4e9413804c30ac8ff70491b9de5f31/llguidance-1.5.0-cp39-abi3-win32.whl", hash = "sha256:2feeb29a46cfd75b8ce64debda7e24f0e9ecd28d9c41cf14711419bde5706488", size = 2605206 },
+    { url = "https://files.pythonhosted.org/packages/b1/63/5cadc75c7fde6e9d65d9c6423f599a1ac248c8140e139c531e05764f6961/llguidance-1.5.0-cp39-abi3-win_amd64.whl", hash = "sha256:8a53d07802e7691687a2fe33e86e7867cf48ef40b70ef1f808fea867defa5d55", size = 2863118 },
 ]
 
 [[package]]
@@ -4859,6 +4904,7 @@ dependencies = [
     { name = "datasets" },
     { name = "distilabel", extra = ["openai"] },
     { name = "evaluate" },
+    { name = "guidance" },
     { name = "huggingface-hub" },
     { name = "ipywidgets" },
     { name = "modal" },
@@ -4889,6 +4935,7 @@ requires-dist = [
     { name = "datasets", specifier = ">=3.0" },
     { name = "distilabel", extras = ["openai"], specifier = ">=1.5.3" },
     { name = "evaluate", specifier = ">=0.4.6" },
+    { name = "guidance", specifier = ">=0.3.1" },
     { name = "huggingface-hub", specifier = ">=0.22" },
     { name = "ipywidgets", specifier = ">=8.1.9" },
     { name = "modal", specifier = ">=1.5.5" },

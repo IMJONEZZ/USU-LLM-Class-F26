@@ -11,6 +11,7 @@ dependencies = [
     "datasets>=3.0",
     "distilabel[openai]>=1.5.3",
     "evaluate>=0.4.6",
+    "guidance>=0.3.1",
     "huggingface-hub>=0.22",
     "ipywidgets>=8.1.9",
     "modal>=1.5.5",
