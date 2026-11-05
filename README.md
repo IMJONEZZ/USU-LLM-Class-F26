@@ -81,7 +81,8 @@ baseline work. Expected-answer embeddings are cached separately for optimization
 and testing. Both programs use identical DSPy formatting and greedy decoding.
 Saved prompts and settings go into `artifacts/prompt_optimization/<run>/`.
 Result CSVs go into `results/prompt_optimization/`, replacing the previous results
-when rerun. Cosine scores measure semantic similarity,
+when rerun. `final_prompt.json` in the same folder contains the selected instructions
+and few-shot examples. Cosine scores measure semantic similarity,
 not exact correctness; the 10-example test comparison is exploratory.
 After optimization, `metrics_by_split.csv` reports baseline and optimized means
 and their differences for train, validation, and test. Per-riddle answers and

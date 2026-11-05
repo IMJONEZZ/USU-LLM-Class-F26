@@ -411,6 +411,9 @@ def main():  # pragma: no cover -- requires CUDA and downloaded model weights
         optimized_program.save(str(run_directory / "optimized_program.json"))
         _results_directory = Path("results/prompt_optimization")
         _results_directory.mkdir(parents=True, exist_ok=True)
+        (_results_directory / "final_prompt.json").write_text(
+            json.dumps(_selected, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
         search_results.to_csv(_results_directory / "validation_trials.csv", index=False)
         _configuration = {
             "model": model_name,
