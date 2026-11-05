@@ -59,6 +59,11 @@ Transformers model directly; no model server or API key is needed. A small
 single-output DSPy adapter accepts plain text because this Qwen model does not
 reliably emit DSPy's field markers or JSON. The same adapter renders the original
 and optimized instructions and demonstrations.
+The proposer receives a separate prompt-editing request. A conservative check
+rejects obvious requests to write another prompt, copied riddle questions, and
+one-word answers. Rejected proposals are retried with feedback up to three times;
+the run stops if none pass. This check catches task confusion, not all possible
+instruction-quality problems; inspect `final_prompt.json` before interpreting scores.
 
 ```powershell
 uv sync

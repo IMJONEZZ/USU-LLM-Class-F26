@@ -1,21 +1,21 @@
 split,input,expected_answer,baseline_answer,baseline_similarity,optimized_answer,optimized_similarity,difference
-validation,What has a face and two hands but no arms or legs?,A clock,Clock,0.9085448980331421,A clock,0.9999999403953552,0.09145504236221313
-validation,"What occurs once in a minute, twice in a moment, and never in a thousand years?",The letter M,Second.,0.26442503929138184,The second.,0.2748885154724121,0.010463476181030273
-validation,"What runs but never walks, has a mouth but never talks, has a head but never weeps, has a bed but never sleeps?",A river,Clock.,0.15955670177936554,A computer,0.286579430103302,0.12702272832393646
-validation,"What can you break, even if you never touch it?",A promise,Promise.,0.6187784671783447,Time,0.286085844039917,-0.33269262313842773
+validation,What has a face and two hands but no arms or legs?,A clock,Clock,0.9085448980331421,Clock,0.9085448980331421,0.0
+validation,"What occurs once in a minute, twice in a moment, and never in a thousand years?",The letter M,Second.,0.26442503929138184,Once.,0.12667815387248993,-0.1377468854188919
+validation,"What runs but never walks, has a mouth but never talks, has a head but never weeps, has a bed but never sleeps?",A river,Clock.,0.15955670177936554,Desk,0.1763494908809662,0.016792789101600647
+validation,"What can you break, even if you never touch it?",A promise,Promise.,0.6187784671783447,An idea,0.43613457679748535,-0.18264389038085938
 validation,"What has keys but no locks, space but no room, and you can enter but can't exit?",A keyboard,keyboard,0.8920568227767944,A keyboard,1.0,0.10794317722320557
-validation,What has one eye but can’t see?,A needle,blindfold,0.21175774931907654,A clock,0.3300442099571228,0.11828646063804626
-validation,What has a spine but no bones?,A book,Computer.,0.37341123819351196,A human body,0.3341846466064453,-0.03922659158706665
-validation,"What starts with 'e', ends with 'e', and contains one letter?",An envelope,elephant,0.1962379813194275,The letter e itself.,0.3477998375892639,0.15156185626983643
-validation,What can be played but is not a sport or game?,A musical instrument,Music,0.5946557521820068,An instrument,0.9378964304924011,0.3432406783103943
-validation,What is always coming but never arrives?,Tomorrow,The future.,0.528548002243042,The future.,0.528548002243042,0.0
+validation,What has one eye but can’t see?,A needle,blindfold,0.21175774931907654,Clock,0.23331089317798615,0.021553143858909607
+validation,What has a spine but no bones?,A book,Computer.,0.37341123819351196,A book,1.0,0.626588761806488
+validation,"What starts with 'e', ends with 'e', and contains one letter?",An envelope,elephant,0.1962379813194275,"The word ""bee"" fits this description perfectly. It starts with a lowercase 'e', ends with an uppercase 'E' (which is technically not a letter as per standard English rules), and contains exactly one letter. However, if we consider it strictly within the constraints of letters used in writing, it would be more",0.27529165148735046,0.07905367016792297
+validation,What can be played but is not a sport or game?,A musical instrument,Music,0.5946557521820068,Music,0.5946557521820068,0.0
+validation,What is always coming but never arrives?,Tomorrow,The future.,0.528548002243042,The future,0.5400427579879761,0.011494755744934082
 validation,What can be seen in water but never gets wet?,A reflection,reflection,0.9533127546310425,Reflection,0.9533127546310425,0.0
-validation,"I’m not alive, but I grow; I don’t have lungs, but I need air. What am I?",Fire,machine,0.35891541838645935,A plant,0.27264225482940674,-0.08627316355705261
+validation,"I’m not alive, but I grow; I don’t have lungs, but I need air. What am I?",Fire,machine,0.35891541838645935,Fire,1.0,0.6410845816135406
 validation,What's full of holes but still holds water?,A sponge,pumpkin,0.30437716841697693,A sponge,1.0,0.6956228315830231
-validation,What has a head and a tail that are only made of gold?,A coin,coin,0.926181435585022,A coin,1.0,0.07381856441497803
-validation,What can you hold without using your hands?,Your breath,A hand.,0.3103135824203491,An umbrella,0.18336425721645355,-0.12694932520389557
+validation,What has a head and a tail that are only made of gold?,A coin,coin,0.926181435585022,Coin,0.926181435585022,0.0
+validation,What can you hold without using your hands?,Your breath,A hand.,0.3103135824203491,An idea,0.19740359485149384,-0.11290998756885529
 validation,"I'm full of holes, but I still hold water. What am I?",A sponge,sponge,0.9129037261009216,A sponge,1.0,0.08709627389907837
 validation,What goes through cities and fields but never moves?,A road,A road.,0.9810274839401245,A road,1.0,0.01897251605987549
 validation,What has wheels but never moves?,A parking lot,Wheel.,0.3667357563972473,A bicycle,0.3494366407394409,-0.017299115657806396
-validation,What gets wetter as it dries?,A towel,paper,0.3677375912666321,A towel,1.0,0.6322624087333679
+validation,What gets wetter as it dries?,A towel,paper,0.3677375912666321,A sponge,0.4935581684112549,0.1258205771446228
 validation,What’s full of holes but still holds water?,A sponge,pumpkin,0.30437716841697693,A sponge,1.0,0.6956228315830231

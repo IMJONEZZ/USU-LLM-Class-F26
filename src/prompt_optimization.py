@@ -3,6 +3,7 @@ __generated_with = "0.25.2"
 # %%
 import importlib.metadata
 import json
+import re
 import sys
 import threading
 from datetime import UTC, datetime
@@ -17,6 +18,31 @@ from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForCausalLM, AutoTokenizer, set_seed
 
 
+class InvalidRiddleInstruction(ValueError):
+    pass
+
+
+def validate_riddle_instruction(instruction):
+    """Reject obvious proposer-task leakage, not judge answer quality."""
+    text = instruction.strip()
+    if (
+        len(text.split()) < 5
+        or not re.search(r"\briddles?\b", text, re.IGNORECASE)
+        or "?" in text
+        or re.search(
+            r"\b(propos\w*|writ\w*|generat\w*|creat\w*|draft\w*|design\w*|provid\w*|suggest\w*)\b"
+            r"[\s\S]{0,100}\b(instructions?|prompts?|system messages?)\b",
+            text,
+            re.IGNORECASE,
+        )
+    ):
+        raise InvalidRiddleInstruction(
+            "Return a reusable instruction addressed to the riddle solver, not a "
+            f"request to write instructions, a particular riddle, or its answer. Got: {text!r}"
+        )
+    return text
+
+
 # %%
 class SingleOutputAdapter(dspy.Adapter):
     """Plain text avoids asking small Qwen to emit DSPy markers or JSON.
@@ -25,12 +51,64 @@ class SingleOutputAdapter(dspy.Adapter):
     This uses DSPy's Adapter extension point and preserves instruction/demo search.
     """
 
+    def __call__(self, lm, lm_kwargs, signature, demos, inputs):
+        if "proposed_instruction" not in signature.output_fields:
+            return super().__call__(lm, lm_kwargs, signature, demos, inputs)
+        for _attempt in range(3):
+            try:
+                return super().__call__(lm, lm_kwargs, signature, demos, inputs)
+            except InvalidRiddleInstruction as error:
+                print(f"Rejected instruction proposal: {error}")
+                inputs = {**inputs, "_proposal_feedback": str(error)}
+        raise RuntimeError(
+            "Qwen failed to propose a usable riddle-solving instruction after 3 attempts."
+        )
+
     def format(self, signature, demos, inputs):
         if len(signature.output_fields) != 1:
             raise ValueError("This experiment's adapter requires one output field.")
         output_name, output_field = next(iter(signature.output_fields.items()))
         if output_field.annotation is not str:
             raise ValueError("This experiment's adapter requires a string output.")
+
+        if output_name == "proposed_instruction":
+            # Do not copy DSPy's meta-task description into the answering prompt.
+            # Only this editor call sees the instruction-writing request.
+            system = (
+                "You edit system prompts for a riddle-solving assistant. Return ONLY "
+                "the revised system prompt, addressed directly to that assistant. "
+                "Write one to three complete sentences. "
+                "Tell it to solve the user's riddle and return a short answer without "
+                "explanation. The prompt must work for any riddle. Do not ask it to "
+                "write or propose instructions. Do not include a specific riddle, "
+                "an example answer, a preamble, or quotation marks."
+            )
+            content = (
+                f"Current system prompt:\n{inputs['basic_instruction']}\n\n"
+                "Task: answer arbitrary wordplay riddles supplied later by a user.\n\n"
+                f"Editing suggestion:\n{inputs.get('tip', '')}\n\n"
+                "Write the complete revised system prompt now, not a title or keyword. "
+                "Do not answer the example riddles yourself."
+            )
+            if "_proposal_feedback" in inputs:
+                content += (
+                    f"\n\nCorrect this previous error: {inputs['_proposal_feedback']}"
+                )
+            return [
+                {"role": "system", "content": system},
+                {
+                    "role": "user",
+                    "content": "Revise this system prompt: Answer riddles.",
+                },
+                {
+                    "role": "assistant",
+                    "content": (
+                        "Solve the user's riddle by considering wordplay and double meanings. "
+                        "Return only the answer in 1 to 3 words without an explanation."
+                    ),
+                },
+                {"role": "user", "content": content},
+            ]
 
         def user_text(values):
             if len(signature.input_fields) == 1:
@@ -62,15 +140,12 @@ class SingleOutputAdapter(dspy.Adapter):
                     ]
                 )
         content = user_text(inputs)
-        if output_name == "proposed_instruction":
-            content += (
-                "\n\nWrite a new instruction for the model that will answer these "
-                "riddles. Do not answer the example riddles yourself."
-            )
         messages.append({"role": "user", "content": content})
         return messages
 
     def parse(self, signature, completion):
+        if "proposed_instruction" in signature.output_fields:
+            completion = validate_riddle_instruction(completion)
         return {next(iter(signature.output_fields)): completion.strip()}
 
 
@@ -243,7 +318,7 @@ def main():  # pragma: no cover -- requires CUDA and downloaded model weights
     run_optimization = True
     optimizer_config = {
         "auto": None,
-        "num_candidates": 3,
+        "num_candidates": 5,
         "max_bootstrapped_demos": 1,
         "max_labeled_demos": 2,
         "num_threads": 1,
@@ -253,10 +328,13 @@ def main():  # pragma: no cover -- requires CUDA and downloaded model weights
         "init_temperature": 0.7,
     }
     compile_config = {
-        "num_trials": 6,
+        "num_trials": 20,
         "minibatch": False,
         "program_aware_proposer": False,
         "data_aware_proposer": False,
+        # Avoid the small proposer rewriting one demo instead of the task prompt.
+        # Demonstrations are still bootstrapped and searched by MIPROv2.
+        "fewshot_aware_proposer": False,
     }
     # Skip summary calls to keep the search small; instruction/demo search remains.
 
@@ -406,6 +484,7 @@ def main():  # pragma: no cover -- requires CUDA and downloaded model weights
                 "Search evaluated no alternative prompt. Inspect search logs."
             )
         _selected = describe_prompt(optimized_program)
+        validate_riddle_instruction(_selected["instructions"])
         _changed = _selected != describe_prompt(baseline_program)
         # Unbound programs save the signature and demos, not model weights.
         optimized_program.save(str(run_directory / "optimized_program.json"))

@@ -1,13 +1,13 @@
 {
-  "instructions": "Propose an instruction that will be used to prompt a Language Model to provide possible answers to the following riddle:\n\nWhat is always before us yet unseen?",
+  "instructions": "Solve the user's riddle. Respond with only the name of the answer in 1 to 3 words. Omit introductory text, explanations, and quotation marks.",
   "demos": [
     {
-      "question": "I am not alive, but I can grow. I don’t have lungs, but I need air. What am I?",
-      "answer": "A fire"
+      "question": "What gets wet while drying?",
+      "answer": "A towel"
     },
     {
-      "question": "What has keys, but no locks; space, but no room; you can enter, but not go in?",
-      "answer": "A keyboard"
+      "question": "What can be read but never spoken?",
+      "answer": "Your thoughts"
     }
   ]
 }

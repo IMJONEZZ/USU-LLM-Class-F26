@@ -1,6 +1,6 @@
 import copy
 from types import SimpleNamespace
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import dspy
 import numpy as np
@@ -8,11 +8,13 @@ import pytest
 from datasets import Dataset
 
 from src.prompt_optimization import (
+    InvalidRiddleInstruction,
     SingleOutputAdapter,
     TransformersLM,
     describe_prompt,
     make_metric,
     prepare_examples,
+    validate_riddle_instruction,
 )
 
 
@@ -34,18 +36,77 @@ def test_plain_text_adapter_preserves_instructions_and_selected_demos():
     proposal_signature = dspy.Signature(
         "basic_instruction, task_demos -> proposed_instruction"
     )
-    assert adapter.parse(proposal_signature, "Consider alternate meanings.") == {
-        "proposed_instruction": "Consider alternate meanings."
+    proposal = (
+        "Solve each riddle by considering alternate meanings. Return only the answer."
+    )
+    assert adapter.parse(proposal_signature, proposal) == {
+        "proposed_instruction": proposal
     }
     proposal_messages = adapter.format(
         proposal_signature,
         [],
         {"basic_instruction": "Solve riddles.", "task_demos": "An example riddle."},
     )
-    assert "Required output (proposed_instruction)" in proposal_messages[0]["content"]
+    assert "revised system prompt" in proposal_messages[0]["content"]
     assert (
         "Do not answer the example riddles yourself" in proposal_messages[-1]["content"]
     )
+
+
+@pytest.mark.parametrize(
+    "instruction",
+    [
+        "Propose an instruction that will be used to prompt a Language Model to provide possible answers to the following riddle:\n\nWhat is always before us yet unseen?",
+        "Future",
+        "Solve this riddle: What has keys but no locks?",
+        "Write a prompt telling the model to solve riddles and return the answer.",
+    ],
+)
+def test_rejects_meta_instructions_and_specific_riddles(instruction):
+    signature = dspy.Signature("basic_instruction -> proposed_instruction")
+    with pytest.raises(InvalidRiddleInstruction):
+        SingleOutputAdapter().parse(signature, instruction)
+
+
+def test_reusable_persona_instruction_is_allowed():
+    instruction = (
+        "You are a riddle-solving assistant who understands wordplay and puns."
+    )
+    assert validate_riddle_instruction(instruction) == instruction
+
+
+def test_bad_instruction_proposal_is_retried_with_feedback():
+    signature = dspy.Signature("basic_instruction -> proposed_instruction")
+    valid = "Solve the user's riddle. Return only a short answer."
+    with patch.object(
+        dspy.Adapter,
+        "__call__",
+        side_effect=[
+            InvalidRiddleInstruction("Do not propose another instruction."),
+            [{"proposed_instruction": valid}],
+        ],
+    ) as call:
+        result = SingleOutputAdapter()(
+            None, {}, signature, [], {"basic_instruction": valid}
+        )
+    assert result == [{"proposed_instruction": valid}]
+    assert call.call_count == 2
+    assert "_proposal_feedback" in call.call_args.args[-1]
+    assert validate_riddle_instruction(valid) == valid
+
+
+def test_unusable_proposals_stop_after_three_attempts():
+    signature = dspy.Signature("basic_instruction -> proposed_instruction")
+    with (
+        patch.object(
+            dspy.Adapter, "__call__", side_effect=InvalidRiddleInstruction("bad")
+        ) as call,
+        pytest.raises(RuntimeError, match="after 3 attempts"),
+    ):
+        SingleOutputAdapter()(
+            None, {}, signature, [], {"basic_instruction": "Solve riddles."}
+        )
+    assert call.call_count == 3
 
 
 def test_split_is_reproducible_and_preserves_original_test_rows():
