@@ -1,0 +1,11 @@
+split,input,expected_answer,baseline_answer,baseline_similarity,optimized_answer,optimized_similarity,difference
+test,What can be rolled but is never a ball?,Your eyes,The answer is: idea.,0.12471164762973785,Paper,0.23595461249351501,0.11124296486377716
+test,What can be cracked but never broken?,A code,code,0.8973521590232849,A code,1.0,0.10264784097671509
+test,What has many faces but no eyes?,A dice,Mask.,0.16918036341667175,A mirror,0.2730078399181366,0.10382747650146484
+test,What has an eye but cannot see?,A needle,clock,0.23331084847450256,A clock,0.330044150352478,0.09673330187797546
+test,What is black and white and read all over?,A newspaper,shelf,0.2652733325958252,A newspaper,1.0,0.7347266674041748
+test,I am always hungry; I must always be fed. The finger I touch will soon turn red. What am I?,Fire,fork,0.30885714292526245,A knife,0.3397286832332611,0.030871540307998657
+test,What can you catch but not throw?,A cold,cold,0.8575940132141113,A wave,0.288607656955719,-0.5689863562583923
+test,"What has a bed but never sleeps, has a mouth but never talks, runs but never walks?",A river,clock,0.15473845601081848,A bathtub,0.39985963702201843,0.24512118101119995
+test,What has branches but no leaves?,A bank,Tree.,0.30293673276901245,A tree branch,0.33159148693084717,0.028654754161834717
+test,What has a face but no eyes?,A clock,Mask.,0.2281729131937027,A clock,1.0,0.7718270868062973

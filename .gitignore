@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 marimo_notebooks/
+artifacts/prompt_optimization/
 
 # C extensions
 *.so

@@ -1,0 +1,18 @@
+trial,validation_cosine,instructions,demos
+1,0.5267000000000001,"Solve the user's riddle. Respond with only the name of the answer in 1 to 3 words. Omit introductory text, explanations, and quotation marks.",[]
+2,0.3679,"Propose an instruction that will be used to prompt a Language Model to provide possible answers to the following riddle:
+
+What is always before us yet unseen?",[]
+3,0.5274,"Propose an instruction that will be used to prompt a Language Model to provide possible answers to the following riddle:
+
+What is always before us yet unseen?","[{""question"": ""What is always in front of you but can’t be seen?"", ""answer"": ""The future.""}, {""question"": ""What has four legs but doesn’t walk?"", ""answer"": ""A table""}]"
+4,0.6111,"Solve the user's riddle. Respond with only the name of the answer in 1 to 3 words. Omit introductory text, explanations, and quotation marks.","[{""question"": ""What is always in front of you but can’t be seen?"", ""answer"": ""The future.""}, {""question"": ""What has four legs but doesn’t walk?"", ""answer"": ""A table""}]"
+5,0.5177,"Propose an instruction that will be used to prompt a Language Model to solve the following riddle:
+
+Question: What is always in front of you but can't be seen?
+
+Answer: The past.","[{""question"": ""What is always in front of you but can’t be seen?"", ""answer"": ""The future.""}, {""question"": ""What has four legs but doesn’t walk?"", ""answer"": ""A table""}]"
+6,0.6542,"Propose an instruction that will be used to prompt a Language Model to provide possible answers to the following riddle:
+
+What is always before us yet unseen?","[{""question"": ""I am not alive, but I can grow. I don’t have lungs, but I need air. What am I?"", ""answer"": ""A fire""}, {""question"": ""What has keys, but no locks; space, but no room; you can enter, but not go in?"", ""answer"": ""A keyboard""}]"
+7,0.6063000000000001,"Solve the user's riddle. Respond with only the name of the answer in 1 to 3 words. Omit introductory text, explanations, and quotation marks.","[{""question"": ""I am not alive, but I can grow. I don’t have lungs, but I need air. What am I?"", ""answer"": ""A fire""}, {""question"": ""What has keys, but no locks; space, but no room; you can enter, but not go in?"", ""answer"": ""A keyboard""}]"

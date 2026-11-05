@@ -6,12 +6,13 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "datasets>=5.1.0",
+    "dspy[optuna]>=3.3,<3.4",
     "ipython>=9.18.1",
     "marimo>=0.25.2",
     "numpy>=2.5.4",
     "pandas>=3.1.1",
     "sentence-transformers>=6.2.0",
-    "torch>=2.15.0",
+    "torch>=2.10.0",
     "tqdm>=4.70.1",
     "transformers>=5.22.1",
 ]
@@ -24,7 +25,10 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "--cov=src --cov-fail-under=80"
+addopts = "--cov=src --cov-fail-under=80 --basetemp=.pytest_cache/tmp"
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128", marker = "sys_platform == 'win32'" }]
 
 [[tool.uv.index]]
 name = "pytorch-cu128"
