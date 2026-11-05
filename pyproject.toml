@@ -4,7 +4,17 @@ version = "0.1.0"
 description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "datasets>=5.1.0",
+    "ipython>=9.18.1",
+    "marimo>=0.25.2",
+    "numpy>=2.5.4",
+    "pandas>=3.1.1",
+    "sentence-transformers>=6.2.0",
+    "torch>=2.15.0",
+    "tqdm>=4.70.1",
+    "transformers>=5.22.1",
+]
 
 [dependency-groups]
 dev = [
@@ -15,3 +25,8 @@ dev = [
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
