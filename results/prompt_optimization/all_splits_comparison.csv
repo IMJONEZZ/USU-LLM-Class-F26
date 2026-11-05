@@ -1,0 +1,101 @@
+split,input,expected_answer,baseline_answer,baseline_similarity,optimized_answer,optimized_similarity,difference
+train,What has to be broken before you can use it?,An egg,Key,0.1815493404865265,An egg,1.0,0.8184506595134735
+train,What can travel around the world while staying in one spot?,A stamp,passport,0.31251025199890137,A stamp,1.0,0.6874897480010986
+train,What goes up and never comes down?,Your age,age,0.7592373490333557,Height,0.38544657826423645,-0.37379077076911926
+train,What has a mouth but never speaks?,A river,fork,0.3010508418083191,A computer,0.286579430103302,-0.01447141170501709
+train,What can you hold without ever touching or using your hands?,Your breath,Air,0.5346018075942993,Air,0.5346018075942993,0.0
+train,What word is spelled incorrectly in every dictionary?,Incorrectly,misspelled,0.4533994495868683,Every,0.3546680808067322,-0.09873136878013611
+train,What is always in front of you but can’t be seen?,The future,Future.,0.8544579744338989,The future,1.0,0.14554202556610107
+train,What has four legs but doesn’t walk?,A table,Chair,0.4753674864768982,A table,1.0,0.5246325135231018
+train,What has one eye but cannot see?,A needle,clock,0.23331089317798615,A clock,0.3300442099571228,0.09673331677913666
+train,What can’t be used unless it’s broken?,An egg,A watch,0.35636648535728455,An umbrella,0.3323390483856201,-0.02402743697166443
+train,"What goes up, but never comes down?",Your age,age,0.7592373490333557,Height,0.38544657826423645,-0.37379077076911926
+train,What is light as a feather but the strongest person can’t hold it for more than a few minutes?,Your breath,shadow,0.3533172011375427,An idea,0.19740359485149384,-0.1559136062860489
+train,"What has branches but no leaves, bark, or fruit?",A bank,Tree,0.28282755613327026,Pipe,0.28824424743652344,0.005416691303253174
+train,What has an end but no beginning?,A stick,circle,0.42964375019073486,A story,0.380195677280426,-0.04944807291030884
+train,What is so fragile that speaking its name breaks it?,Silence,Whisper.,0.5721698999404907,Silence,1.0,0.4278301000595093
+train,What’s black and white and read all over?,A newspaper,The newspaper.,0.8468528389930725,A newspaper,1.0,0.1531471610069275
+train,"What runs but never walks, has a bed but never sleeps, has a mouth but never talks?",A river,Clock,0.1547383964061737,River,0.9332606792449951,0.7785222828388214
+train,What has wheels and flies but is not an aircraft?,A garbage truck,car,0.49096396565437317,An automobile,0.523379921913147,0.032415956258773804
+train,"What has keys but no locks, space but no room, you can enter but can't go in?",A keyboard,keyboard,0.8920568227767944,A keyboard,1.0,0.10794317722320557
+train,What can be broken without being held?,A record,thought,0.2522490620613098,An idea,0.38397493958473206,0.13172587752342224
+train,What has keys but no locks?,A piano,Piano,0.9288643598556519,A piano,1.0,0.07113564014434814
+train,What is cut on a table but is never eaten?,A deck of cards,knife,0.16502657532691956,A slice of bread,0.3490186631679535,0.18399208784103394
+train,What has teeth but cannot bite?,A comb,fork,0.28318214416503906,An envelope,0.2285500466823578,-0.054632097482681274
+train,"What has roots that nobody sees, is taller than trees, up, up it goes, and yet never grows?",A mountain,clouds,0.3406989872455597,Clouds,0.3406989872455597,0.0
+train,"What is light as a feather, yet the strongest man cannot hold it for more than a minute?",Breath,shadow,0.3397500514984131,A candle,0.2593321204185486,-0.0804179310798645
+train,What gets bigger the more you take away from it?,A hole,library,0.1448783427476883,hole,0.8653653860092163,0.720487043261528
+train,"What can be long or short, but is never wrong?",An opinion,truth,0.45559751987457275,A sentence,0.48339012265205383,0.02779260277748108
+train,What can be read but never spoken?,Your thoughts,书 (shū),0.09213778376579285,Your thoughts,1.0,0.9078622162342072
+train,"What comes once in a year, twice in a week, but never in a day?",The letter E,Friday,0.20254583656787872,Sunday,0.2016782909631729,-0.0008675456047058105
+train,"What begins with T, ends with T, and has T in it?",A teapot,Tablette,0.3399801254272461,Table,0.295787513256073,-0.044192612171173096
+train,What can you serve but never eat?,A tennis ball,wine,0.3376716375350952,An ice cream cone,0.2566024363040924,-0.08106920123100281
+train,"If you have me, you want to share me. If you share me, you don’t have me. What am I?",A secret,idea,0.32302236557006836,The internet,0.2893500328063965,-0.033672332763671875
+train,What is always in front of you but can't be seen?,The future,Future.,0.8544579744338989,The future,1.0,0.14554202556610107
+train,What goes up and down but never moves?,Stairs,Elevator,0.5730209946632385,A staircase,0.8819370269775391,0.30891603231430054
+train,What can fly without wings?,Time,Birds,0.3191646933555603,An airplane,0.21421226859092712,-0.10495242476463318
+train,What can you hold without touching it?,A conversation,Thought.,0.17549410462379456,Light,0.29641276597976685,0.12091866135597229
+train,"I am tall when I am young, and I am short when I am old. What am I?",A candle,tree,0.3057957887649536,A candle,1.0,0.6942042112350464
+train,What can fill a room but doesn’t take up any space?,Light,Air.,0.45564568042755127,Air,0.4719262719154358,0.01628059148788452
+train,"What has keys but no locks, space but no room, and you can enter but can't go in?",A keyboard,keyboard,0.8920568227767944,A keyboard,1.0,0.10794317722320557
+train,"What has keys but no locks, and space but no room?",A computer keyboard,keyboard,0.8833741545677185,A keyboard,0.9337182641029358,0.050344109535217285
+train,What has many teeth but can't bite?,A comb,Whistle.,0.2839663028717041,A comb,1.0,0.7160336971282959
+train,What has many faces but no bodies?,Dice,Mirror.,0.14284050464630127,A mirror,0.14726418256759644,0.004423677921295166
+train,What's always coming but never arrives?,Tomorrow,The future.,0.528548002243042,The future,0.5400427579879761,0.011494755744934082
+train,"What has many keys but no locks, space but no room, and you can enter but not go in?",A keyboard,keyboard,0.8920568227767944,A library,0.36006850004196167,-0.5319883227348328
+train,What has legs but doesn’t walk?,A chair,Chair,0.935944676399231,A table,0.4793551564216614,-0.4565895199775696
+train,What has teeth but doesn't bite?,A comb,Whistle,0.2718052864074707,An envelope,0.2285500466823578,-0.043255239725112915
+train,"What has four legs in the morning, two legs at noon, and three legs in the evening?",A human,Dog,0.397748202085495,A person,0.9369218349456787,0.5391736328601837
+train,What belongs to you but is used by others?,Your name,ideas,0.17960964143276215,An umbrella,0.14552544057369232,-0.034084200859069824
+train,"I’m light as a feather, yet the strongest man can’t hold me for more than 5 minutes. What am I?",Breath,butterfly,0.2775804400444031,An umbrella,0.2003110945224762,-0.07726934552192688
+train,"I am not alive, but I can grow. I don’t have lungs, but I need air. What am I?",A fire,paperclip,0.19272658228874207,Paper,0.3438792824745178,0.15115270018577576
+train,"What has a mouth but doesn't eat, has a bank but no money?",A river,river.,0.9012202620506287,Bridge,0.4619757831096649,-0.43924447894096375
+train,What is always on its way but never arrives?,Tomorrow,Time,0.4089590013027191,Time,0.4089590013027191,0.0
+train,What can’t talk but will reply when spoken to?,An echo,mirror,0.3204992115497589,An answering machine,0.33379435539245605,0.013295143842697144
+train,"What has keys, but no locks; space, but no room; you can enter, but not go in?",A keyboard,keyboard,0.8920568227767944,A keyboard,1.0,0.10794317722320557
+train,What has a head and a tail that will never meet?,A coin,coin,0.926181435585022,An electron,0.33700424432754517,-0.5891771912574768
+train,"What has one head, one foot, and four legs?",A bed,Chicken,0.347037672996521,A person,0.3421754240989685,-0.00486224889755249
+train,I have a heart that doesn’t beat. What am I?,An artichoke,clock,0.14471612870693207,A clock,0.217404305934906,0.07268817722797394
+train,What tastes better than it smells?,A tongue,sweetness,0.38804128766059875,Salt,0.30816709995269775,-0.079874187707901
+train,"I have keys but no locks, I have space but no room. You can enter, but can't go outside. What am I?",A keyboard,door,0.4026014804840088,A house,0.37136703729629517,-0.031234443187713623
+train,What is always running but never gets tired?,A refrigerator,clock,0.23174425959587097,A clock,0.3669865131378174,0.1352422535419464
+train,"What can you hold in your hand, but can never touch?",Your reflection,idea,0.19341151416301727,Air,0.3000694811344147,0.1066579669713974
+train,"What can you hold in your right hand, but not in your left?",Your left hand,Pen,0.35214075446128845,A mirror,0.27117931842803955,-0.0809614360332489
+train,What belongs to you but others use it more than you do?,Your name,Money.,0.26313090324401855,Your house,0.5122685432434082,0.24913763999938965
+train,What gets wetter and wetter the more it dries?,A towel,paper,0.3677375912666321,A sponge,0.4935581684112549,0.1258205771446228
+train,"I have branches, but no fruit, trunk or leaves. What am I?",A bank,tree,0.28282755613327026,Tree,0.28282755613327026,0.0
+train,What can be caught but not thrown?,A cold,fish,0.30968177318573,A wave,0.2886075973510742,-0.02107417583465576
+train,What has many teeth but cannot bite?,A comb,comb,0.9161680936813354,A comb,1.0,0.08383190631866455
+train,"What has many faces, all looking in different directions?",A dice,Mirror,0.16014200448989868,A mirror,0.2730078399181366,0.11286583542823792
+train,"What starts with the letter ""t"", is filled with ""t"" and ends in ""t""?",A teapot,Teapot,0.9213842749595642,Table,0.295787513256073,-0.6255967617034912
+train,What gets wet while drying?,A towel,socks,0.34530109167099,A towel,1.0,0.65469890832901
+validation,What has a face and two hands but no arms or legs?,A clock,Clock,0.9085448980331421,Clock,0.9085448980331421,0.0
+validation,"What occurs once in a minute, twice in a moment, and never in a thousand years?",The letter M,Second.,0.26442503929138184,Once.,0.12667815387248993,-0.1377468854188919
+validation,"What runs but never walks, has a mouth but never talks, has a head but never weeps, has a bed but never sleeps?",A river,Clock.,0.15955670177936554,Desk,0.1763494908809662,0.016792789101600647
+validation,"What can you break, even if you never touch it?",A promise,Promise.,0.6187784671783447,An idea,0.43613457679748535,-0.18264389038085938
+validation,"What has keys but no locks, space but no room, and you can enter but can't exit?",A keyboard,keyboard,0.8920568227767944,A keyboard,1.0,0.10794317722320557
+validation,What has one eye but can’t see?,A needle,blindfold,0.21175774931907654,Clock,0.23331089317798615,0.021553143858909607
+validation,What has a spine but no bones?,A book,Computer.,0.37341123819351196,A book,1.0,0.626588761806488
+validation,"What starts with 'e', ends with 'e', and contains one letter?",An envelope,elephant,0.1962379813194275,"The word ""bee"" fits this description perfectly. It starts with a lowercase 'e', ends with an uppercase 'E' (which is technically not a letter as per standard English rules), and contains exactly one letter. However, if we consider it strictly within the constraints of letters used in writing, it would be more",0.27529165148735046,0.07905367016792297
+validation,What can be played but is not a sport or game?,A musical instrument,Music,0.5946557521820068,Music,0.5946557521820068,0.0
+validation,What is always coming but never arrives?,Tomorrow,The future.,0.528548002243042,The future,0.5400427579879761,0.011494755744934082
+validation,What can be seen in water but never gets wet?,A reflection,reflection,0.9533127546310425,Reflection,0.9533127546310425,0.0
+validation,"I’m not alive, but I grow; I don’t have lungs, but I need air. What am I?",Fire,machine,0.35891541838645935,Fire,1.0,0.6410845816135406
+validation,What's full of holes but still holds water?,A sponge,pumpkin,0.30437716841697693,A sponge,1.0,0.6956228315830231
+validation,What has a head and a tail that are only made of gold?,A coin,coin,0.926181435585022,Coin,0.926181435585022,0.0
+validation,What can you hold without using your hands?,Your breath,A hand.,0.3103135824203491,An idea,0.19740359485149384,-0.11290998756885529
+validation,"I'm full of holes, but I still hold water. What am I?",A sponge,sponge,0.9129037261009216,A sponge,1.0,0.08709627389907837
+validation,What goes through cities and fields but never moves?,A road,A road.,0.9810274839401245,A road,1.0,0.01897251605987549
+validation,What has wheels but never moves?,A parking lot,Wheel.,0.3667357563972473,A bicycle,0.3494366407394409,-0.017299115657806396
+validation,What gets wetter as it dries?,A towel,paper,0.3677375912666321,A sponge,0.4935581684112549,0.1258205771446228
+validation,What’s full of holes but still holds water?,A sponge,pumpkin,0.30437716841697693,A sponge,1.0,0.6956228315830231
+test,What can be rolled but is never a ball?,Your eyes,The answer is: idea.,0.12471164762973785,A scroll,0.28288665413856506,0.1581750065088272
+test,What can be cracked but never broken?,A code,code,0.8973521590232849,An egg,0.3096838891506195,-0.5876682698726654
+test,What has many faces but no eyes?,A dice,Mask.,0.16918036341667175,A mirror,0.2730078399181366,0.10382747650146484
+test,What has an eye but cannot see?,A needle,clock,0.23331084847450256,An eye.Dialysis machine,0.43582260608673096,0.2025117576122284
+test,What is black and white and read all over?,A newspaper,shelf,0.2652733325958252,A newspaper,1.0,0.7347266674041748
+test,I am always hungry; I must always be fed. The finger I touch will soon turn red. What am I?,Fire,fork,0.30885714292526245,A lightbulb,0.27307039499282837,-0.03578674793243408
+test,What can you catch but not throw?,A cold,cold,0.8575940132141113,A cold.,0.9627070426940918,0.10511302947998047
+test,"What has a bed but never sleeps, has a mouth but never talks, runs but never walks?",A river,clock,0.15473845601081848,Clock,0.15473845601081848,0.0
+test,What has branches but no leaves?,A bank,Tree.,0.30293673276901245,An umbrella,0.17716458439826965,-0.1257721483707428
+test,What has a face but no eyes?,A clock,Mask.,0.2281729131937027,Mask,0.2169475257396698,-0.011225387454032898

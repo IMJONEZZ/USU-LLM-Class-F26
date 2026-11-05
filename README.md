@@ -49,3 +49,48 @@ uv run pytest
 ### AI assistance
 
 The course supports Claude Code and Codex. Both assistants follow the same student-learning and academic-integrity expectations in [AGENTS.md](AGENTS.md).
+
+### Prompt optimization experiment
+
+On native Windows, `uv sync` installs CUDA 12.8 PyTorch from the explicit PyTorch
+index. The notebook requires a working NVIDIA driver and checks actual model
+placement on CUDA. DSPy 3.3 uses a small custom `BaseLM` backend to call the single
+Transformers model directly; no model server or API key is needed. A small
+single-output DSPy adapter accepts plain text because this Qwen model does not
+reliably emit DSPy's field markers or JSON. The same adapter renders the original
+and optimized instructions and demonstrations.
+The proposer receives a separate prompt-editing request. A conservative check
+rejects obvious requests to write another prompt, copied riddle questions, and
+one-word answers. Rejected proposals are retried with feedback up to three times;
+the run stops if none pass. This check catches task confusion, not all possible
+instruction-quality problems; inspect `final_prompt.json` before interpreting scores.
+
+```powershell
+uv sync
+uv run marimo edit marimo_notebooks/prompt_optimization.py
+uv run marimo export script marimo_notebooks/prompt_optimization.py -o src/prompt_optimization.py
+uv run python src/prompt_optimization.py
+```
+
+`src/prompt_optimization.py` is the tracked, tested implementation. The Marimo
+notebooks are ignored. After exporting notebook changes, keep execution inside
+`main()` and the `if __name__ == "__main__"` guard: raw Marimo exports execute
+their cells on import, which would start model loading during test collection.
+Unit tests import the source helpers; the CUDA experiment in `main()` is verified
+separately with real models.
+
+The code cells run a training-only smoke test and the original-prompt baseline.
+Set `run_optimization = True` in the configuration cell to enable the small
+MIPROv2 search and final comparison. Keep this false until the smoke test and
+baseline work. Expected-answer embeddings are cached separately for optimization
+and testing. Both programs use identical DSPy formatting and greedy decoding.
+Saved prompts and settings go into `artifacts/prompt_optimization/<run>/`.
+Result CSVs go into `results/prompt_optimization/`, replacing the previous results
+when rerun. `final_prompt.json` in the same folder contains the selected instructions
+and few-shot examples. Cosine scores measure semantic similarity,
+not exact correctness; the 10-example test comparison is exploratory.
+After optimization, `metrics_by_split.csv` reports baseline and optimized means
+and their differences for train, validation, and test. Per-riddle answers and
+scores are saved in each split's comparison CSV and `all_splits_comparison.csv`.
+Training and validation scores describe data used during optimization; only the
+test split is held out.

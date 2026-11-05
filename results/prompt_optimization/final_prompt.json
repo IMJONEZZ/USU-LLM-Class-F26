@@ -1,0 +1,13 @@
+{
+  "instructions": "Solve the user's riddle. Respond with only the name of the answer in 1 to 3 words. Omit introductory text, explanations, and quotation marks.",
+  "demos": [
+    {
+      "question": "What gets wet while drying?",
+      "answer": "A towel"
+    },
+    {
+      "question": "What can be read but never spoken?",
+      "answer": "Your thoughts"
+    }
+  ]
+}
