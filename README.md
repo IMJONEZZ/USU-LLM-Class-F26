@@ -62,3 +62,4 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - Assignment 7 — serving the fine-tuned model behind an API (`src/inference.py`, `gpu/serve_app.py`)
 - Assignment 8 — vector database and retrieval (`src/vectordb.py`, `src/rag.py`)
 - Assignment 9 — structured HTML output from a model (`src/html_output.py`)
+- Assignment 10 — prompt optimization with DSPy (`src/prompt_optimization.py`, in progress)
