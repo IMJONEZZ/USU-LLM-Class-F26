@@ -1,7 +1,0 @@
-{
-  "database": "dolt",
-  "backend": "dolt",
-  "dolt_mode": "embedded",
-  "dolt_database": "USU_LLM_Class_F26",
-  "project_id": "720e9e49-6ad0-4c5c-b214-a31285699368"
-}
