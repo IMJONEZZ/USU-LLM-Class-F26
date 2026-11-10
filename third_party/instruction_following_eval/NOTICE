@@ -5,3 +5,4 @@ License: Apache 2.0 (header kept in each file).
 Copied: instructions.py, instructions_registry.py, instructions_util.py, evaluation_lib.py, instructions_test.py.
 Not copied: evaluation_main.py (absl command-line entry point), data/, run.sh.
 Do not edit these files; put any change in src/checks.py.
+SHA256SUMS holds the hash of each copied file; tests/test_pipeline.py fails if one changes.

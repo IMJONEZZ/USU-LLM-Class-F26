@@ -1,6 +1,11 @@
+import hashlib
+from pathlib import Path
+
 import pytest
 
 from src import config, modal_server
+
+VENDORED = Path(__file__).parent.parent / "third_party" / "instruction_following_eval"
 
 
 def test_kv_cache_counts_keys_and_values_for_every_layer_head_and_token():
@@ -13,3 +18,12 @@ def test_split_fractions_sum_to_one():
     # the second sequential split derives its size from these, so a drifted fraction would leave rows unassigned
     total = config.TRAIN_FRACTION + config.VALIDATION_FRACTION + config.TEST_FRACTION
     assert total == pytest.approx(1)
+
+
+def test_vendored_checker_files_match_recorded_hashes():
+    # Google's files must stay byte-for-byte unedited; any change goes in src/checks.py instead
+    for line in (VENDORED / "SHA256SUMS").read_text().splitlines():
+        expected, name = line.split()
+        assert hashlib.sha256((VENDORED / name).read_bytes()).hexdigest() == expected, (
+            name
+        )
