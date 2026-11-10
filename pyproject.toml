@@ -5,10 +5,14 @@ description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "guidance==0.3.1",
+    "absl-py>=2.5.1",
+    "datasets>=5.2.0",
+    "dspy>=3.4.1",
+    "immutabledict>=4.3.1",
+    "langdetect>=1.0.9",
     "modal>=1.6.1",
+    "nltk>=3.10.4",
     "prek>=0.5.5",
-    "pydantic",
     "truststore>=0.10.4",
 ]
 
@@ -18,6 +22,9 @@ dev = [
     "pytest-cov>=7.1.0",
     "ruff>=0.16.4",
 ]
+
+[tool.ruff]
+extend-exclude = ["third_party"]
 
 [tool.ruff.lint]
 extend-select = ["C901", "PLR0912", "PLR0913", "PLR0915"]
@@ -30,4 +37,6 @@ max-statements = 50
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"
+testpaths = ["tests"]  # else pytest also collects the vendored *_test.py
+pythonpath = ["third_party"]  # Google's code imports itself as instruction_following_eval
 markers = ["slow: loads a real model or tokenizer"]

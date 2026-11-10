@@ -1,0 +1,7 @@
+These files are copied unedited from Google's instruction_following_eval folder.
+Source: https://github.com/google-research/google-research/tree/e6890f85757dd84e27ca6df2dd30651dafad28e0/instruction_following_eval
+Commit: e6890f85757dd84e27ca6df2dd30651dafad28e0 (2026-07-22)
+License: Apache 2.0 (header kept in each file).
+Copied: instructions.py, instructions_registry.py, instructions_util.py, evaluation_lib.py, instructions_test.py.
+Not copied: evaluation_main.py (absl command-line entry point), data/, run.sh.
+Do not edit these files; put any change in src/checks.py.
