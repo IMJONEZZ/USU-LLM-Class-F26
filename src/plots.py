@@ -383,7 +383,122 @@ def draw_summary(summary, path):
     print(f"wrote {path}")
 
 
+def draw_greedy(rows, path):
+    """Left: how each instruction's temperature-0 answers split into pass, fail and parse error. Right: the model's average confidence for each kind of answer."""
+    names = ["one_liner", "baseline", "gepa"]
+    outcomes = ["pass", "fail", "parse_error"]
+    colors = {
+        "pass": SERIES["test"],
+        "fail": SERIES["validation"],
+        "parse_error": DROPPED,
+    }
+    fig, (left, right) = plt.subplots(
+        1, 2, figsize=(12, 4), facecolor=SURFACE, gridspec_kw={"width_ratios": [3, 2]}
+    )
+    shown = list(reversed(names))  # the first instruction ends up on top
+    left.set_facecolor(SURFACE)
+    right.set_facecolor(SURFACE)
+    for y, name in enumerate(shown):
+        subset = [r for r in rows if r["prompt"] == name]
+        start = 0
+        for outcome in outcomes:
+            n = sum(r["outcome"] == outcome for r in subset)
+            left.barh(
+                y,
+                n,
+                left=start,
+                color=colors[outcome],
+                height=0.55,
+                edgecolor=SURFACE,
+                linewidth=1.5,
+                label=outcome if y == 0 else None,
+            )
+            if n:
+                left.text(
+                    start + n / 2,
+                    y,
+                    str(n),
+                    ha="center",
+                    va="center",
+                    color=INK,
+                    fontsize=10,
+                )
+            start += n
+        confidence = {
+            outcome: [
+                r["avg_logprob"]
+                for r in subset
+                if r["outcome"] == outcome and r["avg_logprob"] is not None
+            ]
+            for outcome in outcomes
+        }
+        means = {o: sum(v) / len(v) for o, v in confidence.items() if v}
+        if len(means) > 1:
+            right.plot(
+                [min(means.values()), max(means.values())],
+                [y, y],
+                color="#d6d5cf",
+                linewidth=2,
+                zorder=1,
+            )
+        for outcome, mean in means.items():
+            right.scatter(
+                mean, y, s=90, color=colors[outcome], zorder=2, edgecolor=SURFACE
+            )
+            above = (
+                outcome != "fail"
+            )  # labels sit above or below the dot, and lean left or right, so close dots do not collide
+            right.text(
+                mean,
+                y + (0.24 if above else -0.32),
+                f"{mean:.2f}",
+                ha={"pass": "left", "fail": "center", "parse_error": "right"}[outcome],
+                color=INK,
+                fontsize=8,
+            )
+    left.set_yticks(range(len(shown)), shown, color=INK)
+    left.set_xlabel("answers (one temperature-0 answer per test task)", color=MUTED)
+    left.set_title(
+        "Pass, fail and parse error, by instruction", loc="left", color=INK, fontsize=10
+    )
+    left.legend(
+        frameon=False,
+        labelcolor=INK,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.2),
+        ncol=3,
+        fontsize=8,
+    )
+    right.set_yticks(range(len(shown)), [""] * len(shown))
+    right.set_xlabel(
+        "mean average log-probability (closer to 0 is more confident)",
+        color=MUTED,
+        fontsize=9,
+    )
+    right.set_title(
+        "How confident the model was, by outcome", loc="left", color=INK, fontsize=10
+    )
+    right.set_ylim(-0.6, len(shown) - 0.4)
+    left.set_ylim(-0.6, len(shown) - 0.4)
+    for ax in (left, right):
+        ax.tick_params(colors=MUTED, length=0)
+        ax.grid(axis="x", color="#e4e3dd", linewidth=0.8)
+        ax.set_axisbelow(True)
+        for side in ("top", "right", "left", "bottom"):
+            ax.spines[side].set_visible(False)
+    fig.tight_layout()
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(path, dpi=150, bbox_inches="tight", facecolor=SURFACE)
+    print(f"wrote {path}")
+
+
 def main(figure="split"):
+    if figure == "greedy":
+        rows = json.loads((Path(config.RESULTS_DIR) / "greedy.json").read_text())[
+            "results"
+        ]
+        draw_greedy(rows, "results/figures/greedy.png")
+        return
     if figure == "gepa-smoke":
         record = json.loads((Path(config.RESULTS_DIR) / "gepa_smoke.json").read_text())
         draw_gepa(record, "results/figures/gepa_smoke.png")

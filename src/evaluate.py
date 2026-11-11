@@ -13,7 +13,7 @@ import openai
 import scipy.stats
 from tqdm import tqdm
 
-from src import checks, config, data, estimate, optimize, prompts
+from src import checks, config, data, estimate, prompt_optimization, prompts
 
 OUTCOMES = ("pass", "fail", "parse_error", "request_failure")
 
@@ -82,10 +82,19 @@ def run_test_draws():
         },
     }
     meta_path = results / "test_draws_meta.json"
-    if meta_path.exists() and json.loads(meta_path.read_text()) != meta:
-        raise ValueError(
-            "test_draws_meta.json is from a run with different settings; use a new results folder"
-        )
+    if meta_path.exists():
+        earlier = json.loads(meta_path.read_text())
+        # the worker count only changes how fast the run goes, never what a draw means, so it may change on a resume
+        changed = {key for key in meta if meta[key] != earlier.get(key)} - {"workers"}
+        if changed:
+            raise ValueError(
+                f"test_draws_meta.json is from a run with different settings {sorted(changed)}; use a new results folder"
+            )
+        history = earlier.get("earlier_workers", [])
+        if earlier["workers"] != meta["workers"]:
+            history = [*history, earlier["workers"]]
+        if history:
+            meta["earlier_workers"] = history
     meta_path.write_text(json.dumps(meta, indent=2))
 
     path = (
@@ -116,7 +125,7 @@ def run_test_draws():
         ]
     )
 
-    optimize.make_student()  # configures DSPy for the server; every instruction below runs through it
+    prompt_optimization.make_student()  # configures DSPy for the server; every instruction below runs through it
     predicts = {
         name: dspy.Predict(dspy.Signature(prompts.SIGNATURE, text))
         for name, text in instructions.items()
@@ -243,7 +252,7 @@ def run_greedy():
     )
 
     # one live DSPy call, to check that the messages built by hand are exactly the ones DSPy sends
-    lm, predict = optimize.make_student(instructions["one_liner"])
+    lm, predict = prompt_optimization.make_student(instructions["one_liner"])
     try:
         predict(prompt=test_tasks[0]["prompt"])
     except dspy.utils.exceptions.AdapterParseError:
@@ -482,7 +491,7 @@ def main(mode):
             }
         ]
     )
-    lm, predict = optimize.make_student()
+    lm, predict = prompt_optimization.make_student()
 
     start = time.time()
     with ThreadPoolExecutor(config.WORKERS) as pool:

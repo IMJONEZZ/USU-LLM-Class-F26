@@ -31,7 +31,7 @@ STOP_ABOVE = 0.8  # Madi's rule: if more than this share of tasks pass every sam
 TEST_DRAWS = 20  # draws per query in the M8 test run
 BOOTSTRAP_RESAMPLES = 10_000  # resamples for the bootstrap intervals in the final comparison (95% intervals, seed above)
 WORKERS = 8  # requests in flight during the pilot and test runs; the server fits about 11 full-length ones
-TEST_WORKERS = 11  # requests in flight during the M8 test run (Madi chose 11 on 2026-11-10; the server fits about 11 full-length ones)
+TEST_WORKERS = 22  # requests in flight during the M8 test run; Madi chose 11, then 22 at 21:10 after the server showed 6% cache use and an idle queue
 
 # ---- prices (for the call and cost estimate) ----
 GEMINI_INPUT_PER_MILLION = (

@@ -1,4 +1,4 @@
-.PHONY: add_all warm baseline gepa-smoke gepa fig-gepa smoke-record fig-gepa-smoke test-draws fig-draws greedy summary fig-summary modal_app_list deploy models lm-demo pilot-smoke pilot nltk_data data fig-split fig-pilot checks test lint
+.PHONY: add_all warm baseline gepa-smoke gepa fig-gepa smoke-record fig-gepa-smoke fig-greedy test-draws fig-draws greedy summary fig-summary modal_app_list deploy models lm-demo pilot-smoke pilot nltk_data data fig-split fig-pilot checks test lint
 
 # every python target needs the proxy certificates, Google's checker folder on the import path, and the keys in .env
 PY = PYTHONPATH=$$HOME/.pythoncustomize:third_party uv run --env-file .env python -m
@@ -37,7 +37,7 @@ models:
 
 # one real call (twice) through DSPy to the Modal server, then print the messages DSPy sent
 lm-demo:
-	$(PY) src.optimize
+	$(PY) src.prompt_optimization demo
 
 # 3 tasks x 5 samples: read the raw replies by hand before the full pilot
 pilot-smoke:
@@ -65,15 +65,15 @@ warm:
 
 # Gemini writes the baseline instruction from one train task per type; saved once to assets/prompts.json
 baseline:
-	$(PY) src.optimize baseline
+	$(PY) src.prompt_optimization baseline
 
 # a tiny GEPA run (6 train tasks, 40 metric calls) to watch one round; needs the server warm (make warm)
 gepa-smoke:
-	$(PY) src.optimize gepa-smoke
+	$(PY) src.prompt_optimization gepa-smoke
 
 # the GEPA run (light budget, Gemini reflects); saves the instruction in assets/prompts.json and results/gepa.json
 gepa:
-	$(PY) src.optimize gepa
+	$(PY) src.prompt_optimization gepa
 
 # chart of each GEPA candidate's validation score and what the run cost, saved to results/figures/gepa.png
 fig-gepa:
@@ -81,10 +81,14 @@ fig-gepa:
 
 # rebuild the smoke run's record from its log (it predates saved records), then draw it like the full run
 smoke-record:
-	$(PY) src.optimize smoke-record
+	$(PY) src.prompt_optimization smoke-record
 
 fig-gepa-smoke:
 	$(PY) src.plots gepa-smoke
+
+# the greedy answers: each test task as a dot at the model's confidence, by instruction and outcome, saved to results/figures/greedy.png
+fig-greedy:
+	$(PY) src.plots greedy
 
 # the M8 test run: 3 instructions x 75 test tasks x 20 draws, resumable; saves results/test_draws.jsonl
 test-draws:
