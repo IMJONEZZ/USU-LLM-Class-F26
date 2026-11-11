@@ -179,3 +179,24 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+.env
+
+/results
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+.beads/proxieddb/
+*.gate.lock*
+
+# AI-assistant and issue-tracker tooling, kept out of the submission
+.beads/
+.agents/
+.codex/
+.cursor/
+.claude/settings.local.json
+
+# milestone reports written by Claude for Madi to read
+reports/
