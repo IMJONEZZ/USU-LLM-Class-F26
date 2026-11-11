@@ -10,6 +10,7 @@ dependencies = [
     "chromadb>=1.5.9",
     "datasets>=5.0.1",
     "distilabel[hf-inference-endpoints]>=1.5.3",
+    "dspy>=3.5.0",
     "evaluate>=0.4.6",
     "llguidance>=1.9.1",
     "numpy>=2.5.3",

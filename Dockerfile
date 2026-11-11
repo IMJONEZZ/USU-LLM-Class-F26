@@ -1,4 +1,4 @@
-FROM nvidia/cuda:13.0.0-runtime-ubuntu22.04
+FROM nvidia/cuda:13.0.0-devel-ubuntu22.04
 
 RUN apt-get update && apt-get install -y \
     python3 \
@@ -22,14 +22,14 @@ RUN pip3 install --no-cache-dir \
     accelerate \
     bitsandbytes \
     huggingface_hub \
-    jupyter
+    jupyter \
+    dspy
 
 RUN apt-get update && apt-get install -y git cmake build-essential && rm -rf /var/lib/apt/lists/*
 RUN git clone --depth 1 https://github.com/ggml-org/llama.cpp /opt/llama.cpp
 RUN pip3 install -r /opt/llama.cpp/requirements.txt
-RUN cmake -B /opt/llama.cpp/build -S /opt/llama.cpp -DGGML_CUDA=OFF && \
+RUN cmake -B /opt/llama.cpp/build -S /opt/llama.cpp -DGGML_CUDA=ON && \
     cmake --build /opt/llama.cpp/build --config Release -j
-RUN pip3 install -r /opt/llama.cpp/requirements.txt
 RUN pip3 uninstall -y torchvision torchaudio
 
 COPY src/ src/
