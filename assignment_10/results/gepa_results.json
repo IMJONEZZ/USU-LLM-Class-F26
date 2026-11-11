@@ -1,0 +1,752 @@
+{
+  "model": "ollama_chat/llama3.2",
+  "train_size": 40,
+  "test_size": 60,
+  "before": {
+    "accuracy": 20.0,
+    "correct": 12,
+    "total": 60,
+    "items": [
+      {
+        "question": "How many times does the letter 't' appear in the word 'tattoo'?",
+        "expected": "3",
+        "model_answer": "The letter 't' appears twice in the word 'tattoo'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'a' appear in the word 'giraffe'?",
+        "expected": "1",
+        "model_answer": "The letter 'a' appears twice in the word 'giraffe'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'i' appear in the word 'scissors'?",
+        "expected": "1",
+        "model_answer": "The letter 'i' appears twice in the word 'scissors'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'b' appear in the word 'umbrella'?",
+        "expected": "1",
+        "model_answer": "The letter 'b' does not appear in the word 'umbrella'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'f' appear in the word 'giraffe'?",
+        "expected": "2",
+        "model_answer": "The letter 'f' appears twice in the word 'giraffe'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'abbreviation'?",
+        "expected": "1",
+        "model_answer": "The letter 'e' appears twice in the word 'abbreviation'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'b' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'b' appears twice in the word 'butterfly'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'i' appear in the word 'hippopotamus'?",
+        "expected": "1",
+        "model_answer": "The letter 'i' appears 2 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'h' appear in the word 'hippopotamus'?",
+        "expected": "1",
+        "model_answer": "The letter 'h' appears twice in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'giraffe'?",
+        "expected": "1",
+        "model_answer": "The letter 'e' appears twice in the word 'giraffe'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'scissors'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' appears twice in the word 'scissors'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'l' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'l' appears twice in the word 'butterfly'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'a' appear in the word 'hippopotamus'?",
+        "expected": "1",
+        "model_answer": "The letter 'a' appears 2 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'u' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'u' appears twice in the word 'butterfly'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 't' appear in the word 'hippopotamus'?",
+        "expected": "1",
+        "model_answer": "The letter 't' appears 2 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'm' appear in the word 'accommodate'?",
+        "expected": "2",
+        "model_answer": "The letter 'm' appears twice in the word 'accommodate'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'u' appear in the word 'umbrella'?",
+        "expected": "1",
+        "model_answer": "The letter 'u' appears twice in the word 'umbrella'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'v' appear in the word 'abbreviation'?",
+        "expected": "1",
+        "model_answer": "The letter 'v' appears twice in the word 'abbreviation'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'f' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'f' appears twice in the word 'butterfly'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'pepper'?",
+        "expected": "2",
+        "model_answer": "The letter 'e' appears twice in the word 'pepper'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'abbreviation'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' appears twice in the word 'abbreviation'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'a' appear in the word 'parallel'?",
+        "expected": "2",
+        "model_answer": "The letter 'a' appears twice in the word 'parallel'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'a' appear in the word 'umbrella'?",
+        "expected": "1",
+        "model_answer": "The letter 'a' appears twice in the word 'umbrella'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'o' appear in the word 'hippopotamus'?",
+        "expected": "2",
+        "model_answer": "The letter 'o' appears 3 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'a' appear in the word 'accommodate'?",
+        "expected": "2",
+        "model_answer": "The letter 'a' appears 3 times in the word 'accommodate'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 's' appear in the word 'scissors'?",
+        "expected": "4",
+        "model_answer": "The letter 's' appears twice in the word 'scissors'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'l' appear in the word 'parallel'?",
+        "expected": "3",
+        "model_answer": "The letter 'l' appears twice in the word 'parallel'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'n' appear in the word 'abbreviation'?",
+        "expected": "1",
+        "model_answer": "The letter 'n' appears twice in the word 'abbreviation'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 't' appear in the word 'butterfly'?",
+        "expected": "2",
+        "model_answer": "The letter 't' appears twice in the word 'butterfly'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'o' appear in the word 'scissors'?",
+        "expected": "1",
+        "model_answer": "The letter 'o' does not appear in the word 'scissors'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'p' appear in the word 'hippopotamus'?",
+        "expected": "3",
+        "model_answer": "The letter 'p' appears 2 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'd' appear in the word 'accommodate'?",
+        "expected": "1",
+        "model_answer": "The letter 'd' appears twice in the word 'accommodate'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'pepper'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' appears twice in the word 'pepper'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'c' appear in the word 'accommodate'?",
+        "expected": "2",
+        "model_answer": "The letter 'c' appears twice in the word 'accommodate'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 's' appear in the word 'hippopotamus'?",
+        "expected": "1",
+        "model_answer": "The letter 's' appears twice in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' does not appear in the word 'butterfly'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'o' appear in the word 'tattoo'?",
+        "expected": "2",
+        "model_answer": "The letter 'o' appears twice in the word 'tattoo'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'e' appears twice in the word 'butterfly'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 't' appear in the word 'accommodate'?",
+        "expected": "1",
+        "model_answer": "The letter 't' appears 2 times in the word 'accommodate'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'o' appear in the word 'accommodate'?",
+        "expected": "2",
+        "model_answer": "The letter 'o' appears 2 times in the word 'accommodate'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'parallel'?",
+        "expected": "1",
+        "model_answer": "The letter 'e' appears twice in the word 'parallel'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'p' appear in the word 'parallel'?",
+        "expected": "1",
+        "model_answer": "The letter 'p' appears twice in the word 'parallel'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'b' appear in the word 'abbreviation'?",
+        "expected": "2",
+        "model_answer": "The letter 'b' appears twice in the word 'abbreviation'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'umbrella'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' appears twice in the word 'umbrella'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'a' appear in the word 'abbreviation'?",
+        "expected": "2",
+        "model_answer": "The letter 'a' appears 2 times in the word 'abbreviation'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'l' appear in the word 'umbrella'?",
+        "expected": "2",
+        "model_answer": "The letter 'l' appears twice in the word 'umbrella'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'accommodate'?",
+        "expected": "1",
+        "model_answer": "The letter 'e' appears 3 times in the word 'accommodate'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'p' appear in the word 'pepper'?",
+        "expected": "3",
+        "model_answer": "The letter 'p' appears twice in the word 'pepper'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'giraffe'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' appears twice in the word 'giraffe'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'y' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'y' does not appear in the word 'butterfly'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'i' appear in the word 'giraffe'?",
+        "expected": "1",
+        "model_answer": "The letter 'i' appears twice in the word 'giraffe'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'm' appear in the word 'umbrella'?",
+        "expected": "1",
+        "model_answer": "The letter 'm' appears twice in the word 'umbrella'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'parallel'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' appears twice in the word 'parallel'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 't' appear in the word 'abbreviation'?",
+        "expected": "1",
+        "model_answer": "The letter 't' appears twice in the word 'abbreviation'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'o' appear in the word 'abbreviation'?",
+        "expected": "1",
+        "model_answer": "The letter 'o' appears twice in the word 'abbreviation'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'g' appear in the word 'giraffe'?",
+        "expected": "1",
+        "model_answer": "The letter 'g' appears twice in the word 'giraffe'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'umbrella'?",
+        "expected": "1",
+        "model_answer": "The letter 'e' appears twice in the word 'umbrella'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'm' appear in the word 'hippopotamus'?",
+        "expected": "1",
+        "model_answer": "The letter 'm' appears 2 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'c' appear in the word 'scissors'?",
+        "expected": "1",
+        "model_answer": "The letter 'c' appears twice in the word 'scissors'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'i' appear in the word 'abbreviation'?",
+        "expected": "2",
+        "model_answer": "The letter 'i' appears twice in the word 'abbreviation'.",
+        "correct": true
+      }
+    ]
+  },
+  "after": {
+    "accuracy": 41.67,
+    "correct": 25,
+    "total": 60,
+    "items": [
+      {
+        "question": "How many times does the letter 't' appear in the word 'tattoo'?",
+        "expected": "3",
+        "model_answer": "The letter 't' appears 2 times in the word 'tattoo'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'a' appear in the word 'giraffe'?",
+        "expected": "1",
+        "model_answer": "The letter 'a' appears 1 time in the word 'giraffe'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'i' appear in the word 'scissors'?",
+        "expected": "1",
+        "model_answer": "The letter 'i' appears 2 times in the word 'scissors'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'b' appear in the word 'umbrella'?",
+        "expected": "1",
+        "model_answer": "The letter 'b' appears 0 times in the word 'umbrella'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'f' appear in the word 'giraffe'?",
+        "expected": "2",
+        "model_answer": "The letter 'f' appears 1 time in the word 'giraffe'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'abbreviation'?",
+        "expected": "1",
+        "model_answer": "The letter 'e' appears 2 times in the word 'abbreviation'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'b' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'b' appears 2 times in the word 'butterfly'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'i' appear in the word 'hippopotamus'?",
+        "expected": "1",
+        "model_answer": "The letter 'i' appears 2 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'h' appear in the word 'hippopotamus'?",
+        "expected": "1",
+        "model_answer": "The letter 'h' appears 2 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'giraffe'?",
+        "expected": "1",
+        "model_answer": "The letter 'e' appears 1 time in the word 'giraffe'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'scissors'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' appears 1 time in the word 'scissors'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'l' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'l' appears 1 time in the word 'butterfly'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'a' appear in the word 'hippopotamus'?",
+        "expected": "1",
+        "model_answer": "The letter 'a' appears 2 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'u' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'u' appears 1 time in the word 'butterfly'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 't' appear in the word 'hippopotamus'?",
+        "expected": "1",
+        "model_answer": "The letter 't' appears 2 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'm' appear in the word 'accommodate'?",
+        "expected": "2",
+        "model_answer": "The letter 'm' appears 2 times in the word 'accommodate'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'u' appear in the word 'umbrella'?",
+        "expected": "1",
+        "model_answer": "The letter 'u' appears 2 times in the word 'umbrella'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'v' appear in the word 'abbreviation'?",
+        "expected": "1",
+        "model_answer": "The letter 'v' appears 2 times in the word 'abbreviation'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'f' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'f' appears 1 time in the word 'butterfly'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'pepper'?",
+        "expected": "2",
+        "model_answer": "The letter 'e' appears 1 time in the word 'pepper'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'abbreviation'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' appears 2 times in the word 'abbreviation'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'a' appear in the word 'parallel'?",
+        "expected": "2",
+        "model_answer": "The letter 'a' appears 2 times in the word 'parallel'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'a' appear in the word 'umbrella'?",
+        "expected": "1",
+        "model_answer": "The letter 'a' appears 1 time in the word 'umbrella'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'o' appear in the word 'hippopotamus'?",
+        "expected": "2",
+        "model_answer": "The letter 'o' appears 3 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'a' appear in the word 'accommodate'?",
+        "expected": "2",
+        "model_answer": "The letter 'a' appears 2 times in the word 'accommodate'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 's' appear in the word 'scissors'?",
+        "expected": "4",
+        "model_answer": "The letter 's' appears 2 times in the word 'scissors'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'l' appear in the word 'parallel'?",
+        "expected": "3",
+        "model_answer": "The letter 'l' appears 2 times in the word 'parallel'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'n' appear in the word 'abbreviation'?",
+        "expected": "1",
+        "model_answer": "The letter 'n' appears 2 times in the word 'abbreviation'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 't' appear in the word 'butterfly'?",
+        "expected": "2",
+        "model_answer": "The letter 't' appears 1 time in the word 'butterfly'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'o' appear in the word 'scissors'?",
+        "expected": "1",
+        "model_answer": "The letter 'o' appears 0 times in the word 'scissors'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'p' appear in the word 'hippopotamus'?",
+        "expected": "3",
+        "model_answer": "The letter 'p' appears 2 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'd' appear in the word 'accommodate'?",
+        "expected": "1",
+        "model_answer": "The letter 'd' appears 2 times in the word 'accommodate'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'pepper'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' appears 1 time in the word 'pepper'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'c' appear in the word 'accommodate'?",
+        "expected": "2",
+        "model_answer": "The letter 'c' appears 2 times in the word 'accommodate'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 's' appear in the word 'hippopotamus'?",
+        "expected": "1",
+        "model_answer": "The letter 's' appears 2 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' appears 1 time in the word 'butterfly'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'o' appear in the word 'tattoo'?",
+        "expected": "2",
+        "model_answer": "The letter 'o' appears 1 time in the word 'tattoo'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'e' appears 1 time in the word 'butterfly'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 't' appear in the word 'accommodate'?",
+        "expected": "1",
+        "model_answer": "The letter 't' appears 2 times in the word 'accommodate'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'o' appear in the word 'accommodate'?",
+        "expected": "2",
+        "model_answer": "The letter 'o' appears 2 times in the word 'accommodate'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'parallel'?",
+        "expected": "1",
+        "model_answer": "The letter 'e' appears 1 time in the word 'parallel'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'p' appear in the word 'parallel'?",
+        "expected": "1",
+        "model_answer": "The letter 'p' appears 2 times in the word 'parallel'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'b' appear in the word 'abbreviation'?",
+        "expected": "2",
+        "model_answer": "The letter 'b' appears 2 times in the word 'abbreviation'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'umbrella'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' appears 1 time in the word 'umbrella'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'a' appear in the word 'abbreviation'?",
+        "expected": "2",
+        "model_answer": "The letter 'a' appears 2 times in the word 'abbreviation'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'l' appear in the word 'umbrella'?",
+        "expected": "2",
+        "model_answer": "The letter 'l' appears 2 times in the word 'umbrella'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'accommodate'?",
+        "expected": "1",
+        "model_answer": "The letter 'e' appears 2 times in the word 'accommodate'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'p' appear in the word 'pepper'?",
+        "expected": "3",
+        "model_answer": "The letter 'p' appears 2 times in the word 'pepper'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'giraffe'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' appears 1 time in the word 'giraffe'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'y' appear in the word 'butterfly'?",
+        "expected": "1",
+        "model_answer": "The letter 'y' appears 0 times in the word 'butterfly'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'i' appear in the word 'giraffe'?",
+        "expected": "1",
+        "model_answer": "The letter 'i' appears 2 times in the word 'giraffe'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'm' appear in the word 'umbrella'?",
+        "expected": "1",
+        "model_answer": "The letter 'm' appears 1 time in the word 'umbrella'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'r' appear in the word 'parallel'?",
+        "expected": "1",
+        "model_answer": "The letter 'r' appears 2 times in the word 'parallel'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 't' appear in the word 'abbreviation'?",
+        "expected": "1",
+        "model_answer": "The letter 't' appears 2 times in the word 'abbreviation'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'o' appear in the word 'abbreviation'?",
+        "expected": "1",
+        "model_answer": "The letter 'o' appears 2 times in the word 'abbreviation'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'g' appear in the word 'giraffe'?",
+        "expected": "1",
+        "model_answer": "The letter 'g' appears 1 time in the word 'giraffe'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'e' appear in the word 'umbrella'?",
+        "expected": "1",
+        "model_answer": "The letter 'e' appears 2 times in the word 'umbrella'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'm' appear in the word 'hippopotamus'?",
+        "expected": "1",
+        "model_answer": "The letter 'm' appears 2 times in the word 'hippopotamus'.",
+        "correct": false
+      },
+      {
+        "question": "How many times does the letter 'c' appear in the word 'scissors'?",
+        "expected": "1",
+        "model_answer": "The letter 'c' appears 1 time in the word 'scissors'.",
+        "correct": true
+      },
+      {
+        "question": "How many times does the letter 'i' appear in the word 'abbreviation'?",
+        "expected": "2",
+        "model_answer": "The letter 'i' appears 2 times in the word 'abbreviation'.",
+        "correct": true
+      }
+    ]
+  },
+  "gain_points": 21.67,
+  "demos_in_prompt": 0,
+  "instructions_before": "Given the fields `question`, produce the fields `answer`.",
+  "instructions_after": "Given a word, identify the number of times each letter appears in the word and report the letter and its frequency.",
+  "reference_scores": {
+    "always_1": 68.33,
+    "always_twice": 23.33
+  },
+  "challenge_question": "How many times does the letter 'l' appear in the word 'parallel'?",
+  "prompt_before": "[system]\nYour input fields are:\n1. `question` (str):\nYour output fields are:\n1. `answer` (str):\nAll interactions will be structured in the following way, with the appropriate values filled in.\n\n[[ ## question ## ]]\n{question}\n\n[[ ## answer ## ]]\n{answer}\n\n[[ ## completed ## ]]\nIn adhering to this structure, your objective is: \n        Given the fields `question`, produce the fields `answer`.\n\n[user]\n[[ ## question ## ]]\nHow many times does the letter 'l' appear in the word 'parallel'?\n\nRespond with the corresponding output fields, starting with the field `[[ ## answer ## ]]`, and then ending with the marker for `[[ ## completed ## ]]`.",
+  "prompt_after": "[system]\nYour input fields are:\n1. `question` (str):\nYour output fields are:\n1. `answer` (str):\nAll interactions will be structured in the following way, with the appropriate values filled in.\n\n[[ ## question ## ]]\n{question}\n\n[[ ## answer ## ]]\n{answer}\n\n[[ ## completed ## ]]\nIn adhering to this structure, your objective is: \n        Given a word, identify the number of times each letter appears in the word and report the letter and its frequency.\n\n[user]\n[[ ## question ## ]]\nHow many times does the letter 'l' appear in the word 'parallel'?\n\nRespond with the corresponding output fields, starting with the field `[[ ## answer ## ]]`, and then ending with the marker for `[[ ## completed ## ]]`.",
+  "answer_before": "The letter 'l' appears twice in the word 'parallel'.",
+  "answer_after": "The letter 'l' appears 2 times in the word 'parallel'."
+}
