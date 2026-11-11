@@ -1,0 +1,57 @@
+Model: meta-llama/Llama-3.2-3B-Instruct
+Training examples: 50
+
+BASELINE PROGRAM
+----------------
+Instructions: Given the fields `question`, produce the fields `answer`.
+Signature: StringSignature(question -> reasoning, answer
+    instructions='Given the fields `question`, produce the fields `answer`.'
+    question = Field(annotation=str required=True json_schema_extra={'IS_TYPE_UNDEFINED': True, '__dspy_field_type': 'input', 'prefix': 'Question:', 'desc': '${question}'})
+    reasoning = Field(annotation=Reasoning required=True json_schema_extra={'desc': 'A short plan for solving the task.', '__dspy_field_type': 'output', 'prefix': 'Reasoning:', '__dspy_reasoning_fallback': 'plan'})
+    answer = Field(annotation=str required=True json_schema_extra={'__dspy_field_type': 'output', 'prefix': 'Answer:', 'desc': '${answer}'})
+)
+Demonstrations (0):
+
+OPTIMIZED PROGRAM
+-----------------
+Instructions: Given the fields `question`, produce the fields `answer`.
+Signature: StringSignature(question -> reasoning, answer
+    instructions='Given the fields `question`, produce the fields `answer`.'
+    question = Field(annotation=str required=True json_schema_extra={'IS_TYPE_UNDEFINED': True, '__dspy_field_type': 'input', 'prefix': 'Question:', 'desc': '${question}'})
+    reasoning = Field(annotation=Reasoning required=True json_schema_extra={'desc': 'A short plan for solving the task.', '__dspy_field_type': 'output', 'prefix': 'Reasoning:', '__dspy_reasoning_fallback': 'plan'})
+    answer = Field(annotation=str required=True json_schema_extra={'__dspy_field_type': 'output', 'prefix': 'Answer:', 'desc': '${answer}'})
+)
+Demonstrations (8):
+  Demo 1:
+    question: What is 10851 + 30926 - 7924?
+    reasoning: To solve this problem, we need to follow the order of operations (PEMDAS/BODMAS).
+First, add 10851 and 30926 to get 41777.
+Then, subtract 7924 from 41777 to get 33853.
+    answer: 33853
+  Demo 2:
+    question: What is 54597 + 46421 - 3547?
+    answer: 97471
+  Demo 3:
+    question: What is 99192 + 65333 - 2040?
+    answer: 162485
+  Demo 4:
+    question: What is 99733 + 52504 - 1916?
+    answer: 150321
+  Demo 5:
+    question: What is 22156 + 59797 - 2584?
+    answer: 79369
+  Demo 6:
+    question: What is 88907 + 13478 - 4257?
+    answer: 98128
+  Demo 7:
+    question: What is 44973 + 94012 - 6573?
+    answer: 132412
+  Demo 8:
+    question: What is 14165 + 13905 - 2535?
+    answer: 25535
+
+Prompt comparison
+=================
+Question: What is 13661 + 58720 - 7600?
+Before optimization: The result of the calculation is  34261.
+After optimization:  54781
