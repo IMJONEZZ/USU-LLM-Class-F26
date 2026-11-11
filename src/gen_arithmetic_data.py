@@ -14,10 +14,12 @@ def generate_arithmetic_dataset(count=50, seed=42):
     rng = random.Random(seed)
     rows = []
     for _ in range(count):
+        # Generate three random numbers: two 5-digit numbers and one 4-digit number.
         number1 = rng.randint(10_000, 99_999)
         number2 = rng.randint(10_000, 99_999)
         number3 = rng.randint(1_000, 9_999)
         answer = number1 + number2 - number3
+        # Convert the numbers to strings and format the question and answer as a dictionary.
         rows.append(
             {
                 "question": f"What is {number1} + {number2} - {number3}?",
@@ -27,7 +29,7 @@ def generate_arithmetic_dataset(count=50, seed=42):
     return rows
 
 
-def save_arithmetic_dataset(rows, output_path):  # pragma: no cover
+def save_arithmetic_dataset(rows, output_path):
     """Write question/answer rows to a UTF-8 JSONL file."""
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)

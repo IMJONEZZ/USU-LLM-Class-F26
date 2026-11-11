@@ -10,6 +10,7 @@ dependencies = [
     "colorama>=0.4.6",
     "datasets>=3.0",
     "distilabel[openai]>=1.5.3",
+    "dspy>=3.5.0",
     "evaluate>=0.4.6",
     "guidance>=0.3.1",
     "huggingface-hub>=0.22",

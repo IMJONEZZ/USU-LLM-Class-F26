@@ -1,8 +1,9 @@
+import json
 import re
 
 import pytest
 
-from src.gen_arithmetic_data import generate_arithmetic_dataset
+from src.gen_arithmetic_data import generate_arithmetic_dataset, main
 
 
 def test_dataset_is_reproducible_for_same_seed():
@@ -29,3 +30,27 @@ def test_generated_answers_are_correct_with_different_seed():
 def test_non_positive_count_raises_value_error(count):
     with pytest.raises(ValueError, match="count must be positive"):
         generate_arithmetic_dataset(count=count)
+
+
+def test_main_parses_arguments_and_writes_dataset(tmp_path, monkeypatch, capsys):
+    output_path = tmp_path / "nested" / "arithmetic.jsonl"
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "gen_arithmetic_data.py",
+            "--count",
+            "3",
+            "--seed",
+            "17",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    main()
+
+    with output_path.open(encoding="utf-8") as output_file:
+        saved_rows = [json.loads(line) for line in output_file]
+
+    assert saved_rows == generate_arithmetic_dataset(count=3, seed=17)
+    assert "Wrote 3 examples" in capsys.readouterr().out
