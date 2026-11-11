@@ -51,7 +51,7 @@ def vllm_command():
     ]
 
 
-def wait_until_ready():  # pragma: no cover - runs inside the container
+def wait_until_ready():
     while True:
         try:
             urllib.request.urlopen(f"http://localhost:{PORT}/health", timeout=2)
@@ -73,12 +73,12 @@ def wait_until_ready():  # pragma: no cover - runs inside the container
 )
 class Server:
     @modal.enter()
-    def start(self):  # pragma: no cover - needs a GPU machine
+    def start(self):
         versions = {n: importlib.metadata.version(n) for n in VERSIONED_PACKAGES}
         print("versions:", versions, flush=True)
         self.process = subprocess.Popen(vllm_command())
         wait_until_ready()
 
     @modal.exit()
-    def stop(self):  # pragma: no cover - needs a GPU machine
+    def stop(self):
         self.process.terminate()

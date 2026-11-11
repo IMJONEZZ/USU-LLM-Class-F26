@@ -13,8 +13,11 @@ dependencies = [
     "matplotlib>=3.11.2",
     "modal>=1.6.1",
     "nltk>=3.10.4",
+    "numpy>=2.5.4",
+    "openai>=3.48.0",
     "prek>=0.5.5",
     "scikit-learn>=1.9.1",
+    "scipy>=1.18.1",
     "truststore>=0.10.4",
 ]
 

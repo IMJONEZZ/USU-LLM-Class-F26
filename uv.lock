@@ -2564,8 +2564,11 @@ dependencies = [
     { name = "matplotlib" },
     { name = "modal" },
     { name = "nltk" },
+    { name = "numpy" },
+    { name = "openai" },
     { name = "prek" },
     { name = "scikit-learn" },
+    { name = "scipy" },
     { name = "truststore" },
 ]
 
@@ -2586,8 +2589,11 @@ requires-dist = [
     { name = "matplotlib", specifier = ">=3.11.2" },
     { name = "modal", specifier = ">=1.6.1" },
     { name = "nltk", specifier = ">=3.10.4" },
+    { name = "numpy", specifier = ">=2.5.4" },
+    { name = "openai", specifier = ">=3.48.0" },
     { name = "prek", specifier = ">=0.5.5" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
+    { name = "scipy", specifier = ">=1.18.1" },
     { name = "truststore", specifier = ">=0.10.4" },
 ]
 

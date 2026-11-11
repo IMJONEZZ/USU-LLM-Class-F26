@@ -95,3 +95,43 @@ def test_split_counts_tallies_each_type_in_each_split():
         "type0": {"train": 1, "validation": 1, "test": 0},
         "type1": {"train": 1, "validation": 0, "test": 0},
     }
+
+
+def test_load_examples_returns_the_rows_and_only_the_single_instruction_tasks(
+    monkeypatch,
+):
+    rows = [
+        {
+            "key": 1,
+            "prompt": "a",
+            "instruction_id_list": ["x:y"],
+            "kwargs": [{"n": None, "m": 2}],
+        },
+        {
+            "key": 2,
+            "prompt": "b",
+            "instruction_id_list": ["x:y", "z:w"],
+            "kwargs": [{}, {}],
+        },
+    ]
+    monkeypatch.setattr("datasets.load_dataset", lambda name, split: rows)
+    all_rows, tasks = data.load_examples()
+    assert all_rows == rows
+    assert tasks == [
+        {"key": 1, "prompt": "a", "instruction_id": "x:y", "kwargs": {"m": 2}}
+    ]
+
+
+def test_main_writes_the_split_once_and_afterwards_only_compares(
+    tmp_path, monkeypatch, capsys
+):
+    examples = fake_examples(REAL_COUNTS)
+    path = tmp_path / "assets" / "splits.json"
+    monkeypatch.setattr(data, "load_examples", lambda: (examples, examples))
+    monkeypatch.setattr(config, "SPLITS_PATH", str(path))
+    data.main()
+    assert f"wrote {path}" in capsys.readouterr().out
+    saved = path.read_text()
+    data.main()
+    assert "matches this run's split: True" in capsys.readouterr().out
+    assert path.read_text() == saved

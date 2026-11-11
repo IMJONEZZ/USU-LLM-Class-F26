@@ -14,6 +14,9 @@ MAX_MODEL_LEN = (
     4096  # longest prompt 361 tokens + DSPy template + MAX_NEW_TOKENS, rounded up
 )
 
+# printed by the server log at M3; saved in every results file because every pass rate depends on them
+SERVER_VERSIONS = {"vllm": "0.21.0", "torch": "2.11.0", "transformers": "5.8.1"}
+
 # ---- data ----
 SEED = 42
 MIN_TYPE_PROMPTS = 6  # types with this many prompts or fewer are dropped
@@ -23,8 +26,12 @@ TEST_FRACTION = 0.25
 
 # ---- sampling ----
 TEMPERATURE = 1.0  # pilot and test draws; the greedy pass uses 0
-PILOT_SAMPLES = 5  # samples per prompt in the M4 pilot
+PILOT_SAMPLES = 3  # samples per task in the M4 pilot (Madi chose 3 on 2026-11-10; rates are 0, 33, 67 or 100%)
+STOP_ABOVE = 0.8  # Madi's rule: if more than this share of tasks pass every sample, stop and reconsider before M5
 TEST_DRAWS = 20  # draws per query in the M8 test run
+BOOTSTRAP_RESAMPLES = 10_000  # resamples for the bootstrap intervals in the final comparison (95% intervals, seed above)
+WORKERS = 8  # requests in flight during the pilot and test runs; the server fits about 11 full-length ones
+TEST_WORKERS = 11  # requests in flight during the M8 test run (Madi chose 11 on 2026-11-10; the server fits about 11 full-length ones)
 
 # ---- prices (for the call and cost estimate) ----
 GEMINI_INPUT_PER_MILLION = (

@@ -63,14 +63,14 @@ def split_counts(examples, splits):
     return counts
 
 
-def load_examples():  # pragma: no cover - needs the network
+def load_examples():
     from datasets import load_dataset
 
     rows = load_dataset("google/IFEval", split="train")
     return rows, [e for e in map(to_example, rows) if e is not None]
 
 
-def main():  # pragma: no cover - needs the network
+def main():
     rows, single = load_examples()
     examples, dropped = drop_small_types(single, config.MIN_TYPE_PROMPTS)
     splits = split_examples(examples, config.SEED)
@@ -103,5 +103,5 @@ def main():  # pragma: no cover - needs the network
             )
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":
     main()

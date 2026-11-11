@@ -21,19 +21,23 @@ def passes(example, response):
     return result.follow_all_instructions
 
 
+def describe(task):
+    """Google's own description of the rule a task carries, built from the task's arguments."""
+    instruction_id = task["instruction_id"]
+    instruction = instructions_registry.INSTRUCTION_DICT[instruction_id](instruction_id)
+    return instruction.build_description(**task["kwargs"])
+
+
 def feedback(example, response):
     """None when the response passes; otherwise the failed instruction's id and Google's own description of it."""
     if passes(example, response):
         return None
-    instruction_id = example["instruction_id"]
-    instruction = instructions_registry.INSTRUCTION_DICT[instruction_id](instruction_id)
-    description = instruction.build_description(**example["kwargs"])
     return prompts.FEEDBACK_PROMPT.format(
-        instruction_id=instruction_id, description=description
+        instruction_id=example["instruction_id"], description=describe(example)
     )
 
 
-def main():  # pragma: no cover - needs the network
+def main():
     _, single = data.load_examples()
     examples, _ = data.drop_small_types(single, config.MIN_TYPE_PROMPTS)
 
@@ -66,5 +70,5 @@ def main():  # pragma: no cover - needs the network
             )
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":
     main()

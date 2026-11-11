@@ -1,6 +1,15 @@
 from src import config
 
 
+def gepa_light_calls(val_size):
+    """How many student calls GEPA's 'light' budget allows for one predictor.
+
+    From DSPy 3.4.1's auto_budget: V + 5n + 35N + ((N + 1) // 5 + 1) * V with n = 6 and N = 10, V = validation tasks.
+    """
+    n, trials = 6, 10
+    return val_size + 5 * n + 35 * trials + ((trials + 1) // 5 + 1) * val_size
+
+
 def estimate(plan):
     """Print and return the estimated calls and dollars per model before an LLM run.
 

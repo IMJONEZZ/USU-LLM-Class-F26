@@ -1,6 +1,6 @@
 import pytest
 
-from src import checks
+from src import checks, data
 
 # (instruction id, real-shaped kwargs, response, does Google's strict check pass it)
 CASES = [
@@ -107,3 +107,22 @@ def test_empty_and_whitespace_only_responses_fail_even_when_nothing_is_forbidden
     example = make_example("punctuation:no_comma", {})
     assert checks.passes(example, response) is False
     assert "punctuation:no_comma" in checks.feedback(example, response)
+
+
+def test_main_gives_the_same_feedback_for_every_task_on_a_rebuild(monkeypatch, capsys):
+    # drop_small_types keeps a type only when it has more than 6 prompts
+    tasks = [{**make_example("punctuation:no_comma", {}), "key": n} for n in range(7)]
+    monkeypatch.setattr(data, "load_examples", lambda: (tasks, tasks))
+    checks.main()
+    out = capsys.readouterr().out
+    assert "7 prompts: same feedback on rebuild 7, names its instruction 7" in out
+
+
+def test_describe_gives_googles_own_rule_text_built_from_the_task_arguments():
+    task = make_example(
+        "length_constraints:number_words", {"num_words": 400, "relation": "at least"}
+    )
+    assert "at least 400 words" in checks.describe(task)
+    assert checks.describe(make_example("punctuation:no_comma", {})) in checks.feedback(
+        make_example("punctuation:no_comma", {}), "a, b"
+    )
