@@ -2,6 +2,8 @@
 
 Homework-submission repository for USU LLM Class DSAI-5810/6810.
 
+HW 10
+
 > Assignments and course materials will be added throughout the Fall 2026 semester.
 
 ## Contributing
