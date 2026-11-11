@@ -5,18 +5,18 @@ description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "fastapi>=0.138.2",
-    "gpustat>=1.1.1",
+    "accelerate>=1",
+    "bitsandbytes>=0.48",
+    "dspy[litellm,optuna]>=3.5,<4",
     "guidance>=0.3.1",
+    "matplotlib>=3.10,<4",
     "requests>=2.34.2",
     "torch>=2.14.0",
     "transformers>=5.17.0",
-    "uvicorn>=0.54.0",
 ]
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.4",
@@ -24,6 +24,7 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 norecursedirs = [".git", ".venv", "archive", "node_modules"]
 addopts = "--cov=src --cov-fail-under=100"
 markers = ["gpu: opt-in real model integration requiring CUDA and downloaded weights"]

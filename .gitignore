@@ -4,8 +4,9 @@
 
 # Local datasets and ChromaDB persistence (not submitted to CI)
 /data/
+/fixtures/
 
-# Generated Colab / local demo outputs
+# Generated experiment outputs, model states, figures, logs, and local backups
 /artifacts/
 
 # Byte-compiled / optimized / DLL files
