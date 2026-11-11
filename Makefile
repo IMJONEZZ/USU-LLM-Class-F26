@@ -1,4 +1,7 @@
-.PHONY: add_all modal_app_list nltk_data data fig-split test lint
+.PHONY: add_all modal_app_list nltk_data data fig-split checks test lint
+
+# every python target needs the proxy certificates, Google's checker folder on the import path, and the keys in .env
+PY = PYTHONPATH=$$HOME/.pythoncustomize:third_party uv run --env-file .env python -m
 
 add_all:
 	uv run ruff check --fix .
@@ -14,11 +17,15 @@ lint:
 
 # download IFEval, filter, split, save assets/splits.json and print the count tables
 data:
-	PYTHONPATH=$$HOME/.pythoncustomize uv run python -m src.data
+	$(PY) src.data
+
+# run Google's strict check on all 300 prompts and print the feedback samples
+checks:
+	$(PY) src.checks
 
 # stacked-bar chart of prompts per type in each split, saved to results/figures/split.png
 fig-split:
-	PYTHONPATH=$$HOME/.pythoncustomize uv run python -m src.plots
+	$(PY) src.plots
 
 # Google's checker needs this sentence-splitter data once per machine (CI downloads it too)
 nltk_data:

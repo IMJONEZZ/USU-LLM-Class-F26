@@ -197,3 +197,6 @@ cython_debug/
 .codex/
 .cursor/
 .claude/settings.local.json
+
+# milestone reports written by Claude for Madi to read
+reports/
