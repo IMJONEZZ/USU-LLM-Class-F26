@@ -7,6 +7,13 @@ GPU_TYPE = "T4"
 HF_CACHE_VOLUME = "serving-hf-cache"
 SCALEDOWN_WINDOW = 1200  # seconds idle before the container exits; an idle stretch costs at most about $0.20
 
+SERVED_NAME = "llama-3.2-3b"  # the model name clients send to the server
+DTYPE = "half"  # the T4 has no bf16, so fp16
+MAX_NEW_TOKENS = 2048  # the longest ask is 1200 words, about 1,600 tokens (1.3 tokens per word, assumed)
+MAX_MODEL_LEN = (
+    4096  # longest prompt 361 tokens + DSPy template + MAX_NEW_TOKENS, rounded up
+)
+
 # ---- data ----
 SEED = 42
 MIN_TYPE_PROMPTS = 6  # types with this many prompts or fewer are dropped
