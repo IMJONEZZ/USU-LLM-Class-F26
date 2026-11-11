@@ -867,3 +867,117 @@ def test_draw_summary_writes_a_chart_file_and_main_reads_the_saved_summary(
     monkeypatch.chdir(tmp_path)
     plots.main("summary")
     assert (tmp_path / "results" / "figures" / "summary.png").exists()
+
+
+def test_write_baseline_keeps_the_other_saved_instructions_and_records_search_and_sources(
+    tmp_path,
+):
+    path = tmp_path / "prompts.json"
+    path.write_text(json.dumps({"gepa": "optimized text"}))
+    seen = {}
+
+    def writer(messages, **kwargs):
+        seen.update(kwargs)
+        text = (
+            "The instruction.\n---SOURCES---\nhttps://a.example\n\nhttps://b.example\n"
+        )
+        return [
+            {"text": text, "tool_calls": None}
+        ]  # the shape DSPy returns when tools are passed
+
+    optimize.write_baseline(writer, BASELINE_TASKS, BASELINE_SPLITS, path, search=True)
+    saved = json.loads(path.read_text())
+    assert saved["gepa"] == "optimized text"
+    assert saved["baseline"] == "The instruction."
+    assert saved["writer"]["sources_used"] == ["https://a.example", "https://b.example"]
+    assert saved["writer"]["search_requested"] is True
+    assert seen["tools"] == [{"googleSearch": {}}]
+    assert saved["writer"]["guideline_sources"] == prompts.WRITER_GUIDELINE_SOURCES
+
+
+def test_write_baseline_refuses_when_a_baseline_is_saved_even_if_other_keys_exist(
+    tmp_path,
+):
+    path = tmp_path / "prompts.json"
+    path.write_text(json.dumps({"baseline": "frozen", "gepa": "g"}))
+    with pytest.raises(FileExistsError):
+        optimize.write_baseline(
+            fake_writer("new"), BASELINE_TASKS, BASELINE_SPLITS, path
+        )
+    assert json.loads(path.read_text())["baseline"] == "frozen"
+
+
+def test_baseline_retries_once_without_search_when_the_search_call_fails(
+    tmp_path, monkeypatch, capsys
+):
+    class FakeGemini:
+        def __init__(self):
+            self.history = [{"usage": {"total_tokens": 1}, "cost": 0.01}]
+            self.calls = []
+
+        def __call__(self, messages, **kwargs):
+            self.calls.append(kwargs)
+            if kwargs:
+                raise dspy.utils.exceptions.LMError("search is not available")
+            return ["Plain instruction."]
+
+    gemini = FakeGemini()
+    splits_path, prompts_path = tmp_path / "splits.json", tmp_path / "prompts.json"
+    splits_path.write_text(json.dumps(BASELINE_SPLITS))
+    monkeypatch.setattr(config, "SPLITS_PATH", str(splits_path))
+    monkeypatch.setattr(config, "PROMPTS_PATH", str(prompts_path))
+    monkeypatch.setattr(data, "load_examples", lambda: ([], BASELINE_TASKS))
+    monkeypatch.setattr(dspy, "LM", lambda *args, **kwargs: gemini)
+    monkeypatch.setenv("GOOGLE_API_KEY", "key")
+    optimize.baseline()
+    saved = json.loads(prompts_path.read_text())
+    assert saved["baseline"] == "Plain instruction."
+    assert saved["writer"]["search_requested"] is False
+    assert len(gemini.calls) == 2
+    assert "retrying once without search" in capsys.readouterr().out
+
+
+SMOKE_LOG = """command: make gepa-smoke
+start: 2026-11-10 20:05:23
+2026/11/10 20:05:28 INFO dspy.teleprompt.gepa.gepa: Iteration 0: Base program full valset score: 0.33
+2026/11/10 20:09:04 INFO dspy.teleprompt.gepa.gepa: Iteration 5: done
+
+candidates 2, validation scores [0.33, 0.83], best 1, metric calls 42
+actual: 42 student calls, 5 Gemini calls, Gemini cost $0.0362
+exit code: 0
+"""
+
+
+def test_smoke_record_from_log_has_the_shape_of_a_saved_gepa_record():
+    candidates = [{"self": "old"}, {"self": "new"}]
+    record = optimize.smoke_record_from_log(SMOKE_LOG, candidates)
+    assert [c["validation_score"] for c in record["candidates"]] == [0.33, 0.83]
+    assert [c["instruction"] for c in record["candidates"]] == ["old", "new"]
+    assert record["best_index"] == 1
+    assert record["student"]["calls"] == 42
+    assert record["student"]["seconds"] == 216.0  # 20:05:28 to 20:09:04
+    assert record["gemini"]["calls"] == 5
+    assert record["gemini"]["dollars"] == 0.04
+    assert record["gemini"]["prompt_tokens"] is None  # never recorded for this run
+
+
+def test_smoke_record_writes_the_file_once_and_the_chart_says_tokens_were_not_recorded(
+    tmp_path, monkeypatch
+):
+    (tmp_path / "logs").mkdir()
+    (tmp_path / "logs" / "smoke.txt").write_text(SMOKE_LOG)
+    gepa_dir = tmp_path / "gepa_smoke"
+    gepa_dir.mkdir()
+    (gepa_dir / "candidates.json").write_text(
+        json.dumps([{"self": "old"}, {"self": "new"}])
+    )
+    monkeypatch.setattr(config, "RESULTS_DIR", str(tmp_path))
+    optimize.smoke_record(str(tmp_path / "logs" / "smoke.txt"), str(gepa_dir))
+    record = json.loads((tmp_path / "gepa_smoke.json").read_text())
+    with pytest.raises(FileExistsError):
+        optimize.smoke_record(str(tmp_path / "logs" / "smoke.txt"), str(gepa_dir))
+    plots.draw_gepa(record, tmp_path / "gepa_smoke.png")
+    assert (tmp_path / "gepa_smoke.png").stat().st_size > 1000
+    monkeypatch.chdir(tmp_path)
+    plots.main("gepa-smoke")
+    assert (tmp_path / "results" / "figures" / "gepa_smoke.png").exists()

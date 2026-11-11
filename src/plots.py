@@ -186,9 +186,14 @@ def draw_gepa(record, path):
 
     right.set_facecolor(SURFACE)
     student, gemini = record["student"], record["gemini"]
+    tokens = (
+        "tokens not recorded"
+        if gemini["prompt_tokens"] is None
+        else f"{gemini['prompt_tokens'] + gemini['completion_tokens']:,} tokens"
+    )
     names = [
         f"Llama 3.2 3B on a T4\n{student['calls']} calls, {student['seconds']:.0f} s",
-        f"Gemini\n{gemini['calls']} calls, {gemini['prompt_tokens'] + gemini['completion_tokens']:,} tokens",
+        f"Gemini\n{gemini['calls']} calls, {tokens}",
     ]
     dollars = [student["dollars"], gemini["dollars"]]
     right.barh(
@@ -379,6 +384,10 @@ def draw_summary(summary, path):
 
 
 def main(figure="split"):
+    if figure == "gepa-smoke":
+        record = json.loads((Path(config.RESULTS_DIR) / "gepa_smoke.json").read_text())
+        draw_gepa(record, "results/figures/gepa_smoke.png")
+        return
     if figure == "summary":
         summary = json.loads((Path(config.RESULTS_DIR) / "summary.json").read_text())
         draw_summary(summary, "results/figures/summary.png")

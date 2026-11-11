@@ -1,8 +1,10 @@
 import hashlib
 import json
 import os
+import re
 import sys
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 
 import dspy
@@ -71,8 +73,16 @@ def demo():
     )
 
 
-def write_baseline(lm, tasks, splits, path):
-    """Ask Gemini for the baseline instruction and save it. Uses the first train task of each type; refuses to overwrite."""
+def write_baseline(lm, tasks, splits, path, search=False):
+    """Ask Gemini for the baseline instruction and save it beside whatever else the file holds.
+
+    Uses the first train task of each type. Refuses to overwrite a baseline that is already saved.
+    """
+    saved = json.loads(Path(path).read_text()) if Path(path).exists() else {}
+    if "baseline" in saved:
+        raise FileExistsError(
+            f"{path} already holds a baseline; it is frozen once written"
+        )
     train = set(splits["train"])
     first = {}
     for task in sorted(tasks, key=lambda t: t["key"]):
@@ -84,20 +94,32 @@ def write_baseline(lm, tasks, splits, path):
         for n, t in enumerate(chosen, 1)
     )
     meta_prompt = prompts.WRITER_META_PROMPT.format(samples=samples)
-    baseline = lm(messages=[{"role": "user", "content": meta_prompt}])[0].strip()
+    tools = (
+        {"tools": [{"googleSearch": {}}]} if search else {}
+    )  # Gemini's built-in Google Search
+    reply = lm(messages=[{"role": "user", "content": meta_prompt}], **tools)[0]
+    reply = (
+        reply["text"] if isinstance(reply, dict) else reply
+    )  # with tools, DSPy returns {"text": ..., "tool_calls": ...}
+    text, _, source_lines = reply.partition(
+        "---SOURCES---"
+    )  # the writer lists any pages it used after this line
+    baseline = text.strip()
     if not baseline:
         raise ValueError("the writer returned an empty instruction")
-    record = {
-        "baseline": baseline,
-        "writer": {
-            "model": config.GEMINI_MODEL,
-            "meta_prompt": meta_prompt,
-            "meta_prompt_sha256": hashlib.sha256(meta_prompt.encode()).hexdigest(),
-            "example_keys": [t["key"] for t in chosen],
-        },
+    saved["baseline"] = baseline
+    saved["writer"] = {
+        "model": config.GEMINI_MODEL,
+        "search_requested": search,
+        "sources_used": [
+            line.strip() for line in source_lines.splitlines() if line.strip()
+        ],
+        "guideline_sources": prompts.WRITER_GUIDELINE_SOURCES,
+        "meta_prompt": meta_prompt,
+        "meta_prompt_sha256": hashlib.sha256(meta_prompt.encode()).hexdigest(),
+        "example_keys": [t["key"] for t in chosen],
     }
-    with Path(path).open("x") as f:  # "x": the baseline is frozen once written
-        json.dump(record, f, indent=2)
+    Path(path).write_text(json.dumps(saved, indent=2))
     return baseline
 
 
@@ -116,14 +138,29 @@ def baseline():
             }
         ]
     )
-    # Gemini 3 models spend part of max_tokens on hidden thinking, so the limit is generous
+    # Gemini 3 models spend much of max_tokens on hidden thinking, and thinking effort is raised, so the limit is generous
     lm = dspy.LM(
-        config.GEMINI_MODEL, api_key=os.environ["GOOGLE_API_KEY"], max_tokens=8000
+        config.GEMINI_MODEL,
+        api_key=os.environ["GOOGLE_API_KEY"],
+        max_tokens=32000,
+        reasoning_effort="high",
     )
-    text = write_baseline(lm, tasks, splits, config.PROMPTS_PATH)
+    try:
+        text = write_baseline(lm, tasks, splits, config.PROMPTS_PATH, search=True)
+    except dspy.utils.exceptions.LMError as error:
+        print(
+            f"the call with Google Search failed ({type(error).__name__}: {str(error)[:200]}); retrying once without search"
+        )
+        text = write_baseline(lm, tasks, splits, config.PROMPTS_PATH, search=False)
+    saved = json.loads(Path(config.PROMPTS_PATH).read_text())
     last = lm.history[-1]
     print(f"baseline instruction ({len(text.split())} words):\n\n{text}\n")
-    print(f"actual: 1 call, usage {last['usage']}, cost ${last['cost']}")
+    print(
+        f"search requested: {saved['writer']['search_requested']}; sources the writer listed: {saved['writer']['sources_used']}"
+    )
+    print(
+        f"actual: {len(lm.history)} call(s), usage {last['usage']}, cost ${last['cost']} (search grounding fees, if any, are not in this figure)"
+    )
 
 
 def metric(gold, pred, trace=None, pred_name=None, pred_trace=None):
@@ -319,10 +356,77 @@ def gepa_full():
     print(f"actual: student {record['student']}, gemini {record['gemini']}")
 
 
+def smoke_record_from_log(log_text, candidates):
+    """Rebuild the smoke run's record (same shape as results/gepa.json) from its printed log.
+
+    The smoke run was made before records were saved, so its numbers are read back from the log.
+    Gemini's token counts were never printed, so they are None.
+    """
+    summary = re.search(
+        r"candidates (\d+), validation scores \[([^\]]*)\], best (\d+), metric calls (\d+)",
+        log_text,
+    )
+    actual = re.search(
+        r"actual: (\d+) student calls, (\d+) Gemini calls, Gemini cost \$([0-9.]+)",
+        log_text,
+    )
+    stamps = re.findall(
+        r"^(\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2})", log_text, flags=re.MULTILINE
+    )
+    # the log's own clock has no timezone; both stamps are read as UTC, which leaves their difference unchanged
+    first, last = (
+        datetime.strptime(s, "%Y/%m/%d %H:%M:%S").replace(tzinfo=UTC)
+        for s in (stamps[0], stamps[-1])
+    )
+    seconds = (last - first).total_seconds()
+    scores = [float(s) for s in summary[2].split(",")]
+    return {
+        "seed": config.SEED,
+        "source": "rebuilt from results/logs/m6_smoke.txt and the GEPA candidates file; Gemini tokens were not recorded",
+        "total_metric_calls": int(summary[4]),
+        "best_index": int(summary[3]),
+        "candidates": [
+            {"index": i, "validation_score": round(score, 2), "instruction": c["self"]}
+            for i, (score, c) in enumerate(zip(scores, candidates))
+        ],
+        "student": {
+            "model": config.SERVED_NAME,
+            "calls": int(actual[1]),
+            "seconds": round(seconds, 2),
+            "dollars": round(seconds * config.T4_PER_SECOND, 2),
+        },
+        "gemini": {
+            "model": config.GEMINI_MODEL,
+            "calls": int(actual[2]),
+            "prompt_tokens": None,
+            "completion_tokens": None,
+            "dollars": round(float(actual[3]), 2),
+        },
+    }
+
+
+def smoke_record(
+    log_path="results/logs/m6_smoke.txt", gepa_dir="results/gepa_smoke_200528"
+):
+    candidates = json.loads((Path(gepa_dir) / "candidates.json").read_text())
+    record = smoke_record_from_log(Path(log_path).read_text(), candidates)
+    with (Path(config.RESULTS_DIR) / "gepa_smoke.json").open(
+        "x"
+    ) as f:  # "x": never overwrite
+        json.dump(record, f, indent=2)
+    print(
+        f"wrote {config.RESULTS_DIR}/gepa_smoke.json: scores {[c['validation_score'] for c in record['candidates']]}, student {record['student']}, gemini {record['gemini']}"
+    )
+
+
 def main(step="demo"):
-    {"demo": demo, "baseline": baseline, "gepa-smoke": gepa_smoke, "gepa": gepa_full}[
-        step
-    ]()
+    {
+        "demo": demo,
+        "baseline": baseline,
+        "gepa-smoke": gepa_smoke,
+        "gepa": gepa_full,
+        "smoke-record": smoke_record,
+    }[step]()
 
 
 if __name__ == "__main__":

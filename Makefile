@@ -1,4 +1,4 @@
-.PHONY: add_all warm baseline gepa-smoke gepa fig-gepa test-draws fig-draws greedy summary fig-summary modal_app_list deploy models lm-demo pilot-smoke pilot nltk_data data fig-split fig-pilot checks test lint
+.PHONY: add_all warm baseline gepa-smoke gepa fig-gepa smoke-record fig-gepa-smoke test-draws fig-draws greedy summary fig-summary modal_app_list deploy models lm-demo pilot-smoke pilot nltk_data data fig-split fig-pilot checks test lint
 
 # every python target needs the proxy certificates, Google's checker folder on the import path, and the keys in .env
 PY = PYTHONPATH=$$HOME/.pythoncustomize:third_party uv run --env-file .env python -m
@@ -78,6 +78,13 @@ gepa:
 # chart of each GEPA candidate's validation score and what the run cost, saved to results/figures/gepa.png
 fig-gepa:
 	$(PY) src.plots gepa
+
+# rebuild the smoke run's record from its log (it predates saved records), then draw it like the full run
+smoke-record:
+	$(PY) src.optimize smoke-record
+
+fig-gepa-smoke:
+	$(PY) src.plots gepa-smoke
 
 # the M8 test run: 3 instructions x 75 test tasks x 20 draws, resumable; saves results/test_draws.jsonl
 test-draws:
