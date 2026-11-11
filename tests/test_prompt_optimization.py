@@ -324,6 +324,62 @@ def test_run_experiment_accepts_any_optimizer_and_records_instructions():
     assert results["reference_scores"]["always_twice"] == 100.0
 
 
+# ---------- demo: rebuild the GEPA prompt from saved text ----------
+
+
+def test_program_with_instructions_sets_text_and_no_examples():
+    program = po.program_with_instructions("Count carefully.")
+    predictor = program.predictors()[0]
+    assert predictor.signature.instructions == "Count carefully."
+    assert predictor.demos == []
+    assert "Count carefully." in po.render_prompt(program, "q")
+
+
+def test_program_with_instructions_does_not_touch_the_baseline():
+    po.program_with_instructions("Count carefully.")
+    assert "Count carefully." not in po.render_prompt(po.build_program(), "q")
+
+
+def test_demo_asks_both_prompts_and_reports_instructions(tmp_path):
+    saved = tmp_path / "r.json"
+    saved.write_text(
+        json.dumps({"instructions_before": "old", "instructions_after": "new"})
+    )
+    dspy.configure(lm=DummyLM([{"answer": "twice"}, {"answer": "3"}]))
+    shown = po.demo("q?", saved)
+    assert shown["question"] == "q?"
+    assert (shown["instructions_before"], shown["instructions_after"]) == ("old", "new")
+    assert (shown["answer_before"], shown["answer_after"]) == ("twice", "3")
+
+
+def test_main_demo_prints_before_and_after(monkeypatch, tmp_path, capsys):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(po, "configure_lm", lambda: None)
+    seen = {}
+
+    def fake_demo(question, path):
+        seen["args"] = (question, str(path))
+        return {
+            "question": question,
+            "instructions_before": "old",
+            "instructions_after": "new",
+            "answer_before": "twice",
+            "answer_after": "3",
+        }
+
+    monkeypatch.setattr(po, "demo", fake_demo)
+    assert po.main(["demo", "q?"]) == 0
+    out = capsys.readouterr().out
+    assert seen["args"] == ("q?", "assignment_10/results/gepa_results.json")
+    assert (
+        "BEFORE" in out
+        and "AFTER" in out
+        and "Answer: twice" in out
+        and "Answer: 3" in out
+    )
+    assert po.main(["demo"]) == 2  # a question is required
+
+
 # ---------- model setup and command line ----------
 
 

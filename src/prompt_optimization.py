@@ -282,6 +282,28 @@ def run_experiment(
     }
 
 
+def program_with_instructions(instructions: str) -> dspy.Predict:
+    """Rebuild an optimized program from the instruction text GEPA wrote (it adds no examples)."""
+    program = build_program()
+    predictor = program.predictors()[0]
+    predictor.signature = predictor.signature.with_instructions(instructions)
+    return program
+
+
+def demo(question: str, results_path: str | Path) -> dict:
+    """Ask the real model the same question with the baseline and the GEPA prompt."""
+    saved = json.loads(Path(results_path).read_text())
+    baseline = build_program()
+    optimized = program_with_instructions(saved["instructions_after"])
+    return {
+        "question": question,
+        "instructions_before": saved["instructions_before"],
+        "instructions_after": saved["instructions_after"],
+        "answer_before": baseline(question=question).answer,
+        "answer_after": optimized(question=question).answer,
+    }
+
+
 def save_results(results: dict, path: str | Path) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_text(json.dumps(results, indent=2))
@@ -300,8 +322,19 @@ def main(argv: list[str]) -> int:
             trainset=trainset, optimizer=make_gepa_optimizer(valset)
         )
         out = "assignment_10/results/gepa_results.json"
+    elif argv[:1] == ["demo"] and len(argv) == 2:
+        configure_lm()
+        shown = demo(argv[1], "assignment_10/results/gepa_results.json")
+        print(f"Question: {shown['question']}")
+        print(f"\nBEFORE prompt instruction:\n  {shown['instructions_before']}")
+        print(f"Answer: {shown['answer_before']}")
+        print(f"\nAFTER prompt instruction:\n  {shown['instructions_after']}")
+        print(f"Answer: {shown['answer_after']}")
+        return 0
     else:
-        print("usage: python -m src.prompt_optimization run | run-gepa")
+        print(
+            'usage: python -m src.prompt_optimization run | run-gepa | demo "<question>"'
+        )
         return 2
     save_results(results, out)
     print(
