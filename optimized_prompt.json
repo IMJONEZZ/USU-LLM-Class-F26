@@ -1,0 +1,47 @@
+{
+  "traces": [],
+  "train": [],
+  "demos": [
+    {
+      "augmented": true,
+      "dialogue_line": "Mesa Jar Jar Binks. You're a Gungan, aren't you? How'd you end up here with us? My no know. Mesa day starten pitty okeyday witda brisky morning munchen. Den boom! Getten berry scared... ...and grabben dat Jedi, and pow... mesa here. Mesa getten berry, berry scared.",
+      "speaker": "Jar Jar Binks"
+    },
+    {
+      "augmented": true,
+      "dialogue_line": "I'm Qui-Gon Jinn.",
+      "speaker": "Qui-Gon Jinn"
+    },
+    {
+      "augmented": true,
+      "dialogue_line": "Why were you banished, Jar Jar?",
+      "speaker": "Obi-Wan Kenobi"
+    },
+    {
+      "augmented": true,
+      "dialogue_line": "We'll need a navigator to get us through the planet's core. This Gungan may be of help. What is to become of Jar Jar Binks here?",
+      "speaker": "Qui-Gon Jinn"
+    }
+  ],
+  "signature": {
+    "instructions": "Given a line of dialogue, identify which character said it.",
+    "fields": [
+      {
+        "prefix": "Dialogue Line:",
+        "description": "A line of dialogue with the speaker removed"
+      },
+      {
+        "prefix": "Speaker:",
+        "description": "The name of the character who said this line"
+      }
+    ]
+  },
+  "lm": null,
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.14",
+      "dspy": "3.5.0",
+      "cloudpickle": "3.1"
+    }
+  }
+}
