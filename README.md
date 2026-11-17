@@ -63,4 +63,4 @@ The course supports Claude Code and Codex. Both assistants follow the same stude
 - Assignment 8 — vector database and retrieval (`src/vectordb.py`, `src/rag.py`)
 - Assignment 9 — structured HTML output from a model (`src/html_output.py`)
 - Assignment 10 — prompt optimization with DSPy (`src/prompt_optimization.py`)
-- Assignment 11 — a frontend for the HTML service (`src/frontend.py`, in progress)
+- Assignment 11 — a frontend for the HTML service (`src/frontend.py`, `gpu/frontend_app.py`)
