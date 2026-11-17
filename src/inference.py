@@ -3,11 +3,9 @@ import os
 import sys
 import time
 from itertools import pairwise
-from pathlib import Path
 
 import requests
 import truststore
-from tokenizers import Tokenizer
 
 from src import config
 
@@ -28,23 +26,7 @@ def format_prompt(question):
     return f"{config.INSTRUCTION_MARKER}{question}\n\n{config.RESPONSE_MARKER}"
 
 
-def check_chain(chain):
-    _reject_markers(chain, "chain")
-    lines = chain.split("\n")
-    positions = []
-    for label in config.SECTION_LABELS:
-        found = [i for i, line in enumerate(lines) if line.lstrip().startswith(label)]
-        if len(found) != 1:
-            raise ValueError(f"expected exactly one {label!r} line, found {len(found)}")
-        positions.append(found[0])
-    if positions != sorted(positions):
-        raise ValueError("chain sections are out of order")
-    final_line = lines[positions[-1]].lstrip()
-    if not final_line[len(config.FINAL_ANSWER_LABEL) :].strip():
-        raise ValueError("final answer is empty")
-
-
-def completion_request(question, model):
+def completion_request(question, model) -> dict:
     return {
         "model": model,
         "prompt": format_prompt(question),
@@ -79,49 +61,6 @@ def complete(question, model):
     return call("POST", "/v1/completions", json=body)[0].json()
 
 
-def local_token_count(tokenizer, question):
-    return len(tokenizer.encode(format_prompt(question), add_special_tokens=True).ids)
-
-
-def is_format_ok(reply):
-    try:
-        check_chain(reply.strip())
-    except ValueError:
-        return False
-    return True
-
-
-def check(path, tokenizer):
-    questions = [json.loads(line) for line in Path(path).read_text().splitlines()]
-    records = []
-    for model in (config.ADAPTER_NAME, config.SERVED_BASE_NAME):
-        for row in questions:
-            result = complete(row["question"], model)
-            choice = result["choices"][0]
-            records.append(
-                {
-                    "id": row["id"],
-                    "model": model,
-                    "format_ok": is_format_ok(choice["text"]),
-                    "finish_reason": choice["finish_reason"],
-                    "prompt_tokens": result["usage"]["prompt_tokens"],
-                    "local_tokens": local_token_count(tokenizer, row["question"]),
-                    "reply": choice["text"],
-                }
-            )
-    write_run("m4_correctness.json", records)
-    return records
-
-
-def write_run(name, records):
-    rounded = [
-        {k: round(v, 2) if isinstance(v, float) else v for k, v in record.items()}
-        for record in records
-    ]
-    Path(config.RUNS_DIR).mkdir(exist_ok=True)
-    (Path(config.RUNS_DIR) / name).write_text(json.dumps(rounded, indent=2))
-
-
 def stream_stats(arrivals):
     """arrivals: seconds from sending the request to each streamed token chunk."""
     gaps = [later - earlier for earlier, later in pairwise(arrivals)]
@@ -133,70 +72,18 @@ def stream_stats(arrivals):
     }
 
 
-def stream(question, model):
+def stream_body(question, model):
     body = completion_request(question, model)
     body["stream"] = True
     body["stream_options"] = {"include_usage": True}
-    sent = time.perf_counter()
-    response, waited, retries = call("POST", "/v1/completions", json=body, stream=True)
-    arrivals, usage, text = [], None, ""
-    for line in response.iter_lines(decode_unicode=True):
+    return body
+
+
+def parse_sse(lines):
+    """Yield each JSON chunk of a server-sent-events stream; blank lines and [DONE] are skipped."""
+    for line in lines:
         if line.startswith("data: ") and line != "data: [DONE]":
-            chunk = json.loads(line[len("data: ") :])
-            if chunk["choices"]:
-                arrivals.append(time.perf_counter() - sent)
-                text += chunk["choices"][0]["text"]
-            else:
-                usage = chunk["usage"]
-    result = stream_stats(arrivals)
-    result["completion_tokens"] = usage["completion_tokens"]
-    result["waited_s"] = waited
-    result["retries"] = retries
-    result["num_words"] = len(text.split())
-    result["wpm"] = result["num_words"] / (arrivals[-1] - arrivals[0]) * 60
-    return result
-
-
-def stream_runs(question):
-    """One stream; if it had to wait out a cold start (a 503 retry), a second one measures the warm server."""
-    first = stream(question, config.ADAPTER_NAME)
-    cold = first["retries"] > 0
-    first["run"] = "cold start" if cold else "warm"
-    records = [first]
-    if cold:
-        second = stream(question, config.ADAPTER_NAME)
-        second["run"] = "warm"
-        records.append(second)
-    records[-1]["gate_pass"] = records[-1]["rate_tok_s"] >= config.MIN_TOKENS_PER_SEC
-    return records
-
-
-def print_stream(records):
-    for r in records:
-        print(
-            f"{r['run']}: first token {r['ttft_s']:.2f}s | {r['rate_tok_s']:.1f} tok/s "
-            f"after the first | {r['chunks']} chunks (server counted "
-            f"{r['completion_tokens']}) | {r['wpm']:.0f} words/min | longest gap "
-            f"{r['max_gap_s'] * 1000:.0f} ms | waited {r['waited_s']:.0f}s through "
-            f"{r['retries']} 503s"
-        )
-    warm = records[-1]
-    verdict = "PASS" if warm["gate_pass"] else "FAIL"
-    print(
-        f"gate: {verdict}, warm rate {warm['rate_tok_s']:.2f} tok/s "
-        f"(minimum {config.MIN_TOKENS_PER_SEC})"
-    )
-
-
-def print_summary(records):
-    for model in dict.fromkeys(r["model"] for r in records):
-        mine = [r for r in records if r["model"] == model]
-        print(
-            f"{model}: format ok {sum(r['format_ok'] for r in mine)}/{len(mine)}, "
-            f"prompt tokens match "
-            f"{sum(r['prompt_tokens'] == r['local_tokens'] for r in mine)}/{len(mine)}, "
-            f"cut off at max tokens {sum(r['finish_reason'] == 'length' for r in mine)}"
-        )
+            yield json.loads(line[len("data: ") :])
 
 
 def ask(question):
@@ -212,14 +99,8 @@ def main(command, argument):
     truststore.inject_into_ssl()
     if command == "ask":
         ask(argument)
-    elif command == "check":
-        print_summary(check(argument, Tokenizer.from_pretrained(config.MODEL_NAME)))
-    elif command == "stream":
-        records = stream_runs(argument)
-        write_run("m5_stream.json", records)
-        print_stream(records)
     else:
-        raise ValueError(f"unknown command {command!r}: use ask, check or stream")
+        raise ValueError(f"unknown command {command!r}: use ask")
 
 
 if __name__ == "__main__":

@@ -5,11 +5,10 @@ description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "matplotlib>=3.11.2",
+    "gradio>=6.32.0",
     "modal>=1.6.1",
     "prek>=0.5.5",
     "requests>=2.34.2",
-    "tokenizers>=0.23.3",
     "truststore>=0.10.4",
 ]
 
@@ -31,4 +30,4 @@ max-statements = 50
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"
-markers = ["slow: loads a real model or tokenizer"]
+testpaths = ["tests"]

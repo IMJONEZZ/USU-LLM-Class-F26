@@ -5,9 +5,6 @@ LORA_R = 16  # the rank the A6 adapter was trained with; the server's --max-lora
 # ---- templates (the A6 training prompt; the served model must see exactly this) ----
 INSTRUCTION_MARKER = "### Instruction:\n"
 RESPONSE_MARKER = "### Response:\n"
-SECTION_LABELS = ["Restate:", "Check:", "Solve:", "Verify:", "Final answer:"]
-FINAL_ANSWER_LABEL = SECTION_LABELS[-1]
-EOS_TOKEN = "<|end_of_text|>"
 
 # ---- serving ----
 GPU_TYPE = "L4"
@@ -23,8 +20,5 @@ SCALEDOWN_WINDOW = 60  # seconds idle before the container exits
 # the client retries a 503 (server still starting) every interval, up to the timeout
 RETRY_TIMEOUT_SECONDS = 600
 RETRY_INTERVAL_SECONDS = 15
-# the speed gate: steady rate of the warm run on the deployed config
-MIN_TOKENS_PER_SEC = 9
 # the server prints one line starting with this tag when it is ready
 MARKS_TAG = "STAGE_MARKS"
-RUNS_DIR = "serving_runs"  # gitignored; run records are written here as JSON
