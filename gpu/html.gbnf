@@ -1,0 +1,33 @@
+# The HTML this service is allowed to produce.
+#
+# Every tag is written as a pair, so an unclosed element isn't something the
+# sampler can reach. That's the whole point of doing this with a grammar
+# instead of asking the model for valid markup and checking afterwards.
+#
+# Text can't contain < > & or a quote, which means nothing the model writes
+# can open a tag I didn't put here or break out into an attribute. The
+# repetition bounds are deliberate too. llama.cpp warns that open-ended
+# repeats make sampling slow, and a page is capped at eight blocks anyway.
+
+root ::= "<!DOCTYPE html>\n<html>\n<head>\n<title>" title "</title>\n</head>\n<body>\n" block{1,10} "</body>\n</html>"
+
+block ::= heading | paragraph | list
+
+heading ::= "<h1>" text "</h1>\n" | "<h2>" text "</h2>\n"
+
+paragraph ::= "<p>" text "</p>\n"
+
+list ::= "<ul>\n" item{1,6} "</ul>\n"
+
+item ::= "<li>" text "</li>\n"
+
+# 400 and not 180. The first version capped text at 180 characters, and when
+# the model wanted to write more than that the grammar forced the closing tag
+# in the middle of a word, so a page came back with "rocky outc</p><p>hills".
+# The cap has to sit above the length the model actually wants to write, or it
+# stops being a safety limit and starts being a text editor.
+text ::= char{1,400}
+
+title ::= char{1,80}
+
+char ::= [^<>&"\n\r]

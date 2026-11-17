@@ -1,0 +1,7 @@
+{
+  "before_instructions": "Write an HTML page about the topic.",
+  "after_instructions": "Write an HTML page about the topic, ensuring that the HTML structure is correct and adheres to the specified grammar. Use appropriate tags such as <html>, <head>, <meta>, <title>, <body>, <h1>, <p>, <ul>, <li>, and <style>. Additionally, include a brief introduction to the topic, a detailed explanation of the main points, and a conclusion. For example, if the topic is 'Ada Lovelace', provide a scientific explanation of her contributions to computer programming. If the topic is 'why onions make you cry', explain the chemical process that causes this reaction. If the topic is 'the city of Petra', discuss its history, architecture, and significance. Ensure that the <html>, <head>, and <body> tags are correctly used and that all other tags are included as per the grammar. Do not include any attributes in the <meta> tag as it is not a tag the grammar allows. Do not use <strong>, <em>, or any other tags that are not specified in the grammar. Additionally, ensure that the content is accurate and includes all relevant factual information.",
+  "demos": [],
+  "valid_before": 0.0,
+  "valid_after": 20.0
+}
