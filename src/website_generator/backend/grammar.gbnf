@@ -1,0 +1,10 @@
+root ::= ws element (ws element)* ws
+ws ::= [ \t\r\n]*
+element ::= "<div>" content "</div>" | "<section>" content "</section>" | "<article>" content "</article>" | "<h1>" inline "</h1>" | "<h2>" inline "</h2>" | "<h3>" inline "</h3>" | "<p>" inline "</p>" | "<ul>" ws item (ws item)* ws "</ul>"
+content ::= (text | element)*
+inline ::= (text | "<strong>" inline "</strong>" | "<em>" inline "</em>" | link)*
+item ::= "<li>" content "</li>"
+link ::= "<a href=\"https://" host path "\">" text "</a>"
+host ::= [a-zA-Z0-9] [a-zA-Z0-9.-]* "." [a-zA-Z] [a-zA-Z]+
+path ::= ("/" [a-zA-Z0-9/_.~-]*)?
+text ::= ([^<>&\x00-\x08\x0b\x0c\x0e-\x1f\x7f] | "&amp;" | "&lt;" | "&gt;" | "&quot;" | "&#39;")+
