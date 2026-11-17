@@ -17,6 +17,7 @@ instead of a popup.
 import html
 
 import pytest
+import requests
 
 from src import frontend as fe
 from src.inference import ServerNotReady
@@ -303,3 +304,51 @@ def test_prompt_service_falls_back_to_the_committed_instruction(monkeypatch):
     monkeypatch.setattr(fe, "optimized_instructions", spy)
     assert fe.prompt_service(TOPIC) == CLEAN
     assert used["called"]
+
+
+# --- the cold GPU ------------------------------------------------------------
+
+
+def test_a_read_timeout_is_retried_because_the_first_call_wakes_the_container():
+    # `ask` waits out llama.cpp's 503, but a properly asleep server holds the
+    # connection instead and requests gives up at its own timeout, which never
+    # reaches that retry loop. I hit this on the last check before calling the
+    # assignment done, which is exactly what a grader opening a cold URL gets.
+    calls = []
+
+    def cold_then_ready(topic, **kwargs):
+        calls.append(topic)
+        if len(calls) == 1:
+            raise requests.ReadTimeout("read timed out")
+        return CLEAN
+
+    result = fe.answer(TOPIC, fe.MODE_GRAMMAR, {fe.MODE_GRAMMAR: cold_then_ready})
+    assert len(calls) == 2
+    assert result["note"] is None
+    assert result["markup"] == CLEAN
+
+
+def test_a_server_that_never_wakes_says_so_rather_than_retrying_forever():
+    calls = []
+
+    def always_timeout(topic, **kwargs):
+        calls.append(topic)
+        raise requests.ConnectionError("connection refused")
+
+    result = fe.answer(TOPIC, fe.MODE_GRAMMAR, {fe.MODE_GRAMMAR: always_timeout})
+    assert len(calls) == fe.COLD_ATTEMPTS
+    assert "waking up" in result["note"]
+
+
+def test_a_real_error_is_not_retried():
+    # Retrying a bug just makes it happen twice. Only the waking-up family
+    # gets a second go.
+    calls = []
+
+    def boom(topic, **kwargs):
+        calls.append(topic)
+        raise RuntimeError("that is a genuine bug")
+
+    result = fe.answer(TOPIC, fe.MODE_GRAMMAR, {fe.MODE_GRAMMAR: boom})
+    assert len(calls) == 1
+    assert "genuine bug" in result["note"]

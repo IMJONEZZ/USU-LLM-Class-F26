@@ -22,6 +22,8 @@ import json
 import pathlib
 from functools import partial
 
+import requests
+
 from src.html_output import validate
 from src.inference import ServerNotReady
 
@@ -54,6 +56,10 @@ STAR_WARS_EXAMPLES = (
     "Jabba's palace",
 )
 EXAMPLES = PLAIN_EXAMPLES + STAR_WARS_EXAMPLES
+
+# Two tries, because the first is what wakes the container and the second
+# is the one that gets an answer.
+COLD_ATTEMPTS = 2
 
 WAKING_UP = (
     "The server is waking up. It scales to zero, so the first request after "
@@ -106,25 +112,42 @@ def verdict(problems):
     return f"Invalid, {len(problems)} problems. {head}{more}"
 
 
-def answer(topic, mode, services=None):
+def answer(topic, mode, services=None, attempts=COLD_ATTEMPTS):
     """Run one topic through one service and score what comes back.
 
     Nothing raises out of here. An exception that escapes lands in the browser
     as a red Gradio popup with a stack trace behind it, which is useless to
     anyone looking at the page, and a cold server is a normal thing to hit
     rather than a crash. Both come back as text in the verdict line instead.
+
+    The retry is for a cold GPU specifically. `ask` waits out the 503 that
+    llama.cpp returns while it loads, but a server that's properly asleep
+    holds the connection open instead and `requests` gives up at its own
+    timeout, which is not a 503 and never reached that retry loop. The first
+    attempt is what wakes the container, so the second one usually lands. I
+    found this on the last check before calling the assignment done, which is
+    the one path a grader opening a cold URL would have hit first.
     """
     services = SERVICES if services is None else services
-    try:
-        markup = services[mode](topic)
-    except ServerNotReady:
-        return {"mode": mode, "markup": "", "problems": [], "note": WAKING_UP}
-    # Broad on purpose. This is the edge of the app, and anything that
-    # gets past here is a popup with a stack trace in a browser.
-    except Exception as exc:  # noqa: BLE001
-        note = f"{mode} didn't answer. {type(exc).__name__}: {exc}"
-        return {"mode": mode, "markup": "", "problems": [], "note": note}
-    return {"mode": mode, "markup": markup, "problems": validate(markup), "note": None}
+    for attempt in range(1, attempts + 1):
+        try:
+            markup = services[mode](topic)
+        except ServerNotReady, requests.Timeout, requests.ConnectionError:
+            if attempt == attempts:
+                return {"mode": mode, "markup": "", "problems": [], "note": WAKING_UP}
+        # Broad on purpose. This is the edge of the app, and anything that
+        # gets past here is a popup with a stack trace in a browser.
+        except Exception as exc:  # noqa: BLE001
+            note = f"{mode} didn't answer. {type(exc).__name__}: {exc}"
+            return {"mode": mode, "markup": "", "problems": [], "note": note}
+        else:
+            return {
+                "mode": mode,
+                "markup": markup,
+                "problems": validate(markup),
+                "note": None,
+            }
+    raise AssertionError("unreachable")  # pragma: no cover
 
 
 def panels(result):
