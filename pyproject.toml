@@ -4,9 +4,14 @@ version = "0.1.0"
 description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "fastapi>=0.115,<1",
+    "httpx>=0.28,<1",
+    "uvicorn>=0.34,<1",
+]
 
 [dependency-groups]
+inference = ["vllm; sys_platform == 'linux'"]
 dev = [
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
@@ -15,3 +20,11 @@ dev = [
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-fail-under=80"
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128", marker = "sys_platform == 'win32' or sys_platform == 'linux'" }]

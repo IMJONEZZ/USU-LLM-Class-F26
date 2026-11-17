@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HTML Studio · Local AI generator</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/script.js" defer></script>
+</head>
+<body>
+  <main>
+    <header><span class="badge">LOCAL AI / XGRAMMAR</span><h1>HTML Studio<span>.</span></h1>
+      <p>Describe an idea. Turn it into a structured webpage.</p></header>
+    <form id="generator">
+      <label for="prompt">What would you like to create?</label>
+      <textarea id="prompt" required maxlength="4000" rows="4" placeholder="A website for a neighborhood book club, with a welcome heading, upcoming meetings, and a reading list."></textarea>
+      <div class="actions"><small>Simple HTML. Grammar enforced by the server.</small><button id="generate" type="submit">Generate webpage →</button></div>
+    </form>
+    <p id="status" role="status" aria-live="polite">Ready when you are.</p>
+    <div class="workspace">
+      <section class="panel"><h2>Website preview</h2>
+        <iframe id="preview" title="Generated website preview" sandbox="" referrerpolicy="no-referrer" srcdoc="<p>Your generated webpage will appear here.</p>"></iframe>
+      </section>
+      <section class="panel"><h2>HTML source</h2><pre><code id="source">No generation yet.</code></pre></section>
+    </div>
+    <footer>Qwen2.5 3B · vLLM · HTML constrained at decoding time</footer>
+  </main>
+</body>
+</html>
