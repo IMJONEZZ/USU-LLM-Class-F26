@@ -17,6 +17,12 @@ import modal
 PORT_CONCURRENCY = 8
 SCALEDOWN_SECONDS = 300
 
+# Modal cancels an input at 300 seconds by default, and a request that
+# arrives while the GPU behind it is still loading can legitimately take
+# longer than that. Without this the container kills its own request and
+# the browser just waits forever.
+REQUEST_TIMEOUT = 900
+
 # Pinned to what I developed against. Gradio 6 dropped the `type` parameter
 # that every ChatInterface tutorial still passes, so a floating version here
 # would be a working deploy today and a TypeError whenever it drifts.
@@ -32,6 +38,7 @@ app = modal.App("hw11-frontend", image=image)
 @app.function(
     secrets=[modal.Secret.from_name("hw7-api-key")],
     scaledown_window=SCALEDOWN_SECONDS,
+    timeout=REQUEST_TIMEOUT,
     max_containers=1,
 )
 @modal.concurrent(max_inputs=PORT_CONCURRENCY)
