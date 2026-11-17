@@ -64,6 +64,12 @@ EXAMPLES = PLAIN_EXAMPLES + STAR_WARS_EXAMPLES
 COLD_SECONDS = 300
 COLD_ATTEMPTS = 2
 
+# Named, not spelled out in the `except` line. This repo is on 3.14 where
+# `except A, B:` is legal, the container that runs this file is on 3.12
+# where it isn't, and ruff formats to the 3.14 spelling, so writing the
+# tuple inline gets a SyntaxError put back every time I format.
+COLD_ERRORS = (ServerNotReady, requests.Timeout, requests.ConnectionError)
+
 WAKING_UP = (
     "The server is waking up. It scales to zero, so the first request after "
     "an idle spell waits on a 4.7GB model loading onto a GPU."
@@ -136,7 +142,7 @@ def answer(topic, mode, services=None, attempts=COLD_ATTEMPTS):
     for attempt in range(1, attempts + 1):
         try:
             markup = services[mode](topic)
-        except ServerNotReady, requests.Timeout, requests.ConnectionError:
+        except COLD_ERRORS:
             if attempt == attempts:
                 return {"mode": mode, "markup": "", "problems": [], "note": WAKING_UP}
         # Broad on purpose. This is the edge of the app, and anything that

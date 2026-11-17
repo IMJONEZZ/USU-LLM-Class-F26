@@ -15,6 +15,7 @@ instead of a popup.
 """
 
 import html
+import pathlib
 
 import pytest
 import requests
@@ -378,3 +379,20 @@ def test_a_caller_can_still_override_the_timeout(monkeypatch):
     )
     fe.grammar_service(TOPIC, timeout=5)
     assert seen["timeout"] == 5
+
+
+def test_the_frontend_parses_on_the_python_the_container_runs():
+    # This file runs on 3.14 locally and on whatever gpu/frontend_app.py pins
+    # in the image. Python 3.14 accepts `except A, B:` without parentheses and
+    # 3.12 does not, so I shipped a SyntaxError that ruff, pytest and a local
+    # import all thought was fine, and only the deploy logs ever saw it.
+    import ast
+    import re
+
+    app_source = pathlib.Path("gpu/frontend_app.py").read_text(encoding="utf-8")
+    pinned = re.search(r'python_version="(\d+)\.(\d+)"', app_source)
+    assert pinned, "frontend_app.py should pin the image's python version"
+    version = (int(pinned.group(1)), int(pinned.group(2)))
+
+    source = pathlib.Path("src/frontend.py").read_text(encoding="utf-8")
+    ast.parse(source, feature_version=version)
