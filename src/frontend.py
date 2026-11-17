@@ -57,8 +57,11 @@ STAR_WARS_EXAMPLES = (
 )
 EXAMPLES = PLAIN_EXAMPLES + STAR_WARS_EXAMPLES
 
-# Two tries, because the first is what wakes the container and the second
-# is the one that gets an answer.
+# A cold container boots and loads 4.7GB before it answers anything, which
+# is longer than the 120 second default in src/inference.py. That default was
+# sized for an 800MB model on CPU and there's no response to retry on while a
+# GPU is still waking, so the wait has to be long enough to cover it.
+COLD_SECONDS = 300
 COLD_ATTEMPTS = 2
 
 WAKING_UP = (
@@ -80,6 +83,7 @@ def optimized_instructions(path=None):
 def grammar_service(topic, **kwargs):
     from src.html_output import generate
 
+    kwargs.setdefault("timeout", COLD_SECONDS)
     return generate(topic, **kwargs)["html"]
 
 

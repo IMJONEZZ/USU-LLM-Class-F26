@@ -269,7 +269,7 @@ def test_grammar_service_hands_back_markup_and_not_the_whole_result(monkeypatch)
 
     monkeypatch.setattr(html_output, "generate", fake_generate)
     assert fe.grammar_service(TOPIC, key="k") == CLEAN
-    assert seen == {"topic": TOPIC, "key": "k"}
+    assert seen == {"topic": TOPIC, "key": "k", "timeout": fe.COLD_SECONDS}
 
 
 def test_prompt_service_uses_the_instruction_i_measured(monkeypatch):
@@ -352,3 +352,29 @@ def test_a_real_error_is_not_retried():
     result = fe.answer(TOPIC, fe.MODE_GRAMMAR, {fe.MODE_GRAMMAR: boom})
     assert len(calls) == 1
     assert "genuine bug" in result["note"]
+
+
+def test_the_grammar_service_waits_longer_than_the_cpu_default(monkeypatch):
+    # The 120 second default in src/inference.py was sized for an 800MB model
+    # on CPU. A cold GPU container spends longer than that booting, and there
+    # is no response to retry on while it does, so this has to be bigger.
+    from src import html_output, inference
+
+    seen = {}
+    monkeypatch.setattr(
+        html_output, "generate", lambda topic, **kw: seen.update(kw) or {"html": CLEAN}
+    )
+    fe.grammar_service(TOPIC)
+    assert seen["timeout"] == fe.COLD_SECONDS
+    assert fe.COLD_SECONDS > inference.TIMEOUT_SECONDS
+
+
+def test_a_caller_can_still_override_the_timeout(monkeypatch):
+    from src import html_output
+
+    seen = {}
+    monkeypatch.setattr(
+        html_output, "generate", lambda topic, **kw: seen.update(kw) or {"html": CLEAN}
+    )
+    fe.grammar_service(TOPIC, timeout=5)
+    assert seen["timeout"] == 5

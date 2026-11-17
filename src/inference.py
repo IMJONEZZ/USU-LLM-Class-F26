@@ -96,12 +96,19 @@ def ask(
     attempts=MAX_ATTEMPTS,
     retry_seconds=RETRY_SECONDS,
     sleep=time.sleep,
+    timeout=TIMEOUT_SECONDS,
     **kwargs,
 ):
     """Ask one question and return the answer text.
 
     `session` and `sleep` are arguments so the tests can hand over a fake
     transport and a clock that doesn't actually wait.
+
+    `timeout` is one too, because the default suits this 800MB model and not
+    the 7B behind assignment 11's front end. A properly cold container spends
+    longer than 120 seconds booting and loading weights, and during that time
+    there is no response at all, so the retry loop below never sees anything
+    to retry on. The caller that knows it's waiting on a GPU asks for longer.
     """
     session = requests.Session() if session is None else session
     headers = {
@@ -115,7 +122,7 @@ def ask(
             f"{url}/v1/chat/completions",
             headers=headers,
             json=payload,
-            timeout=TIMEOUT_SECONDS,
+            timeout=timeout,
         )
         if is_still_loading(response):
             if attempt == attempts:
