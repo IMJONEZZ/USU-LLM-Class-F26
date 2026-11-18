@@ -37,10 +37,13 @@ def build_prompt(context: str, question: str) -> str:
     template_text = (
         "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n"
         "You are a helpful, smart, kind, and efficient AI assistant. "
-        "You always fulfill the user's requests to the best of your ability."
+        "You always fulfill the user's requests to the best of your ability. "
+        "Use the provided context when it is relevant to the question. "
+        "If the context is irrelevant or does not provide enough information, "
+        "answer using your general knowledge."
         "<|eot_id|>"
         "<|start_header_id|>user<|end_header_id|>\n\n"
-        "{context}\n{question}<|eot_id|>"
+        "Context:\n{context}\n\nQuestion:\n{question}<|eot_id|>"
         "<|start_header_id|>assistant<|end_header_id|>\n\n"
     )
     return template_text.format(context=context, question=question)

@@ -88,7 +88,7 @@ def test_build_prompt_includes_context_question_and_chat_tokens():
     assert "<|start_header_id|>system<|end_header_id|>" in prompt
     assert "<|start_header_id|>user<|end_header_id|>" in prompt
     assert "<|eot_id|>" in prompt
-    assert "retrieved text\nthe question" in prompt
+    assert "Context:\nretrieved text\n\nQuestion:\nthe question" in prompt
     assert prompt.endswith("<|start_header_id|>assistant<|end_header_id|>\n\n")
 
 
@@ -114,7 +114,7 @@ def test_answer_question_uses_retrieved_context(monkeypatch):
         n_results=1,
     )
     prompt = generate.call_args.args[0]
-    assert "retrieved text\nthe question" in prompt
+    assert "Context:\nretrieved text\n\nQuestion:\nthe question" in prompt
     assert generate.call_args.args[1:] == (tokenizer, model)
 
 
