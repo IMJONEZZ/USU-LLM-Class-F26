@@ -1,24 +1,28 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := all
-DATASET ?= fixtures/a10.json
 
-.PHONY: all sync clean smoke optimize evaluate report reference
+.PHONY: all sync run test lint format clean
 
-all:
-	uv run ruff check .
-	uv run ruff format --check .
-	uv run pytest
+all: lint test
 
 sync:
-	uv sync --group dev
+	uv sync
 
-# Reset generated state while keeping dependencies and downloaded models installed.
+# Start the Gradio chatbot on 127.0.0.1:7860 (Ollama must already be running).
+run:
+	uv run python -m src.frontend
+
+test:
+	uv run pytest
+
+lint:
+	uv run ruff check .
+	uv run ruff format --check .
+
+format:
+	uv run ruff check --fix .
+	uv run ruff format .
+
 clean:
-	rm -rf -- artifacts .pytest_cache .ruff_cache htmlcov .coverage .coverage.* __pycache__
+	rm -rf -- .pytest_cache .ruff_cache htmlcov .coverage .coverage.* __pycache__
 	find src tests -type d -name __pycache__ -prune -exec rm -rf -- {} +
-
-smoke optimize evaluate report:
-	uv run python -m src.prompt_optimization $@ --dataset "$(DATASET)"
-
-reference:
-	uv run python -m src.a9_reference
