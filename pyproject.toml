@@ -4,14 +4,21 @@ version = "0.1.0"
 description = "Repository for USU LLM Class DSAI-5810/6810, Fall 2026"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
-
-[dependency-groups]
-dev = [
+dependencies = [
+    "gradio>=6.32.0",
+    "ollama>=0.6.3",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.4",
 ]
 
 [tool.pytest.ini_options]
-addopts = "--cov=src --cov-fail-under=80"
+testpaths = ["tests"]
+pythonpath = ["."]
+norecursedirs = [".git", ".venv", "archive", "node_modules"]
+addopts = "--cov=src --cov-fail-under=100"
+
+[tool.coverage.report]
+exclude_also = [
+    "if __name__ == .__main__.:",
+]
