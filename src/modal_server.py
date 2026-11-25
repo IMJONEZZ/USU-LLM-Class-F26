@@ -1,14 +1,20 @@
-from pathlib import Path
+import os
 
 import modal
 
-volume = modal.Volume.from_name("base-model-store", create_if_missing=True)
+from src.config import (
+    GPU,
+    MODEL_DIR,
+    MODEL_NAME,
+    ROUTING_REGION,
+    SCALEDOWN_WINDOW,
+    STARTUP_TIMEOUT,
+    VLLM_PORT,
+)
 
+model_volume = modal.Volume.from_name("base-model-store", create_if_missing=True)
 vllm_cache_vol = modal.Volume.from_name("vllm-cache", create_if_missing=True)
 
-
-MODEL_NAME = "unsloth/Llama-3.2-1B"
-MODEL_DIR = Path("/models")
 
 download_image = (
     modal.Image.debian_slim()
@@ -26,16 +32,18 @@ inference_image = (
     )
     .env({"HF_XET_HIGH_PERFORMANCE": "1"})
 )
-app = modal.App()
+app = modal.App("vllm-inference")
+
+
+volumes = {MODEL_DIR: model_volume, "/root/.cache/vllm": vllm_cache_vol}
 
 
 @app.function(
-    volumes={MODEL_DIR: volume},
+    volumes={MODEL_DIR: model_volume},
     image=download_image,
     secrets=[modal.Secret.from_dotenv()],
 )  # .as_posix() converts a path objevt into a string
 def download_model():
-    import os
 
     from huggingface_hub import snapshot_download
 
@@ -45,16 +53,44 @@ def download_model():
         token=os.environ["HF_TOKEN"],
     )
     print(f"Model downloaded to {MODEL_DIR / MODEL_NAME}")
-    volume.commit()
+    model_volume.commit()
     print("Model commited!")
 
 
-@app.function(volumes={MODEL_DIR: volume}, image=inference_image)
-def inference():
-    from transformers import pipeline
+@app.server(
+    image=inference_image,
+    gpu=GPU,
+    scaledown_window=SCALEDOWN_WINDOW,
+    startup_timeout=STARTUP_TIMEOUT,
+    volumes=volumes,
+    port=VLLM_PORT,
+    routing_region=ROUTING_REGION,
+    target_concurrency=2,
+    unauthenticated=False,
+)
+class Server:
+    @modal.enter()
+    def start(self):
+        import subprocess
 
-    pipe = pipeline("text-generation", model=MODEL_DIR / MODEL_NAME)
+        cmd = [
+            "vllm",
+            "serve",
+            MODEL_NAME,
+            "--served-model-name",
+            MODEL_NAME,
+            "llm",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            str(VLLM_PORT),
+            "--uvicorn-log-level=info",
+            "--async-scheduling",
+            "--enforce-eager",  # help with the cold starts
+        ]
+        print(*cmd)
+        self.process = subprocess.Popen(cmd)
 
-    returned_text = pipe("The secret to baking a good cake is ", max_length=50)
-
-    print(f"Model loaded! {returned_text}")
+    @modal.exit()
+    def stop(self):
+        self.process.terminate()

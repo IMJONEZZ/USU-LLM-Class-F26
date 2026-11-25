@@ -10,7 +10,7 @@ app = FastAPI()
 @app.post("/question_selection")
 def get_idx(inputs: Inputs) -> dict:
     # from prompts import create_prompts
-    # from modal import send_to_modal
+    # from modal_server import send_to_modal
     # from stats import select_best
     # check_api_key()
     # prompts = create_prompts(inputs= inputs)
