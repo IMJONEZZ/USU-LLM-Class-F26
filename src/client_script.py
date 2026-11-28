@@ -1,11 +1,11 @@
 import json
+import os
 
 import requests
 
 from src.schemas import MCQ, HistoryRecord, Inputs, Question
 
-BASE_URL = "http://127.0.0.1:8001"
-QUESTION_SELECTION_URL = "/question_selection"
+GATEWAY_URL = "https://madisonbsperry--vllm-inference-get-idx.us-east.modal.run"
 
 
 def transform_for_api(history_path: str) -> list[HistoryRecord]:
@@ -47,11 +47,18 @@ def call_api(questions: list[Question], history_path: str):
 
     question_input = Inputs(candidate_questions=questions, history=history)
 
+    headers = {
+        "Modal-Key": os.environ["MODAL_ID"],
+        "Modal-Secret": os.environ["MODAL_SECRET"],
+    }
+
     response = requests.post(
-        url=BASE_URL + QUESTION_SELECTION_URL,
+        url=GATEWAY_URL,
         json=question_input.model_dump(mode="json"),
-        timeout=5,
+        headers=headers,
+        timeout=300,
     )
-    if response.status_code == 200:
-        response_idx = response.json()["best_question"]
-        return response_idx
+    response.raise_for_status()
+
+    response_idx = response.json()["best_question"]
+    return response_idx

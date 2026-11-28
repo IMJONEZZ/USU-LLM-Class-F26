@@ -1,4 +1,5 @@
 import os
+from random import randint
 
 import modal
 
@@ -11,6 +12,7 @@ from src.config import (
     STARTUP_TIMEOUT,
     VLLM_PORT,
 )
+from src.schemas import Inputs
 
 model_volume = modal.Volume.from_name("base-model-store", create_if_missing=True)
 vllm_cache_vol = modal.Volume.from_name("vllm-cache", create_if_missing=True)
@@ -20,6 +22,7 @@ download_image = (
     modal.Image.debian_slim()
     .uv_pip_install("huggingface_hub")
     .env({"HF_XET_HIGH_PERFORMANCE": "1"})  # enable fast data transfer
+    .add_local_dir("src", remote_path="/root/src")
 )
 
 inference_image = (
@@ -29,8 +32,11 @@ inference_image = (
         "torch==2.8.0",
         "flashinfer-python==0.3.1",
         "huggingface_hub==0.35.0",
+        "fastapi[standard]",
+        "pydantic",
     )
     .env({"HF_XET_HIGH_PERFORMANCE": "1"})
+    .add_local_dir("src", remote_path="/root/src")
 )
 app = modal.App("vllm-inference")
 
@@ -42,11 +48,13 @@ volumes = {MODEL_DIR: model_volume, "/root/.cache/vllm": vllm_cache_vol}
     volumes={MODEL_DIR: model_volume},
     image=download_image,
     secrets=[modal.Secret.from_dotenv()],
-)  # .as_posix() converts a path objevt into a string
+)  # .as_posix() converts a path object into a string
 def download_model():
-
     from huggingface_hub import snapshot_download
 
+    if (MODEL_DIR / MODEL_NAME / "model.safetensors").exists:
+        print(f"Model already on the volume at {MODEL_DIR / MODEL_NAME}")
+        return
     snapshot_download(
         repo_id=MODEL_NAME,
         local_dir=MODEL_DIR / MODEL_NAME,
@@ -76,15 +84,13 @@ class Server:
         cmd = [
             "vllm",
             "serve",
-            MODEL_NAME,
+            str(MODEL_DIR / MODEL_NAME),
             "--served-model-name",
-            MODEL_NAME,
             "llm",
             "--host",
             "0.0.0.0",
             "--port",
             str(VLLM_PORT),
-            "--uvicorn-log-level=info",
             "--async-scheduling",
             "--enforce-eager",  # help with the cold starts
         ]
@@ -94,3 +100,18 @@ class Server:
     @modal.exit()
     def stop(self):
         self.process.terminate()
+
+
+@app.function(image=inference_image)
+@modal.fastapi_endpoint(method="POST", requires_proxy_auth=True, docs=True)
+def get_idx(inputs: Inputs) -> dict:
+    # from prompts import create_prompts
+    # from stats import select_best
+
+    # prompts = create_prompts(inputs= inputs)
+    # probs = send_to_modal(prompts = prompts)
+    # random_int = select_best(probs = probs)
+
+    random_int = randint(0, len(inputs.candidate_questions) - 1)
+
+    return {"best_question": random_int}
